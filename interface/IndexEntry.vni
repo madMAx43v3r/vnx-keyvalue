@@ -1,0 +1,11 @@
+package vnx.keyvalue;
+
+import vnx.Variant;
+
+class IndexEntry {
+	
+	Variant key;
+	
+	long block_offset = -1;
+	
+}

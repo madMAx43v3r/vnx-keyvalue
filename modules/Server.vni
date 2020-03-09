@@ -1,0 +1,22 @@
+package vnx.keyvalue;
+
+import vnx.Variant;
+
+module Server {
+	
+	string collection = "store";
+	
+	string storage_path = ".keyvalue/";
+	
+	long max_block_size = 268435456;
+	
+	float rewrite_threshold = 0.5;
+	
+	
+	Variant get_value(Variant key) const;
+	
+	void store_value(Variant key, Variant value);
+	
+	void delete_value(Variant key);
+	
+}
