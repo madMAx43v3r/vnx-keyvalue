@@ -8,4 +8,6 @@ class IndexEntry {
 	
 	long block_offset = -1;
 	
+	long num_bytes;
+	
 }

@@ -1,0 +1,9 @@
+package vnx.keyvalue;
+
+class Collection {
+	
+	string name;
+	
+	vector<long> block_list;
+	
+}
