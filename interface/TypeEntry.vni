@@ -1,0 +1,7 @@
+package vnx.keyvalue;
+
+class TypeEntry {
+	
+	long block_offset = -1;
+	
+}

@@ -12,7 +12,9 @@
 #include <vnx/keyvalue/Collection.hxx>
 
 #include <vnx/File.h>
+#include <vnx/Buffer.h>
 
+#include <atomic>
 #include <unordered_map>
 
 
@@ -26,16 +28,20 @@ public:
 protected:
 	void main() override;
 	
-	Variant get_value(const Variant& key) const override;
+	void get_value_async(	const Variant& key,
+							const std::function<void(const std::shared_ptr<const Value>&)>& callback,
+							const vnx::request_id_t& request_id) const override;
 	
-	void store_value(const Variant& key, const Variant& value) override;
+	void get_values_async(	const std::vector<Variant>& keys,
+							const std::function<void(const std::vector<std::shared_ptr<const Value>>&)>& callback,
+							const vnx::request_id_t& request_id) const override;
+	
+	void store_value(const Variant& key, const std::shared_ptr<const Value>& value) override;
 	
 	void delete_value(const Variant& key) override;
 	
 private:
-	typedef std::vector<uint8_t> key_t;
-	
-	struct key_map_t {
+	struct key_index_t {
 		int64_t block_index = -1;
 		int64_t block_offset = -1;
 		int64_t num_bytes = 0;
@@ -49,20 +55,57 @@ private:
 		int64_t num_bytes_total = 0;
 	};
 	
+	struct read_result_t {
+		std::function<void(const std::shared_ptr<const Value>&)> callback;
+	};
+	
+	struct read_result_many_t {
+		std::atomic<uint32_t> num_left;
+		std::vector<std::shared_ptr<const Value>> values;
+		std::function<void(const std::vector<std::shared_ptr<const Value>>&)> callback;
+	};
+	
+	struct read_item_t {
+		uint32_t index = 0;
+		int fd = 0;
+		int64_t offset = 0;
+		size_t num_bytes = 0;
+		std::shared_ptr<read_result_t> result;
+		std::shared_ptr<read_result_many_t> result_many;
+	};
+	
 	std::string get_file_path(const std::string& name, int64_t index) const;
 	
 	std::shared_ptr<block_t> get_current_block() const;
 	
+	std::shared_ptr<block_t> get_block(int64_t index) const;
+	
+	key_index_t get_key_index(const Variant& key) const;
+	
 	std::shared_ptr<block_t> add_new_block();
 	
 	void write_index();
+	
+	void read_loop();
 	
 private:
 	std::shared_ptr<Collection> coll_index;
 	
 	std::map<int64_t, std::shared_ptr<block_t>> block_map;
 	
-	std::unordered_map<key_t, key_map_t> key_map;
+	std::unordered_map<Variant, key_index_t> key_map;
+	
+	mutable std::mutex read_mutex;
+	mutable std::condition_variable read_condition;
+	
+	std::vector<std::thread> read_threads;
+	mutable std::queue<read_item_t> read_queue;
+	
+	mutable uint64_t read_counter = 0;
+	mutable std::atomic<uint64_t> num_bytes_read;
+	
+	uint64_t write_counter = 0;
+	std::atomic<uint64_t> num_bytes_written;
 	
 };
 

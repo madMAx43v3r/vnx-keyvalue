@@ -1,0 +1,9 @@
+package vnx.keyvalue;
+
+import vnx.Variant;
+
+class DeleteEntry {
+	
+	Variant key;
+	
+}

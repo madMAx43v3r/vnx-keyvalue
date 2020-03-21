@@ -1,21 +1,26 @@
 package vnx.keyvalue;
 
 import vnx.Variant;
+import vnx.Value;
 
 module Server {
 	
 	string collection = "store";
 	
-	string storage_path = ".keyvalue/";
+	string storage_path = "storage/";
 	
 	long max_block_size = 268435456;
 	
 	float rewrite_threshold = 0.5;
 	
+	int num_read_threads = 10;
 	
-	Variant get_value(Variant key) const;
 	
-	void store_value(Variant key, Variant value);
+	Value* get_value(Variant key) const async;
+	
+	vector<Value*> get_values(vector<Variant> keys) const async;
+	
+	void store_value(Variant key, Value* value);
 	
 	void delete_value(Variant key);
 	
