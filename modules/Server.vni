@@ -5,7 +5,7 @@ import vnx.Value;
 
 module Server {
 	
-	string collection = "store";
+	string collection = "storage";
 	
 	string storage_path;
 	

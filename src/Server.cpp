@@ -23,6 +23,11 @@ Server::Server(const std::string& _vnx_name)
 {
 }
 
+void Server::init()
+{
+	vnx::open_pipe(vnx_name, this, UNLIMITED);
+}
+
 void Server::main()
 {
 	for(int i = 0; i < 3; ++i) {
@@ -37,12 +42,15 @@ void Server::main()
 		coll_index->name = collection;
 	}
 	
-	for(int64_t block_index : coll_index->block_list)
+	for(const int64_t block_index : coll_index->block_list)
 	{
+		log(INFO).out << "Reading block " << block_index << " ...";
+		
 		auto block = std::make_shared<block_t>();
 		block->index = block_index;
 		block->key_file.open(get_file_path("key", block_index), "rb+");
 		block->value_file.open(get_file_path("value", block_index), "rb");
+		block_map[block_index] = block;
 		
 		auto& key_in = block->key_file.in;
 		auto& value_in = block->value_file.in;
@@ -61,8 +69,8 @@ void Server::main()
 					if(index_entry) {
 						auto& index = key_map[index_entry->key];
 						if(index.block_index >= 0) {
-							auto block = get_block(index.block_index);
-							block->num_bytes_used -= index_entry->num_bytes;
+							auto old_block = get_block(index.block_index);
+							old_block->num_bytes_used -= index_entry->num_bytes;
 						}
 						index.block_index = block_index;
 						index.block_offset = index_entry->block_offset;
@@ -130,7 +138,7 @@ void Server::main()
 			{
 				value_end_pos = value_in.get_input_pos();
 				try {
-					vnx::skip(key_in);
+					vnx::skip(value_in);
 				} catch(...) {
 					break;
 				}
@@ -140,18 +148,22 @@ void Server::main()
 		
 		block->key_file.seek_to(prev_key_pos);
 		block->value_file.seek_to(value_end_pos);
-		block_map[block_index] = block;
-		
-		log(INFO).out << "Read block " << block_index << ": " << block->num_bytes_used << " bytes used, "
+	}
+	
+	for(const auto& entry : block_map) {
+		auto block = entry.second;
+		log(INFO).out << "Block " << block->index << ": " << block->num_bytes_used << " bytes used, "
 				<< block->num_bytes_total << " bytes total, "
-				<< float(block->num_bytes_used) / block->num_bytes_total << " % use factor";
+				<< 100 * float(block->num_bytes_used) / block->num_bytes_total << " % use factor";
 	}
 	
 	if(block_map.empty()) {
 		add_new_block();
 	} else {
 		auto block = get_current_block();
+		auto out_pos = block->value_file.get_output_pos();
 		block->value_file.open("rb+");
+		block->value_file.seek_to(out_pos);
 	}
 	
 	write_index();
@@ -263,12 +275,13 @@ void Server::store_value(const Variant& key, const std::shared_ptr<const Value>&
 	
 	IndexEntry entry;
 	try {
-		if(!value_out.type_code_map.count(value->get_type_hash()))
-		{
+		auto type_code = value->get_type_code();
+		if(type_code) {
 			TypeEntry entry;
 			entry.block_offset = value_out.get_output_pos();
-			vnx::write(key_out, entry);
-			vnx::write(value_out, value->get_type_code());
+			if(value_out.write_type_code(type_code)) {
+				vnx::write(key_out, entry);
+			}
 		}
 		entry.key = key;
 		entry.block_offset = value_out.get_output_pos();

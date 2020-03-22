@@ -16,6 +16,12 @@ target_link_libraries(vnx_keyvalue vnx_base)
 add_executable(vnx_keyvalue_server src/vnx_keyvalue_server.cpp)
 target_link_libraries(vnx_keyvalue_server vnx_keyvalue)
 
+add_executable(test_server_store test/test_server_store.cpp)
+target_link_libraries(test_server_store vnx_keyvalue)
+
+add_executable(test_server_delete test/test_server_delete.cpp)
+target_link_libraries(test_server_delete vnx_keyvalue)
+
 install(DIRECTORY include/ DESTINATION include)
 install(DIRECTORY generated/include/ DESTINATION include)
 install(DIRECTORY interface/ DESTINATION interface/vnx/keyvalue)

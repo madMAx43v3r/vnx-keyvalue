@@ -15,7 +15,16 @@
 
 int main(int argc, char** argv)
 {
-	vnx::init("vnx_keyvalue_server", argc, argv);
+	std::map<std::string, std::string> options;
+	options["s"] = "server";
+	options["server"] = "server name";
+	options["n"] = "name";
+	options["name"] = "collection name";
+	
+	vnx::init("vnx_keyvalue_server", argc, argv, options);
+	
+	std::string server_name = "StorageServer";
+	vnx::read_config("server", server_name);
 	
 	{
 		vnx::Handle<vnx::Terminal> terminal = new vnx::Terminal("Terminal");
@@ -26,7 +35,8 @@ int main(int argc, char** argv)
 		server.start_detached();
 	}
 	{
-		vnx::Handle<vnx::keyvalue::Server> module = new vnx::keyvalue::Server("Server");
+		vnx::Handle<vnx::keyvalue::Server> module = new vnx::keyvalue::Server(server_name);
+		vnx::read_config("name", module->collection);
 		module.start_detached();
 	}
 	

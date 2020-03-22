@@ -26,6 +26,8 @@ public:
 	Server(const std::string& _vnx_name);
 	
 protected:
+	void init() override;
+	
 	void main() override;
 	
 	void get_value_async(	const Variant& key,
