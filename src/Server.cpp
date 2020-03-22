@@ -9,6 +9,7 @@
 #include <vnx/keyvalue/IndexEntry.hxx>
 #include <vnx/keyvalue/TypeEntry.hxx>
 #include <vnx/keyvalue/DeleteEntry.hxx>
+#include <vnx/keyvalue/CloseEntry.hxx>
 
 #include <sys/mman.h>
 #include <unistd.h>
@@ -16,6 +17,11 @@
 
 namespace vnx {
 namespace keyvalue {
+
+Server::Server(const std::string& _vnx_name)
+	:	ServerBase(_vnx_name)
+{
+}
 
 void Server::main()
 {
@@ -31,10 +37,121 @@ void Server::main()
 		coll_index->name = collection;
 	}
 	
-	// TODO: load blocks
+	for(int64_t block_index : coll_index->block_list)
+	{
+		auto block = std::make_shared<block_t>();
+		block->index = block_index;
+		block->key_file.open(get_file_path("key", block_index), "rb+");
+		block->value_file.open(get_file_path("value", block_index), "rb");
+		
+		auto& key_in = block->key_file.in;
+		auto& value_in = block->value_file.in;
+		
+		bool is_error = false;
+		int64_t prev_key_pos = 0;
+		int64_t value_end_pos = -1;
+		
+		while(vnx_do_run())
+		{
+			prev_key_pos = key_in.get_input_pos();
+			try {
+				auto entry = vnx::read(key_in);
+				{
+					auto index_entry = std::dynamic_pointer_cast<IndexEntry>(entry);
+					if(index_entry) {
+						auto& index = key_map[index_entry->key];
+						if(index.block_index >= 0) {
+							auto block = get_block(index.block_index);
+							block->num_bytes_used -= index_entry->num_bytes;
+						}
+						index.block_index = block_index;
+						index.block_offset = index_entry->block_offset;
+						index.num_bytes = index_entry->num_bytes;
+						block->num_bytes_used += index_entry->num_bytes;
+						block->num_bytes_total += index_entry->num_bytes;
+					}
+				}
+				{
+					auto delete_entry = std::dynamic_pointer_cast<DeleteEntry>(entry);
+					if(delete_entry) {
+						auto iter = key_map.find(delete_entry->key);
+						if(iter != key_map.end()) {
+							block->num_bytes_used -= iter->second.num_bytes;
+							key_map.erase(iter);
+						}
+					}
+				}
+				{
+					auto type_entry = std::dynamic_pointer_cast<TypeEntry>(entry);
+					if(type_entry) {
+						value_in.reset();
+						block->value_file.seek_to(type_entry->block_offset);
+						while(vnx_do_run()) {
+							try {
+								uint16_t code = 0;
+								vnx::read(value_in, code);
+								if(code == CODE_TYPE_CODE || code == CODE_ALT_TYPE_CODE) {
+									vnx::read_type_code(value_in);
+								} else {
+									break;
+								}
+							} catch(const std::underflow_error& ex) {
+								break;
+							} catch(const std::exception& ex) {
+								log(WARN).out << "Error while reading type codes from block "
+										<< block_index << ": " << ex.what();
+								break;
+							} catch(...) {
+								break;
+							}
+						}
+					}
+				}
+				{
+					auto close_entry = std::dynamic_pointer_cast<CloseEntry>(entry);
+					if(close_entry) {
+						value_end_pos = close_entry->block_offset;
+						break;
+					}
+				}
+			}
+			catch(const std::exception& ex) {
+				log(WARN).out << "Error reading block " << block_index << " key file: " << ex.what();
+				is_error = true;
+				break;
+			}
+		}
+		
+		if(is_error) {
+			log(INFO).out << "Verifying block " << block->index << " ...";
+			value_in.reset();
+			block->value_file.seek_begin();
+			while(vnx_do_run())
+			{
+				value_end_pos = value_in.get_input_pos();
+				try {
+					vnx::skip(key_in);
+				} catch(...) {
+					break;
+				}
+			}
+			log(INFO).out << "Done verifying block " << block->index << ": " << value_end_pos << " bytes";
+		}
+		
+		block->key_file.seek_to(prev_key_pos);
+		block->value_file.seek_to(value_end_pos);
+		block_map[block_index] = block;
+		
+		log(INFO).out << "Read block " << block_index << ": " << block->num_bytes_used << " bytes used, "
+				<< block->num_bytes_total << " bytes total, "
+				<< float(block->num_bytes_used) / block->num_bytes_total << " % use factor";
+	}
 	
 	if(block_map.empty()) {
 		add_new_block();
+	} else {
+		auto block = get_current_block();
+		block->value_file.open("rb+");
 	}
 	
 	write_index();
@@ -44,6 +161,10 @@ void Server::main()
 		read_threads[i] = std::thread(&Server::read_loop, this);
 	}
 	
+	set_timer_millis(10 * 1000, std::bind(&Server::check_rewrite, this));
+	
+	rewrite.timer = add_timer(std::bind(&Server::rewrite_func, this));
+	
 	Super::main();
 	
 	read_condition.notify_all();
@@ -51,6 +172,22 @@ void Server::main()
 		if(thread.joinable()) {
 			thread.join();
 		}
+	}
+	
+	for(const auto& entry : block_map)
+	{
+		auto block = entry.second;
+		try {
+			CloseEntry entry;
+			entry.block_offset = block->value_file.get_output_pos();
+			vnx::write(block->key_file.out, entry);
+			block->key_file.flush();
+		}
+		catch(const std::exception& ex) {
+			log(ERROR).out << "Failed to close block " << block->index << ": " << ex.what();
+		}
+		block->key_file.close();
+		block->value_file.close();
 	}
 }
 
@@ -102,7 +239,7 @@ void Server::get_values_async(	const std::vector<Variant>& keys,
 		item.fd = ::fileno(block->value_file.get_handle());
 		item.offset = index.block_offset;
 		item.num_bytes = index.num_bytes;
-		item.result = result;
+		item.result_many = result;
 		{
 			std::lock_guard<std::mutex> lock(read_mutex);
 			read_queue.push(item);
@@ -114,36 +251,61 @@ void Server::get_values_async(	const std::vector<Variant>& keys,
 void Server::store_value(const Variant& key, const std::shared_ptr<const Value>& value)
 {
 	auto block = get_current_block();
-	if(block) {
-		auto& key_out = block->key_file.out;
-		auto& value_out = block->value_file.out;
-		if(!value_out.type_code_map.count(value->get_type_hash())) {
+	if(!block) {
+		throw std::runtime_error("storage closed");
+	}
+	
+	auto& key_out = block->key_file.out;
+	auto& value_out = block->value_file.out;
+	
+	const int64_t prev_key_pos = key_out.get_output_pos();
+	const int64_t prev_value_pos = value_out.get_output_pos();
+	
+	IndexEntry entry;
+	try {
+		if(!value_out.type_code_map.count(value->get_type_hash()))
+		{
 			TypeEntry entry;
 			entry.block_offset = value_out.get_output_pos();
 			vnx::write(key_out, entry);
 			vnx::write(value_out, value->get_type_code());
 		}
-		
-		IndexEntry entry;
 		entry.key = key;
 		entry.block_offset = value_out.get_output_pos();
 		vnx::write(value_out, value);
-		entry.num_bytes = value_out.get_output_pos() - entry.block_offset;
-		vnx::write(key_out, entry);
-		block->key_file.flush();
 		block->value_file.flush();
 		
-		key_index_t& index = key_map[key];
-		block->num_bytes_used += entry.num_bytes - index.num_bytes;
-		block->num_bytes_total += entry.num_bytes;
-		
-		index.block_index = block->index;
-		index.block_offset = entry.block_offset;
-		index.num_bytes = entry.num_bytes;
-		
-		if(block->num_bytes_total >= max_block_size) {
-			add_new_block();
-		}
+		entry.num_bytes = value_out.get_output_pos() - entry.block_offset;
+		vnx::write(key_out, entry);
+		block->key_file.flush();	// key file last
+	}
+	catch(const std::exception& ex)
+	{
+		block->key_file.seek_to(prev_key_pos);
+		block->value_file.seek_to(prev_value_pos);
+		log(WARN).out << "store_value(): " << ex.what();
+		throw;
+	}
+	
+	key_index_t& index = key_map[key];
+	
+	if(index.block_index >= 0) {
+		auto block = get_block(index.block_index);
+		block->num_bytes_used -= index.num_bytes;
+	}
+	
+	index.block_index = block->index;
+	index.block_offset = entry.block_offset;
+	index.num_bytes = entry.num_bytes;
+	
+	block->num_bytes_used += entry.num_bytes;
+	block->num_bytes_total += entry.num_bytes;
+	
+	write_counter++;
+	num_bytes_written += entry.num_bytes;
+	
+	if(block->num_bytes_total >= max_block_size) {
+		add_new_block();
 	}
 }
 
@@ -153,17 +315,27 @@ void Server::delete_value(const Variant& key)
 	if(iter == key_map.end()) {
 		throw std::runtime_error("unknown key");
 	}
-	const auto& index = iter->second;
-	
+	delete_value(key, iter->second);
+	key_map.erase(iter);
+}
+
+void Server::delete_value(const Variant& key, const key_index_t& index)
+{
 	auto block = get_block(index.block_index);
-	if(block) {
+	auto& key_out = block->key_file.out;
+	const int64_t prev_key_pos = key_out.get_output_pos();
+	try {
 		DeleteEntry entry;
 		entry.key = key;
-		vnx::write(block->key_file.out, entry);
+		vnx::write(key_out, entry);
 		block->key_file.flush();
 		block->num_bytes_used -= index.num_bytes;
 	}
-	key_map.erase(iter);
+	catch(const std::exception& ex) {
+		block->key_file.seek_to(prev_key_pos);
+		log(WARN).out << "delete_value(): " << ex.what();
+		throw;
+	}
 }
 
 std::string Server::get_file_path(const std::string& name, int64_t index) const
@@ -200,21 +372,93 @@ Server::key_index_t Server::get_key_index(const Variant& key) const
 std::shared_ptr<Server::block_t> Server::add_new_block()
 {
 	auto curr_block = get_current_block();
-	if(curr_block) {
-		curr_block->value_file.open("rb");
-	}
 	
-	auto block = std::make_shared<block_t>();
-	block->index = curr_block ? curr_block->index + 1 : 0;
-	block->key_file.open(get_file_path("key", block->index), "ab+");
-	block->value_file.open(get_file_path("value", block->index), "ab+");
-	block->key_file.write_header();
-	block->value_file.write_header();
-	block->key_file.flush();
-	block->value_file.flush();
-	block_map[block->index] = block;
-	write_index();
+	std::shared_ptr<block_t> block = std::make_shared<block_t>();
+	try {
+		block->index = curr_block ? curr_block->index + 1 : 0;
+		block->key_file.open(get_file_path("key", block->index), "wb");
+		block->value_file.open(get_file_path("value", block->index), "wb");
+		block->key_file.write_header();
+		block->value_file.write_header();
+		block->key_file.open("rb+");
+		block->value_file.open("rb+");
+		block->key_file.seek_end();
+		block->value_file.seek_end();
+		
+		block_map[block->index] = block;
+		write_index();
+	}
+	catch(const std::exception& ex) {
+		log(ERROR).out << "Failed to write new block " << block->index << ": " << ex.what();
+		return curr_block;
+	}
+	log(INFO).out << "Added new block " << block->index;
 	return block;
+}
+
+void Server::check_rewrite()
+{
+	// TODO
+}
+
+void Server::rewrite_func()
+{
+	if(!rewrite.block) {
+		return;
+	}
+	if(!rewrite.stream) {
+		auto stream = rewrite.block->key_file.mmap_read();
+		if(!stream->is_valid()) {
+			log(ERROR).out << "Block " << rewrite.block->index << " rewrite: mmap() failed!";
+			return;
+		}
+		rewrite.stream = stream;
+		rewrite.key_in = std::make_shared<TypeInput>(rewrite.stream.get());
+	}
+	try {
+		while(vnx_do_run()) {
+			auto entry = vnx::read(*rewrite.key_in);
+			{
+				auto index_entry = std::dynamic_pointer_cast<IndexEntry>(entry);
+				if(index_entry) {
+					auto iter = key_map.find(index_entry->key);
+					if(iter != key_map.end()) {
+						if(iter->second.block_index == rewrite.block->index) {
+							auto stream = rewrite.block->value_file.mmap_read(index_entry->block_offset, index_entry->num_bytes);
+							TypeInput value_in(stream.get());
+							auto value = vnx::read(value_in);
+							store_value(index_entry->key, value);
+							break;
+						}
+					}
+				}
+			}
+		}
+		rewrite.timer->set_millis(0);
+	}
+	catch(const std::underflow_error& ex)
+	{
+		if(do_verify_rewrite) {
+			for(const auto& entry : key_map) {
+				if(entry.second.block_index == rewrite.block->index) {
+					log(ERROR).out << "Rewrite of block " << rewrite.block->index << " failed.";
+					return;
+				}
+			}
+		}
+		log(INFO).out << "Rewrite of block " << rewrite.block->index << " finished.";
+		block_map.erase(rewrite.block->index);
+		write_index();
+		
+		rewrite.key_in = 0;
+		rewrite.stream = 0;
+		rewrite.block->key_file.remove();
+		rewrite.block->value_file.remove();
+		rewrite.block = 0;
+	}
+	catch(const std::exception& ex) {
+		log(ERROR).out << "Block " << rewrite.block->index << " rewrite: " << ex.what();
+	}
 }
 
 void Server::write_index()
@@ -224,7 +468,11 @@ void Server::write_index()
 		coll_index->block_list.push_back(entry.first);
 	}
 	for(int i = 0; i < 3; ++i) {
-		vnx::write_to_file(get_file_path("index", i), coll_index);
+		try {
+			vnx::write_to_file(get_file_path("index", i), coll_index);
+		} catch(const std::exception& ex) {
+			log(ERROR).out << "Failed to write collection index " << i << ": " << ex.what();
+		}
 	}
 }
 
@@ -247,17 +495,10 @@ void Server::read_loop()
 				break;
 			}
 		}
+		MappedMemoryInputStream stream(request.fd, request.num_bytes, request.offset);
+		
 		std::shared_ptr<Value> value;
-		
-		const size_t offset = request.offset % page_size;
-		const size_t length = request.num_bytes + offset;
-		
-		const char* p_map = (const char*)::mmap(0, length, PROT_READ, MAP_PRIVATE,
-								request.fd, request.offset - offset);
-		
-		if(p_map != MAP_FAILED)
-		{
-			PointerInputStream stream(p_map + offset, request.num_bytes);
+		if(stream.is_valid()) {
 			TypeInput in(&stream);
 			try {
 				value = vnx::read(in);
@@ -265,7 +506,6 @@ void Server::read_loop()
 			catch(...) {
 				// ignore for now
 			}
-			::munmap((void*)p_map, length);
 			num_bytes_read += request.num_bytes;
 		}
 		if(request.result) {

@@ -7,13 +7,15 @@ module Server {
 	
 	string collection = "store";
 	
-	string storage_path = "storage/";
+	string storage_path;
 	
 	long max_block_size = 268435456;
 	
 	float rewrite_threshold = 0.5;
 	
 	int num_read_threads = 10;
+	
+	bool do_verify_rewrite = false;
 	
 	
 	Value* get_value(Variant key) const async;

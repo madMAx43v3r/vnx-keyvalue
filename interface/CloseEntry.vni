@@ -1,0 +1,7 @@
+package vnx.keyvalue;
+
+class CloseEntry {
+	
+	long block_offset;		// end of value file
+	
+}

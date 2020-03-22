@@ -84,6 +84,12 @@ private:
 	
 	std::shared_ptr<block_t> add_new_block();
 	
+	void delete_value(const Variant& key, const key_index_t& index);
+	
+	void check_rewrite();
+	
+	void rewrite_func();
+	
 	void write_index();
 	
 	void read_loop();
@@ -106,6 +112,13 @@ private:
 	
 	uint64_t write_counter = 0;
 	std::atomic<uint64_t> num_bytes_written;
+	
+	struct rewrite_t {
+		std::shared_ptr<block_t> block;
+		std::shared_ptr<Timer> timer;
+		std::shared_ptr<PointerInputStream> stream;
+		std::shared_ptr<TypeInput> key_in;
+	} rewrite;
 	
 };
 
