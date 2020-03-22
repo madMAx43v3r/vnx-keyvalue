@@ -55,6 +55,7 @@ private:
 		int64_t index = -1;
 		int64_t num_bytes_used = 0;
 		int64_t num_bytes_total = 0;
+		std::atomic<size_t> num_pending;
 	};
 	
 	struct read_result_t {
@@ -62,13 +63,14 @@ private:
 	};
 	
 	struct read_result_many_t {
-		std::atomic<uint32_t> num_left;
+		std::atomic<size_t> num_left;
 		std::vector<std::shared_ptr<const Value>> values;
 		std::function<void(const std::vector<std::shared_ptr<const Value>>&)> callback;
 	};
 	
 	struct read_item_t {
-		uint32_t index = 0;
+		std::shared_ptr<block_t> block;
+		uint32_t result_index = 0;
 		int fd = 0;
 		int64_t offset = 0;
 		size_t num_bytes = 0;
@@ -118,9 +120,11 @@ private:
 	struct rewrite_t {
 		std::shared_ptr<block_t> block;
 		std::shared_ptr<Timer> timer;
-		std::shared_ptr<PointerInputStream> stream;
+		std::shared_ptr<PointerInputStream> key_stream;
 		std::shared_ptr<TypeInput> key_in;
 	} rewrite;
+	
+	std::list<std::shared_ptr<block_t>> delete_list;
 	
 };
 

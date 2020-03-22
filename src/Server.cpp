@@ -42,6 +42,24 @@ void Server::main()
 		coll_index->name = collection;
 	}
 	
+	for(const auto block_index : coll_index->delete_list)
+	{
+		try {
+			File file(get_file_path("key", block_index));
+			file.remove();
+			log(INFO).out << "Deleted old key file from block " << block_index;
+		} catch(...) {
+			// ignore
+		}
+		try {
+			File file(get_file_path("value", block_index));
+			file.remove();
+			log(INFO).out << "Deleted old value file from block " << block_index;
+		} catch(...) {
+			// ignore
+		}
+	}
+	
 	for(const int64_t block_index : coll_index->block_list)
 	{
 		log(INFO).out << "Reading block " << block_index << " ...";
@@ -214,6 +232,7 @@ void Server::get_value_async(	const Variant& key,
 	result->callback = callback;
 	
 	read_item_t item;
+	item.block = block;
 	item.fd = ::fileno(block->value_file.get_handle());
 	item.offset = index.block_offset;
 	item.num_bytes = index.num_bytes;
@@ -221,6 +240,7 @@ void Server::get_value_async(	const Variant& key,
 	{
 		std::lock_guard<std::mutex> lock(read_mutex);
 		read_queue.push(item);
+		block->num_pending++;
 	}
 	read_condition.notify_one();
 }
@@ -247,7 +267,8 @@ void Server::get_values_async(	const std::vector<Variant>& keys,
 		}
 		
 		read_item_t item;
-		item.index = i;
+		item.block = block;
+		item.result_index = i;
 		item.fd = ::fileno(block->value_file.get_handle());
 		item.offset = index.block_offset;
 		item.num_bytes = index.num_bytes;
@@ -255,6 +276,7 @@ void Server::get_values_async(	const std::vector<Variant>& keys,
 		{
 			std::lock_guard<std::mutex> lock(read_mutex);
 			read_queue.push(item);
+			block->num_pending++;
 		}
 		read_condition.notify_one();
 	}
@@ -411,33 +433,60 @@ std::shared_ptr<Server::block_t> Server::add_new_block()
 
 void Server::check_rewrite()
 {
-	// TODO
+	if(!rewrite.block) {
+		for(auto entry : block_map) {
+			if(entry.first != block_map.rbegin()->first) {
+				auto block = entry.second;
+				const double use_factor = double(block->num_bytes_used) / block->num_bytes_total;
+				if(use_factor < rewrite_threshold)
+				{
+					log(INFO).out << "Rewriting block " << block->index << " with use factor " << float(100 * use_factor) << " % ...";
+					rewrite.block = block;
+					rewrite.timer->set_millis(0);
+					break;
+				}
+			}
+		}
+	}
+	
+	auto iter = delete_list.begin();
+	while(iter != delete_list.end()) {
+		auto block = *iter;
+		if(block->num_pending == 0) {
+			block->key_file.remove();
+			block->value_file.remove();
+			iter = delete_list.erase(iter);
+		} else {
+			iter++;
+		}
+	}
 }
 
 void Server::rewrite_func()
 {
-	if(!rewrite.block) {
+	auto block = rewrite.block;
+	if(!block) {
 		return;
 	}
-	if(!rewrite.stream) {
-		auto stream = rewrite.block->key_file.mmap_read();
+	if(!rewrite.key_stream) {
+		auto stream = block->key_file.mmap_read();
 		if(!stream->is_valid()) {
-			log(ERROR).out << "Block " << rewrite.block->index << " rewrite: mmap() failed!";
+			log(ERROR).out << "Block " << block->index << " rewrite: mmap() failed!";
 			return;
 		}
-		rewrite.stream = stream;
-		rewrite.key_in = std::make_shared<TypeInput>(rewrite.stream.get());
+		rewrite.key_stream = stream;
+		rewrite.key_in = std::make_shared<TypeInput>(stream.get());
 	}
 	try {
-		while(vnx_do_run()) {
+		for(int i = 0; i < 100; ++i) {
 			auto entry = vnx::read(*rewrite.key_in);
 			{
 				auto index_entry = std::dynamic_pointer_cast<IndexEntry>(entry);
 				if(index_entry) {
 					auto iter = key_map.find(index_entry->key);
 					if(iter != key_map.end()) {
-						if(iter->second.block_index == rewrite.block->index) {
-							auto stream = rewrite.block->value_file.mmap_read(index_entry->block_offset, index_entry->num_bytes);
+						if(iter->second.block_index == block->index) {
+							auto stream = block->value_file.mmap_read(index_entry->block_offset, index_entry->num_bytes);
 							TypeInput value_in(stream.get());
 							auto value = vnx::read(value_in);
 							store_value(index_entry->key, value);
@@ -453,24 +502,25 @@ void Server::rewrite_func()
 	{
 		if(do_verify_rewrite) {
 			for(const auto& entry : key_map) {
-				if(entry.second.block_index == rewrite.block->index) {
-					log(ERROR).out << "Rewrite of block " << rewrite.block->index << " failed.";
+				if(entry.second.block_index == block->index) {
+					log(ERROR).out << "Rewrite of block " << block->index << " failed.";
 					return;
 				}
 			}
 		}
-		log(INFO).out << "Rewrite of block " << rewrite.block->index << " finished.";
-		block_map.erase(rewrite.block->index);
+		log(INFO).out << "Rewrite of block " << block->index << " finished.";
+		
+		block_map.erase(block->index);
+		coll_index->delete_list.push_back(block->index);
 		write_index();
 		
+		delete_list.push_back(block);
 		rewrite.key_in = 0;
-		rewrite.stream = 0;
-		rewrite.block->key_file.remove();
-		rewrite.block->value_file.remove();
+		rewrite.key_stream = 0;
 		rewrite.block = 0;
 	}
 	catch(const std::exception& ex) {
-		log(ERROR).out << "Block " << rewrite.block->index << " rewrite: " << ex.what();
+		log(ERROR).out << "Block " << block->index << " rewrite: " << ex.what();
 	}
 }
 
@@ -508,24 +558,28 @@ void Server::read_loop()
 				break;
 			}
 		}
-		MappedMemoryInputStream stream(request.fd, request.num_bytes, request.offset);
 		
 		std::shared_ptr<Value> value;
-		if(stream.is_valid()) {
-			TypeInput in(&stream);
-			try {
-				value = vnx::read(in);
+		{
+			MappedMemoryInputStream stream(request.fd, request.num_bytes, request.offset);
+			if(stream.is_valid()) {
+				TypeInput in(&stream);
+				try {
+					value = vnx::read(in);
+				}
+				catch(...) {
+					// ignore for now
+				}
+				num_bytes_read += request.num_bytes;
 			}
-			catch(...) {
-				// ignore for now
-			}
-			num_bytes_read += request.num_bytes;
 		}
+		request.block->num_pending--;
+		
 		if(request.result) {
 			request.result->callback(value);
 		}
 		if(request.result_many) {
-			request.result_many->values[request.index] = value;
+			request.result_many->values[request.result_index] = value;
 			if(++request.result_many->num_left == 0) {
 				request.result_many->callback(request.result_many->values);
 			}

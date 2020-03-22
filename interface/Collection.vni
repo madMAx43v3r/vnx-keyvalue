@@ -6,4 +6,6 @@ class Collection {
 	
 	vector<long> block_list;
 	
+	vector<long> delete_list;
+	
 }
