@@ -127,8 +127,6 @@ void Server::main()
 								log(WARN).out << "Error while reading type codes from block "
 										<< block_index << ": " << ex.what();
 								break;
-							} catch(...) {
-								break;
 							}
 						}
 					}
@@ -325,8 +323,12 @@ void Server::store_value(const Variant& key, const std::shared_ptr<const Value>&
 	key_index_t& index = key_map[key];
 	
 	if(index.block_index >= 0) {
-		auto block = get_block(index.block_index);
-		block->num_bytes_used -= index.num_bytes;
+		try {
+			auto old_block = get_block(index.block_index);
+			old_block->num_bytes_used -= index.num_bytes;
+		} catch(...) {
+			// ignore
+		}
 	}
 	
 	index.block_index = block->index;
@@ -390,7 +392,7 @@ std::shared_ptr<Server::block_t> Server::get_block(int64_t index) const
 {
 	auto iter = block_map.find(index);
 	if(iter == block_map.end()) {
-		throw std::runtime_error("unknown block");
+		throw std::runtime_error("unknown block: " + std::to_string(index));
 	}
 	return iter->second;
 }
@@ -435,7 +437,7 @@ void Server::check_rewrite()
 {
 	if(!rewrite.block) {
 		for(auto entry : block_map) {
-			if(entry.first != block_map.rbegin()->first) {
+			if(entry.first != get_current_block()->index) {
 				auto block = entry.second;
 				const double use_factor = double(block->num_bytes_used) / block->num_bytes_total;
 				if(use_factor < rewrite_threshold)
@@ -501,11 +503,16 @@ void Server::rewrite_func()
 	catch(const std::underflow_error& ex)
 	{
 		if(do_verify_rewrite) {
+			bool is_fail = false;
 			for(const auto& entry : key_map) {
 				if(entry.second.block_index == block->index) {
-					log(ERROR).out << "Rewrite of block " << block->index << " failed.";
-					return;
+					log(ERROR).out << "Key '" << entry.first << "' still points to block " << block->index;
+					is_fail = true;
 				}
+			}
+			if(is_fail) {
+				log(ERROR).out << "Rewrite of block " << block->index << " failed.";
+				return;
 			}
 		}
 		log(INFO).out << "Rewrite of block " << block->index << " finished.";
@@ -522,6 +529,7 @@ void Server::rewrite_func()
 	catch(const std::exception& ex) {
 		log(ERROR).out << "Block " << block->index << " rewrite: " << ex.what();
 	}
+	check_rewrite();
 }
 
 void Server::write_index()
