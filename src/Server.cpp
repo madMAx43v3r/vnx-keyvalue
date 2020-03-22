@@ -189,6 +189,7 @@ void Server::main()
 		read_threads[i] = std::thread(&Server::read_loop, this);
 	}
 	
+	set_timer_millis(1000, std::bind(&Server::print_stats, this));
 	set_timer_millis(10 * 1000, std::bind(&Server::check_rewrite, this));
 	
 	rewrite.timer = add_timer(std::bind(&Server::rewrite_func, this));
@@ -241,6 +242,7 @@ void Server::get_value_async(	const Variant& key,
 		block->num_pending++;
 	}
 	read_condition.notify_one();
+	num_bytes_read += index.num_bytes;
 }
 
 void Server::get_values_async(	const std::vector<Variant>& keys,
@@ -277,6 +279,7 @@ void Server::get_values_async(	const std::vector<Variant>& keys,
 			block->num_pending++;
 		}
 		read_condition.notify_one();
+		num_bytes_read += index.num_bytes;
 	}
 }
 
@@ -547,6 +550,16 @@ void Server::write_index()
 	}
 }
 
+void Server::print_stats()
+{
+	log(INFO).out << read_counter << " reads/s, " << num_bytes_read/1024 << " KB/s read, "
+			<< write_counter << " writes/s, " << num_bytes_written/1024 << " KB/s write";
+	read_counter = 0;
+	write_counter = 0;
+	num_bytes_read = 0;
+	num_bytes_written = 0;
+}
+
 void Server::read_loop()
 {
 	const int page_size = ::sysconf(_SC_PAGE_SIZE);
@@ -578,7 +591,6 @@ void Server::read_loop()
 				catch(...) {
 					// ignore for now
 				}
-				num_bytes_read += request.num_bytes;
 			}
 		}
 		request.block->num_pending--;

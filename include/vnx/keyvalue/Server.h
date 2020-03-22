@@ -96,6 +96,8 @@ private:
 	
 	void write_index();
 	
+	void print_stats();
+	
 	void read_loop();
 	
 private:
@@ -112,10 +114,10 @@ private:
 	mutable std::queue<read_item_t> read_queue;
 	
 	mutable uint64_t read_counter = 0;
-	mutable std::atomic<uint64_t> num_bytes_read;
+	mutable uint64_t num_bytes_read = 0;
 	
 	uint64_t write_counter = 0;
-	std::atomic<uint64_t> num_bytes_written;
+	uint64_t num_bytes_written = 0;
 	
 	struct rewrite_t {
 		std::shared_ptr<block_t> block;
