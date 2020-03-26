@@ -60,7 +60,7 @@ void Server::main()
 		}
 	}
 	
-	for(const int64_t block_index : coll_index->block_list)
+	for(const auto block_index : coll_index->block_list)
 	{
 		log(INFO).out << "Reading block " << block_index << " ...";
 		
@@ -177,7 +177,7 @@ void Server::main()
 		add_new_block();
 	} else {
 		auto block = get_current_block();
-		auto out_pos = block->value_file.get_output_pos();
+		const auto out_pos = block->value_file.get_output_pos();
 		block->value_file.open("rb+");
 		block->value_file.seek_to(out_pos);
 	}

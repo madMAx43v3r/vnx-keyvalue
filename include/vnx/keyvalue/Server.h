@@ -12,7 +12,6 @@
 #include <vnx/keyvalue/Collection.hxx>
 
 #include <vnx/File.h>
-#include <vnx/Buffer.h>
 
 #include <atomic>
 #include <unordered_map>
