@@ -224,25 +224,30 @@ void Server::get_value_async(	const Variant& key,
 								const std::function<void(const std::shared_ptr<const Value>&)>& callback,
 								const vnx::request_id_t& request_id) const
 {
-	auto index = get_key_index(key);
-	auto block = get_block(index.block_index);
-	
-	auto result = std::make_shared<read_result_t>();
-	result->callback = callback;
-	
-	read_item_t item;
-	item.block = block;
-	item.fd = ::fileno(block->value_file.get_handle());
-	item.offset = index.block_offset;
-	item.num_bytes = index.num_bytes;
-	item.result = result;
-	{
-		std::lock_guard<std::mutex> lock(read_mutex);
-		read_queue.push(item);
-		block->num_pending++;
+	try {
+		auto index = get_key_index(key);
+		auto block = get_block(index.block_index);
+		
+		auto result = std::make_shared<read_result_t>();
+		result->callback = callback;
+		
+		read_item_t item;
+		item.block = block;
+		item.fd = ::fileno(block->value_file.get_handle());
+		item.offset = index.block_offset;
+		item.num_bytes = index.num_bytes;
+		item.result = result;
+		{
+			std::lock_guard<std::mutex> lock(read_mutex);
+			read_queue.push(item);
+			block->num_pending++;
+		}
+		read_condition.notify_one();
+		num_bytes_read += index.num_bytes;
 	}
-	read_condition.notify_one();
-	num_bytes_read += index.num_bytes;
+	catch(const std::exception& ex) {
+		callback(0);
+	}
 }
 
 void Server::get_values_async(	const std::vector<Variant>& keys,
