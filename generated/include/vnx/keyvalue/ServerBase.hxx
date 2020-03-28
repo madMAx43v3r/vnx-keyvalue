@@ -6,6 +6,7 @@
 
 #include <vnx/keyvalue/package.hxx>
 #include <vnx/Module.h>
+#include <vnx/TopicPtr.h>
 #include <vnx/Value.h>
 #include <vnx/Variant.h>
 
@@ -16,6 +17,7 @@ namespace keyvalue {
 class ServerBase : public ::vnx::Module {
 public:
 	
+	::vnx::TopicPtr update_topic;
 	::std::string collection = "storage";
 	::std::string storage_path;
 	::int64_t max_block_size = 268435456;
@@ -49,10 +51,12 @@ public:
 	static std::shared_ptr<vnx::TypeCode> static_create_type_code();
 	
 protected:
+	virtual void block_sync_finished(const ::int64_t& job_id) = 0;
 	virtual void delete_value(const ::vnx::Variant& key) = 0;
 	virtual void get_value_async(const ::vnx::Variant& key, const std::function<void(const ::std::shared_ptr<const ::vnx::Value>&)>& _callback, const vnx::request_id_t& _request_id) const = 0;
 	virtual void get_values_async(const ::std::vector<::vnx::Variant>& keys, const std::function<void(const ::std::vector<::std::shared_ptr<const ::vnx::Value>>&)>& _callback, const vnx::request_id_t& _request_id) const = 0;
 	virtual void store_value(const ::vnx::Variant& key, const ::std::shared_ptr<const ::vnx::Value>& value) = 0;
+	virtual void sync_all(const ::vnx::TopicPtr& topic) = 0;
 	
 	void vnx_handle_switch(std::shared_ptr<const ::vnx::Sample> _sample) override;
 	std::shared_ptr<vnx::Value> vnx_call_switch(vnx::TypeInput& _in, const vnx::TypeCode* _call_type, const vnx::request_id_t& _request_id) override;

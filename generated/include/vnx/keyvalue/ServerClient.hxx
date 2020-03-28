@@ -6,6 +6,7 @@
 
 #include <vnx/Client.h>
 #include <vnx/Module.h>
+#include <vnx/TopicPtr.h>
 #include <vnx/Value.h>
 #include <vnx/Variant.h>
 
@@ -19,6 +20,10 @@ public:
 	
 	ServerClient(vnx::Hash64 service_addr);
 	
+	void block_sync_finished(const ::int64_t& job_id);
+	
+	void block_sync_finished_async(const ::int64_t& job_id);
+	
 	void delete_value(const ::vnx::Variant& key);
 	
 	void delete_value_async(const ::vnx::Variant& key);
@@ -30,6 +35,10 @@ public:
 	void store_value(const ::vnx::Variant& key, const ::std::shared_ptr<const ::vnx::Value>& value);
 	
 	void store_value_async(const ::vnx::Variant& key, const ::std::shared_ptr<const ::vnx::Value>& value);
+	
+	void sync_all(const ::vnx::TopicPtr& topic);
+	
+	void sync_all_async(const ::vnx::TopicPtr& topic);
 	
 };
 

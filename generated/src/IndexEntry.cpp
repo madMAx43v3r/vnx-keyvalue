@@ -15,7 +15,7 @@ namespace keyvalue {
 
 
 const vnx::Hash64 IndexEntry::VNX_TYPE_HASH(0xbcae33addff34e23ull);
-const vnx::Hash64 IndexEntry::VNX_CODE_HASH(0xaad921e8449a8206ull);
+const vnx::Hash64 IndexEntry::VNX_CODE_HASH(0x69531dbc2d15dd1eull);
 
 vnx::Hash64 IndexEntry::get_type_hash() const {
 	return VNX_TYPE_HASH;
@@ -48,14 +48,16 @@ void IndexEntry::accept(vnx::Visitor& _visitor) const {
 	const vnx::TypeCode* _type_code = vnx::keyvalue::vnx_native_type_code_IndexEntry;
 	_visitor.type_begin(*_type_code);
 	_visitor.type_field(_type_code->fields[0], 0); vnx::accept(_visitor, key);
-	_visitor.type_field(_type_code->fields[1], 1); vnx::accept(_visitor, block_offset);
-	_visitor.type_field(_type_code->fields[2], 2); vnx::accept(_visitor, num_bytes);
+	_visitor.type_field(_type_code->fields[1], 1); vnx::accept(_visitor, version);
+	_visitor.type_field(_type_code->fields[2], 2); vnx::accept(_visitor, block_offset);
+	_visitor.type_field(_type_code->fields[3], 3); vnx::accept(_visitor, num_bytes);
 	_visitor.type_end(*_type_code);
 }
 
 void IndexEntry::write(std::ostream& _out) const {
 	_out << "{";
 	_out << "\"key\": "; vnx::write(_out, key);
+	_out << ", \"version\": "; vnx::write(_out, version);
 	_out << ", \"block_offset\": "; vnx::write(_out, block_offset);
 	_out << ", \"num_bytes\": "; vnx::write(_out, num_bytes);
 	_out << "}";
@@ -71,6 +73,8 @@ void IndexEntry::read(std::istream& _in) {
 			vnx::from_string(_entry.second, key);
 		} else if(_entry.first == "num_bytes") {
 			vnx::from_string(_entry.second, num_bytes);
+		} else if(_entry.first == "version") {
+			vnx::from_string(_entry.second, version);
 		}
 	}
 }
@@ -78,6 +82,7 @@ void IndexEntry::read(std::istream& _in) {
 vnx::Object IndexEntry::to_object() const {
 	vnx::Object _object;
 	_object["key"] = key;
+	_object["version"] = version;
 	_object["block_offset"] = block_offset;
 	_object["num_bytes"] = num_bytes;
 	return _object;
@@ -91,6 +96,8 @@ void IndexEntry::from_object(const vnx::Object& _object) {
 			_entry.second.to(key);
 		} else if(_entry.first == "num_bytes") {
 			_entry.second.to(num_bytes);
+		} else if(_entry.first == "version") {
+			_entry.second.to(version);
 		}
 	}
 }
@@ -119,11 +126,11 @@ std::shared_ptr<vnx::TypeCode> IndexEntry::static_create_type_code() {
 	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>(true);
 	type_code->name = "vnx.keyvalue.IndexEntry";
 	type_code->type_hash = vnx::Hash64(0xbcae33addff34e23ull);
-	type_code->code_hash = vnx::Hash64(0xaad921e8449a8206ull);
+	type_code->code_hash = vnx::Hash64(0x69531dbc2d15dd1eull);
 	type_code->is_class = true;
 	type_code->create_value = []() -> std::shared_ptr<vnx::Value> { return std::make_shared<IndexEntry>(); };
 	type_code->methods.resize(0);
-	type_code->fields.resize(3);
+	type_code->fields.resize(4);
 	{
 		vnx::TypeField& field = type_code->fields[0];
 		field.is_extended = true;
@@ -132,12 +139,17 @@ std::shared_ptr<vnx::TypeCode> IndexEntry::static_create_type_code() {
 	}
 	{
 		vnx::TypeField& field = type_code->fields[1];
+		field.name = "version";
+		field.code = {4};
+	}
+	{
+		vnx::TypeField& field = type_code->fields[2];
 		field.name = "block_offset";
 		field.value = vnx::to_string(-1);
 		field.code = {8};
 	}
 	{
-		vnx::TypeField& field = type_code->fields[2];
+		vnx::TypeField& field = type_code->fields[3];
 		field.name = "num_bytes";
 		field.code = {8};
 	}
@@ -168,11 +180,17 @@ void read(TypeInput& in, ::vnx::keyvalue::IndexEntry& value, const TypeCode* typ
 		{
 			const vnx::TypeField* const _field = type_code->field_map[1];
 			if(_field) {
-				vnx::read_value(_buf + _field->offset, value.block_offset, _field->code.data());
+				vnx::read_value(_buf + _field->offset, value.version, _field->code.data());
 			}
 		}
 		{
 			const vnx::TypeField* const _field = type_code->field_map[2];
+			if(_field) {
+				vnx::read_value(_buf + _field->offset, value.block_offset, _field->code.data());
+			}
+		}
+		{
+			const vnx::TypeField* const _field = type_code->field_map[3];
 			if(_field) {
 				vnx::read_value(_buf + _field->offset, value.num_bytes, _field->code.data());
 			}
@@ -195,9 +213,10 @@ void write(TypeOutput& out, const ::vnx::keyvalue::IndexEntry& value, const Type
 	if(code && code[0] == CODE_STRUCT) {
 		type_code = type_code->depends[code[1]];
 	}
-	char* const _buf = out.write(16);
-	vnx::write_value(_buf + 0, value.block_offset);
-	vnx::write_value(_buf + 8, value.num_bytes);
+	char* const _buf = out.write(24);
+	vnx::write_value(_buf + 0, value.version);
+	vnx::write_value(_buf + 8, value.block_offset);
+	vnx::write_value(_buf + 16, value.num_bytes);
 	vnx::write(out, value.key, type_code, type_code->fields[0].code.data());
 }
 

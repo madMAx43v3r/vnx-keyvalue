@@ -20,6 +20,25 @@ ServerClient::ServerClient(vnx::Hash64 service_addr)
 {
 }
 
+void ServerClient::block_sync_finished(const ::int64_t& job_id) {
+	std::shared_ptr<vnx::Binary> _argument_data = vnx::Binary::create();
+	vnx::BinaryOutputStream _stream_out(_argument_data.get());
+	vnx::TypeOutput _out(&_stream_out);
+	const vnx::TypeCode* _type_code = vnx::keyvalue::vnx_native_type_code_Server_block_sync_finished;
+	{
+		char* const _buf = _out.write(8);
+		vnx::write_value(_buf + 0, job_id);
+	}
+	_out.flush();
+	_argument_data->type_code = _type_code;
+	vnx_request(_argument_data);
+}
+
+void ServerClient::block_sync_finished_async(const ::int64_t& job_id) {
+	vnx_is_async = true;
+	block_sync_finished(job_id);
+}
+
 void ServerClient::delete_value(const ::vnx::Variant& key) {
 	std::shared_ptr<vnx::Binary> _argument_data = vnx::Binary::create();
 	vnx::BinaryOutputStream _stream_out(_argument_data.get());
@@ -115,6 +134,24 @@ void ServerClient::store_value(const ::vnx::Variant& key, const ::std::shared_pt
 void ServerClient::store_value_async(const ::vnx::Variant& key, const ::std::shared_ptr<const ::vnx::Value>& value) {
 	vnx_is_async = true;
 	store_value(key, value);
+}
+
+void ServerClient::sync_all(const ::vnx::TopicPtr& topic) {
+	std::shared_ptr<vnx::Binary> _argument_data = vnx::Binary::create();
+	vnx::BinaryOutputStream _stream_out(_argument_data.get());
+	vnx::TypeOutput _out(&_stream_out);
+	const vnx::TypeCode* _type_code = vnx::keyvalue::vnx_native_type_code_Server_sync_all;
+	{
+		vnx::write(_out, topic, _type_code, _type_code->fields[0].code.data());
+	}
+	_out.flush();
+	_argument_data->type_code = _type_code;
+	vnx_request(_argument_data);
+}
+
+void ServerClient::sync_all_async(const ::vnx::TopicPtr& topic) {
+	vnx_is_async = true;
+	sync_all(topic);
 }
 
 

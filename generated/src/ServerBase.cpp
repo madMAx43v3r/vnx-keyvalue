@@ -18,7 +18,7 @@ namespace keyvalue {
 
 
 const vnx::Hash64 ServerBase::VNX_TYPE_HASH(0xbb28aa6f1d808048ull);
-const vnx::Hash64 ServerBase::VNX_CODE_HASH(0xd430522da5c53a64ull);
+const vnx::Hash64 ServerBase::VNX_CODE_HASH(0xe1a5eb09102c2bd3ull);
 
 ServerBase::ServerBase(const std::string& _vnx_name)
 	:	Module::Module(_vnx_name)
@@ -29,6 +29,7 @@ ServerBase::ServerBase(const std::string& _vnx_name)
 	vnx::read_config(vnx_name + ".num_read_threads", num_read_threads);
 	vnx::read_config(vnx_name + ".rewrite_threshold", rewrite_threshold);
 	vnx::read_config(vnx_name + ".storage_path", storage_path);
+	vnx::read_config(vnx_name + ".update_topic", update_topic);
 }
 
 vnx::Hash64 ServerBase::get_type_hash() const {
@@ -45,18 +46,20 @@ const vnx::TypeCode* ServerBase::get_type_code() const {
 void ServerBase::accept(vnx::Visitor& _visitor) const {
 	const vnx::TypeCode* _type_code = vnx::keyvalue::vnx_native_type_code_Server;
 	_visitor.type_begin(*_type_code);
-	_visitor.type_field(_type_code->fields[0], 0); vnx::accept(_visitor, collection);
-	_visitor.type_field(_type_code->fields[1], 1); vnx::accept(_visitor, storage_path);
-	_visitor.type_field(_type_code->fields[2], 2); vnx::accept(_visitor, max_block_size);
-	_visitor.type_field(_type_code->fields[3], 3); vnx::accept(_visitor, rewrite_threshold);
-	_visitor.type_field(_type_code->fields[4], 4); vnx::accept(_visitor, num_read_threads);
-	_visitor.type_field(_type_code->fields[5], 5); vnx::accept(_visitor, do_verify_rewrite);
+	_visitor.type_field(_type_code->fields[0], 0); vnx::accept(_visitor, update_topic);
+	_visitor.type_field(_type_code->fields[1], 1); vnx::accept(_visitor, collection);
+	_visitor.type_field(_type_code->fields[2], 2); vnx::accept(_visitor, storage_path);
+	_visitor.type_field(_type_code->fields[3], 3); vnx::accept(_visitor, max_block_size);
+	_visitor.type_field(_type_code->fields[4], 4); vnx::accept(_visitor, rewrite_threshold);
+	_visitor.type_field(_type_code->fields[5], 5); vnx::accept(_visitor, num_read_threads);
+	_visitor.type_field(_type_code->fields[6], 6); vnx::accept(_visitor, do_verify_rewrite);
 	_visitor.type_end(*_type_code);
 }
 
 void ServerBase::write(std::ostream& _out) const {
 	_out << "{";
-	_out << "\"collection\": "; vnx::write(_out, collection);
+	_out << "\"update_topic\": "; vnx::write(_out, update_topic);
+	_out << ", \"collection\": "; vnx::write(_out, collection);
 	_out << ", \"storage_path\": "; vnx::write(_out, storage_path);
 	_out << ", \"max_block_size\": "; vnx::write(_out, max_block_size);
 	_out << ", \"rewrite_threshold\": "; vnx::write(_out, rewrite_threshold);
@@ -81,12 +84,15 @@ void ServerBase::read(std::istream& _in) {
 			vnx::from_string(_entry.second, rewrite_threshold);
 		} else if(_entry.first == "storage_path") {
 			vnx::from_string(_entry.second, storage_path);
+		} else if(_entry.first == "update_topic") {
+			vnx::from_string(_entry.second, update_topic);
 		}
 	}
 }
 
 vnx::Object ServerBase::to_object() const {
 	vnx::Object _object;
+	_object["update_topic"] = update_topic;
 	_object["collection"] = collection;
 	_object["storage_path"] = storage_path;
 	_object["max_block_size"] = max_block_size;
@@ -110,6 +116,8 @@ void ServerBase::from_object(const vnx::Object& _object) {
 			_entry.second.to(rewrite_threshold);
 		} else if(_entry.first == "storage_path") {
 			_entry.second.to(storage_path);
+		} else if(_entry.first == "update_topic") {
+			_entry.second.to(update_topic);
 		}
 	}
 }
@@ -138,8 +146,32 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>(true);
 	type_code->name = "vnx.keyvalue.Server";
 	type_code->type_hash = vnx::Hash64(0xbb28aa6f1d808048ull);
-	type_code->code_hash = vnx::Hash64(0xd430522da5c53a64ull);
-	type_code->methods.resize(4);
+	type_code->code_hash = vnx::Hash64(0xe1a5eb09102c2bd3ull);
+	type_code->methods.resize(6);
+	{
+		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>(true);
+		call_type->name = "vnx.keyvalue.Server.block_sync_finished";
+		call_type->type_hash = vnx::Hash64(0xba90ce7bfd371653ull);
+		call_type->code_hash = vnx::Hash64(0x1ea478ca41e18707ull);
+		call_type->is_method = true;
+		{
+			std::shared_ptr<vnx::TypeCode> return_type = std::make_shared<vnx::TypeCode>(true);
+			return_type->name = "vnx.keyvalue.Server.block_sync_finished.return";
+			return_type->type_hash = vnx::Hash64(0xe5d95a7b370db191ull);
+			return_type->code_hash = vnx::Hash64(0x2074747a5437b8f4ull);
+			return_type->is_return = true;
+			return_type->build();
+			call_type->return_type = vnx::register_type_code(return_type);
+		}
+		call_type->fields.resize(1);
+		{
+			vnx::TypeField& field = call_type->fields[0];
+			field.name = "job_id";
+			field.code = {8};
+		}
+		call_type->build();
+		type_code->methods[0] = vnx::register_type_code(call_type);
+	}
 	{
 		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>(true);
 		call_type->name = "vnx.keyvalue.Server.delete_value";
@@ -163,7 +195,7 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 			field.code = {17};
 		}
 		call_type->build();
-		type_code->methods[0] = vnx::register_type_code(call_type);
+		type_code->methods[1] = vnx::register_type_code(call_type);
 	}
 	{
 		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>(true);
@@ -195,7 +227,7 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 			field.code = {17};
 		}
 		call_type->build();
-		type_code->methods[1] = vnx::register_type_code(call_type);
+		type_code->methods[2] = vnx::register_type_code(call_type);
 	}
 	{
 		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>(true);
@@ -227,7 +259,7 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 			field.code = {12, 17};
 		}
 		call_type->build();
-		type_code->methods[2] = vnx::register_type_code(call_type);
+		type_code->methods[3] = vnx::register_type_code(call_type);
 	}
 	{
 		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>(true);
@@ -258,42 +290,73 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 			field.code = {16};
 		}
 		call_type->build();
-		type_code->methods[3] = vnx::register_type_code(call_type);
+		type_code->methods[4] = vnx::register_type_code(call_type);
 	}
-	type_code->fields.resize(6);
+	{
+		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>(true);
+		call_type->name = "vnx.keyvalue.Server.sync_all";
+		call_type->type_hash = vnx::Hash64(0x6173affeadaf11ddull);
+		call_type->code_hash = vnx::Hash64(0x3586a46e6beccaf2ull);
+		call_type->is_method = true;
+		{
+			std::shared_ptr<vnx::TypeCode> return_type = std::make_shared<vnx::TypeCode>(true);
+			return_type->name = "vnx.keyvalue.Server.sync_all.return";
+			return_type->type_hash = vnx::Hash64(0x964de09bdefcfc87ull);
+			return_type->code_hash = vnx::Hash64(0x95c5d36cbdabb501ull);
+			return_type->is_return = true;
+			return_type->build();
+			call_type->return_type = vnx::register_type_code(return_type);
+		}
+		call_type->fields.resize(1);
+		{
+			vnx::TypeField& field = call_type->fields[0];
+			field.is_extended = true;
+			field.name = "topic";
+			field.code = {12, 5};
+		}
+		call_type->build();
+		type_code->methods[5] = vnx::register_type_code(call_type);
+	}
+	type_code->fields.resize(7);
 	{
 		vnx::TypeField& field = type_code->fields[0];
+		field.is_extended = true;
+		field.name = "update_topic";
+		field.code = {12, 5};
+	}
+	{
+		vnx::TypeField& field = type_code->fields[1];
 		field.is_extended = true;
 		field.name = "collection";
 		field.value = vnx::to_string("storage");
 		field.code = {12, 5};
 	}
 	{
-		vnx::TypeField& field = type_code->fields[1];
+		vnx::TypeField& field = type_code->fields[2];
 		field.is_extended = true;
 		field.name = "storage_path";
 		field.code = {12, 5};
 	}
 	{
-		vnx::TypeField& field = type_code->fields[2];
+		vnx::TypeField& field = type_code->fields[3];
 		field.name = "max_block_size";
 		field.value = vnx::to_string(268435456);
 		field.code = {8};
 	}
 	{
-		vnx::TypeField& field = type_code->fields[3];
+		vnx::TypeField& field = type_code->fields[4];
 		field.name = "rewrite_threshold";
 		field.value = vnx::to_string(0.5);
 		field.code = {9};
 	}
 	{
-		vnx::TypeField& field = type_code->fields[4];
+		vnx::TypeField& field = type_code->fields[5];
 		field.name = "num_read_threads";
 		field.value = vnx::to_string(10);
 		field.code = {7};
 	}
 	{
-		vnx::TypeField& field = type_code->fields[5];
+		vnx::TypeField& field = type_code->fields[6];
 		field.name = "do_verify_rewrite";
 		field.value = vnx::to_string(false);
 		field.code = {1};
@@ -307,7 +370,33 @@ void ServerBase::vnx_handle_switch(std::shared_ptr<const ::vnx::Sample> _sample)
 }
 
 std::shared_ptr<vnx::Value> ServerBase::vnx_call_switch(vnx::TypeInput& _in, const vnx::TypeCode* _call_type, const vnx::request_id_t& _request_id) {
-	if(_call_type->type_hash == vnx::Hash64(0xf5f6c0eca92f8e82ull)) {
+	if(_call_type->type_hash == vnx::Hash64(0xba90ce7bfd371653ull)) {
+		::int64_t job_id = 0;
+		{
+			const char* const _buf = _in.read(_call_type->total_field_size);
+			if(_call_type->is_matched) {
+				{
+					const vnx::TypeField* const _field = _call_type->field_map[0];
+					if(_field) {
+						vnx::read_value(_buf + _field->offset, job_id, _field->code.data());
+					}
+				}
+			}
+			for(const vnx::TypeField* _field : _call_type->ext_fields) {
+				switch(_field->native_index) {
+					default: vnx::skip(_in, _call_type, _field->code.data());
+				}
+			}
+		}
+		block_sync_finished(job_id);
+		std::shared_ptr<vnx::Binary> _return_value;
+		{
+			const vnx::TypeCode* _return_type = vnx::keyvalue::vnx_native_type_code_Server_block_sync_finished_return;
+			_return_value = vnx::Binary::create();
+			_return_value->type_code = _return_type;
+		}
+		return _return_value;
+	} else if(_call_type->type_hash == vnx::Hash64(0xf5f6c0eca92f8e82ull)) {
 		::vnx::Variant key;
 		{
 			const char* const _buf = _in.read(_call_type->total_field_size);
@@ -381,6 +470,27 @@ std::shared_ptr<vnx::Value> ServerBase::vnx_call_switch(vnx::TypeInput& _in, con
 			_return_value->type_code = _return_type;
 		}
 		return _return_value;
+	} else if(_call_type->type_hash == vnx::Hash64(0x6173affeadaf11ddull)) {
+		::vnx::TopicPtr topic;
+		{
+			const char* const _buf = _in.read(_call_type->total_field_size);
+			if(_call_type->is_matched) {
+			}
+			for(const vnx::TypeField* _field : _call_type->ext_fields) {
+				switch(_field->native_index) {
+					case 0: vnx::read(_in, topic, _call_type, _field->code.data()); break;
+					default: vnx::skip(_in, _call_type, _field->code.data());
+				}
+			}
+		}
+		sync_all(topic);
+		std::shared_ptr<vnx::Binary> _return_value;
+		{
+			const vnx::TypeCode* _return_type = vnx::keyvalue::vnx_native_type_code_Server_sync_all_return;
+			_return_value = vnx::Binary::create();
+			_return_value->type_code = _return_type;
+		}
+		return _return_value;
 	}
 	auto _ex = vnx::NoSuchMethod::create();
 	_ex->method = _call_type->name;
@@ -432,25 +542,25 @@ void read(TypeInput& in, ::vnx::keyvalue::ServerBase& value, const TypeCode* typ
 	const char* const _buf = in.read(type_code->total_field_size);
 	if(type_code->is_matched) {
 		{
-			const vnx::TypeField* const _field = type_code->field_map[2];
+			const vnx::TypeField* const _field = type_code->field_map[3];
 			if(_field) {
 				vnx::read_value(_buf + _field->offset, value.max_block_size, _field->code.data());
 			}
 		}
 		{
-			const vnx::TypeField* const _field = type_code->field_map[3];
+			const vnx::TypeField* const _field = type_code->field_map[4];
 			if(_field) {
 				vnx::read_value(_buf + _field->offset, value.rewrite_threshold, _field->code.data());
 			}
 		}
 		{
-			const vnx::TypeField* const _field = type_code->field_map[4];
+			const vnx::TypeField* const _field = type_code->field_map[5];
 			if(_field) {
 				vnx::read_value(_buf + _field->offset, value.num_read_threads, _field->code.data());
 			}
 		}
 		{
-			const vnx::TypeField* const _field = type_code->field_map[5];
+			const vnx::TypeField* const _field = type_code->field_map[6];
 			if(_field) {
 				vnx::read_value(_buf + _field->offset, value.do_verify_rewrite, _field->code.data());
 			}
@@ -458,8 +568,9 @@ void read(TypeInput& in, ::vnx::keyvalue::ServerBase& value, const TypeCode* typ
 	}
 	for(const vnx::TypeField* _field : type_code->ext_fields) {
 		switch(_field->native_index) {
-			case 0: vnx::read(in, value.collection, type_code, _field->code.data()); break;
-			case 1: vnx::read(in, value.storage_path, type_code, _field->code.data()); break;
+			case 0: vnx::read(in, value.update_topic, type_code, _field->code.data()); break;
+			case 1: vnx::read(in, value.collection, type_code, _field->code.data()); break;
+			case 2: vnx::read(in, value.storage_path, type_code, _field->code.data()); break;
 			default: vnx::skip(in, type_code, _field->code.data());
 		}
 	}
@@ -479,8 +590,9 @@ void write(TypeOutput& out, const ::vnx::keyvalue::ServerBase& value, const Type
 	vnx::write_value(_buf + 8, value.rewrite_threshold);
 	vnx::write_value(_buf + 12, value.num_read_threads);
 	vnx::write_value(_buf + 16, value.do_verify_rewrite);
-	vnx::write(out, value.collection, type_code, type_code->fields[0].code.data());
-	vnx::write(out, value.storage_path, type_code, type_code->fields[1].code.data());
+	vnx::write(out, value.update_topic, type_code, type_code->fields[0].code.data());
+	vnx::write(out, value.collection, type_code, type_code->fields[1].code.data());
+	vnx::write(out, value.storage_path, type_code, type_code->fields[2].code.data());
 }
 
 void read(std::istream& in, ::vnx::keyvalue::ServerBase& value) {
