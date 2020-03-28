@@ -1,0 +1,12 @@
+package vnx.keyvalue;
+
+class SyncInfo {
+	
+	static const uint BEGIN = 1;
+	static const uint END = 2;
+	
+	string collection;
+	
+	uint code = 0;
+	
+}

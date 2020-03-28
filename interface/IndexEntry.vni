@@ -6,6 +6,8 @@ class IndexEntry {
 	
 	Variant key;
 	
+	ulong version;
+	
 	long block_offset = -1;
 	
 	long num_bytes;

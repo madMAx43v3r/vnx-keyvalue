@@ -2,8 +2,11 @@ package vnx.keyvalue;
 
 import vnx.Variant;
 import vnx.Value;
+import vnx.TopicPtr;
 
 module Server {
+	
+	vnx.TopicPtr update_topic;
 	
 	string collection = "storage";
 	
@@ -22,8 +25,13 @@ module Server {
 	
 	vector<Value*> get_values(vector<Variant> keys) const async;
 	
+	void sync_all(TopicPtr topic);
+	
 	void store_value(Variant key, Value* value);
 	
 	void delete_value(Variant key);
 	
+	// below internal use only
+	
+	void block_sync_finished(long job_id);
 }

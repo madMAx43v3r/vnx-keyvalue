@@ -37,9 +37,13 @@ protected:
 							const std::function<void(const std::vector<std::shared_ptr<const Value>>&)>& callback,
 							const vnx::request_id_t& request_id) const override;
 	
+	void sync_all(const TopicPtr& topic) override;
+	
 	void store_value(const Variant& key, const std::shared_ptr<const Value>& value) override;
 	
 	void delete_value(const Variant& key) override;
+	
+	void block_sync_finished(const int64_t& job_id) override;
 	
 private:
 	struct key_index_t {
@@ -70,11 +74,20 @@ private:
 	struct read_item_t {
 		std::shared_ptr<block_t> block;
 		uint32_t result_index = 0;
-		int fd = 0;
+		int fd = -1;
 		int64_t offset = 0;
 		size_t num_bytes = 0;
 		std::shared_ptr<read_result_t> result;
 		std::shared_ptr<read_result_many_t> result_many;
+	};
+	
+	struct sync_job_t {
+		int64_t id = -1;
+		TopicPtr topic;
+		std::thread thread;
+		std::shared_ptr<block_t> curr_block;
+		std::vector<std::shared_ptr<IndexEntry>> items;
+		int fd = -1;
 	};
 	
 	std::string get_file_path(const std::string& name, int64_t index) const;
@@ -87,7 +100,11 @@ private:
 	
 	std::shared_ptr<block_t> add_new_block();
 	
-	void delete_value(const Variant& key, const key_index_t& index);
+	key_index_t store_value_internal(const Variant& key, const std::shared_ptr<const Value>& value, uint64_t version);
+	
+	void block_sync_start(std::shared_ptr<sync_job_t> job);
+	
+	void delete_value_internal(const Variant& key, const key_index_t& index);
 	
 	void check_rewrite();
 	
@@ -99,11 +116,13 @@ private:
 	
 	void read_loop();
 	
+	void sync_loop(std::shared_ptr<const sync_job_t> job);
+	
 private:
+	uint64_t curr_version = 0;
 	std::shared_ptr<Collection> coll_index;
 	
 	std::map<int64_t, std::shared_ptr<block_t>> block_map;
-	
 	std::unordered_map<Variant, key_index_t> key_map;
 	
 	mutable std::mutex read_mutex;
@@ -126,6 +145,9 @@ private:
 	} rewrite;
 	
 	std::list<std::shared_ptr<block_t>> delete_list;
+	
+	int64_t next_sync_id = 0;
+	std::map<int64_t, std::shared_ptr<sync_job_t>> sync_jobs;
 	
 };
 

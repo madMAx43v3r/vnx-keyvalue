@@ -1,0 +1,16 @@
+package vnx.keyvalue;
+
+import vnx.Variant;
+import vnx.Value;
+
+class KeyValuePair {
+	
+	string collection;
+	
+	ulong version;
+	
+	Variant key;
+	
+	Value* value;
+	
+}

@@ -10,6 +10,9 @@
 #include <vnx/keyvalue/TypeEntry.hxx>
 #include <vnx/keyvalue/DeleteEntry.hxx>
 #include <vnx/keyvalue/CloseEntry.hxx>
+#include <vnx/keyvalue/KeyValuePair.hxx>
+#include <vnx/keyvalue/SyncInfo.hxx>
+#include <vnx/keyvalue/ServerClient.hxx>
 
 #include <sys/mman.h>
 #include <unistd.h>
@@ -59,6 +62,7 @@ void Server::main()
 			// ignore
 		}
 	}
+	coll_index->delete_list.clear();
 	
 	for(const auto block_index : coll_index->block_list)
 	{
@@ -93,6 +97,8 @@ void Server::main()
 						index.block_index = block_index;
 						index.block_offset = index_entry->block_offset;
 						index.num_bytes = index_entry->num_bytes;
+						
+						curr_version = std::max(curr_version, index_entry->version);
 						block->num_bytes_used += index_entry->num_bytes;
 						block->num_bytes_total += index_entry->num_bytes;
 					}
@@ -288,7 +294,85 @@ void Server::get_values_async(	const std::vector<Variant>& keys,
 	}
 }
 
-void Server::store_value(const Variant& key, const std::shared_ptr<const Value>& value)
+void Server::sync_all(const TopicPtr& topic)
+{
+	if(block_map.empty()) {
+		throw std::runtime_error("collection empty");
+	}
+	
+	auto job = std::make_shared<sync_job_t>();
+	job->id = next_sync_id++;
+	job->topic = topic;
+	job->curr_block = block_map.begin()->second;
+	sync_jobs[job->id] = job;
+	
+	auto info = SyncInfo::create();
+	info->collection = collection;
+	info->code = SyncInfo::BEGIN;
+	publish(info, topic, BLOCKING);
+	
+	block_sync_start(job);
+	log(INFO).out << "Started sync job " << job->id << " ...";
+}
+
+void Server::block_sync_start(std::shared_ptr<sync_job_t> job)
+{
+	auto block = job->curr_block;
+	job->items.clear();
+	{
+		auto key_stream = block->key_file.mmap_read();
+		TypeInput key_in(key_stream.get());
+		try {
+			while(vnx_do_run())
+			{
+				auto entry = vnx::read(key_in);
+				{
+					auto index_entry = std::dynamic_pointer_cast<IndexEntry>(entry);
+					if(index_entry) {
+						auto iter = key_map.find(index_entry->key);
+						if(iter != key_map.end()) {
+							if(iter->second.block_index == block->index) {
+								job->items.push_back(index_entry);
+							}
+						}
+					}
+				}
+			}
+		} catch(const std::underflow_error& ex) {
+			// all good
+		}
+	}
+	block->num_pending++;
+	job->fd = ::fileno(block->value_file.get_handle());
+	job->thread = std::thread(&Server::sync_loop, this, job);
+}
+
+void Server::block_sync_finished(const int64_t& job_id)
+{
+	auto iter = sync_jobs.find(job_id);
+	if(iter == sync_jobs.end()) {
+		return;
+	}
+	auto job = iter->second;
+	if(job->thread.joinable()) {
+		job->thread.join();
+	}
+	auto next = block_map.upper_bound(job->curr_block->index);
+	if(next != block_map.end()) {
+		job->curr_block = next->second;
+		block_sync_start(job);
+	} else {
+		auto info = SyncInfo::create();
+		info->collection = collection;
+		info->code = SyncInfo::END;
+		publish(info, job->topic, BLOCKING);
+		
+		log(INFO).out << "Finished sync job " << job->id;
+		sync_jobs.erase(iter);
+	}
+}
+
+Server::key_index_t Server::store_value_internal(const Variant& key, const std::shared_ptr<const Value>& value, uint64_t version)
 {
 	auto block = get_current_block();
 	if(!block) {
@@ -312,6 +396,7 @@ void Server::store_value(const Variant& key, const std::shared_ptr<const Value>&
 			}
 		}
 		entry.key = key;
+		entry.version = version;
 		entry.block_offset = value_out.get_output_pos();
 		vnx::write(value_out, value);
 		block->value_file.flush();
@@ -346,11 +431,32 @@ void Server::store_value(const Variant& key, const std::shared_ptr<const Value>&
 	block->num_bytes_used += entry.num_bytes;
 	block->num_bytes_total += entry.num_bytes;
 	
-	write_counter++;
-	num_bytes_written += entry.num_bytes;
-	
 	if(block->num_bytes_total >= max_block_size) {
 		add_new_block();
+	}
+	return index;
+}
+
+void Server::store_value(const Variant& key, const std::shared_ptr<const Value>& value)
+{
+	if(value)
+	{
+		const auto index = store_value_internal(key, value, curr_version + 1);
+		curr_version++;
+		
+		if(update_topic) {
+			auto pair = KeyValuePair::create();
+			pair->collection = collection;
+			pair->version = curr_version;
+			pair->key = key;
+			pair->value = value;
+			publish(pair, update_topic, BLOCKING);
+		}
+		write_counter++;
+		num_bytes_written += index.num_bytes;
+	}
+	else {
+		delete_value(key);
 	}
 }
 
@@ -360,11 +466,20 @@ void Server::delete_value(const Variant& key)
 	if(iter == key_map.end()) {
 		throw std::runtime_error("unknown key");
 	}
-	delete_value(key, iter->second);
+	delete_value_internal(key, iter->second);
+	
+	if(update_topic) {
+		auto pair = KeyValuePair::create();
+		pair->collection = collection;
+		pair->version = curr_version;
+		pair->key = key;
+		pair->value = 0;
+		publish(pair, update_topic, BLOCKING);
+	}
 	key_map.erase(iter);
 }
 
-void Server::delete_value(const Variant& key, const key_index_t& index)
+void Server::delete_value_internal(const Variant& key, const key_index_t& index)
 {
 	auto block = get_block(index.block_index);
 	auto& key_out = block->key_file.out;
@@ -499,7 +614,7 @@ void Server::rewrite_func()
 							auto stream = block->value_file.mmap_read(index_entry->block_offset, index_entry->num_bytes);
 							TypeInput value_in(stream.get());
 							auto value = vnx::read(value_in);
-							store_value(index_entry->key, value);
+							store_value_internal(index_entry->key, value, index_entry->version);
 							break;
 						}
 					}
@@ -588,14 +703,11 @@ void Server::read_loop()
 		std::shared_ptr<Value> value;
 		{
 			MappedMemoryInputStream stream(request.fd, request.num_bytes, request.offset);
-			if(stream.is_valid()) {
-				TypeInput in(&stream);
-				try {
-					value = vnx::read(in);
-				}
-				catch(...) {
-					// ignore for now
-				}
+			TypeInput in(&stream);
+			try {
+				value = vnx::read(in);
+			} catch(...) {
+				// ignore for now
 			}
 		}
 		request.block->num_pending--;
@@ -610,6 +722,36 @@ void Server::read_loop()
 			}
 		}
 	}
+}
+
+void Server::sync_loop(std::shared_ptr<const sync_job_t> job)
+{
+	Publisher publisher;
+	
+	for(const auto& entry : job->items)
+	{
+		std::shared_ptr<Value> value;
+		{
+			MappedMemoryInputStream stream(job->fd, entry->num_bytes, entry->block_offset);
+			TypeInput in(&stream);
+			try {
+				value = vnx::read(in);
+			} catch(...) {
+				// ignore for now
+			}
+		}
+		
+		auto pair = KeyValuePair::create();
+		pair->collection = collection;
+		pair->version = entry->version;
+		pair->key = entry->key;
+		pair->value = value;
+		publisher.publish(pair, job->topic, BLOCKING);
+	}
+	job->curr_block->num_pending--;
+	
+	ServerClient client(vnx_name);
+	client.block_sync_finished_async(job->id);
 }
 
 
