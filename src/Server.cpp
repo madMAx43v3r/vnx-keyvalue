@@ -249,10 +249,12 @@ void Server::get_value_async(	const Variant& key,
 			block->num_pending++;
 		}
 		read_condition.notify_one();
+		
+		read_counter++;
 		num_bytes_read += index.num_bytes;
 	}
 	catch(const std::exception& ex) {
-		callback(0);
+		callback(0);	// return null
 	}
 }
 
@@ -290,6 +292,8 @@ void Server::get_values_async(	const std::vector<Variant>& keys,
 			block->num_pending++;
 		}
 		read_condition.notify_one();
+		
+		read_counter++;
 		num_bytes_read += index.num_bytes;
 	}
 }
