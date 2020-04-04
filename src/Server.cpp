@@ -28,7 +28,7 @@ Server::Server(const std::string& _vnx_name)
 
 void Server::init()
 {
-	vnx::open_pipe(vnx_name, this, UNLIMITED);
+	vnx::open_pipe(vnx_name, this, max_queue_ms);
 }
 
 void Server::main()
