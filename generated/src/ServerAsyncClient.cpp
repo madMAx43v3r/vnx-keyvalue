@@ -245,6 +245,9 @@ void ServerAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_pt
 			}
 		}
 	}
+	else {
+		throw std::runtime_error("unknown return value");
+	}
 }
 
 

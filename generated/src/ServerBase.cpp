@@ -507,6 +507,7 @@ std::shared_ptr<vnx::Value> ServerBase::vnx_call_switch(vnx::TypeInput& _in, con
 		return _return_value;
 	}
 	auto _ex = vnx::NoSuchMethod::create();
+	_ex->dst_mac = vnx_request ? vnx_request->dst_mac : 0;
 	_ex->method = _call_type->name;
 	return _ex;
 }

@@ -20,17 +20,23 @@ public:
 	
 	ServerAsyncClient(vnx::Hash64 service_addr);
 	
-	uint64_t block_sync_finished(const ::int64_t& job_id, const std::function<void()>& _callback = std::function<void()>());
+	uint64_t block_sync_finished(const ::int64_t& job_id, 
+			const std::function<void()>& _callback = std::function<void()>());
 	
-	uint64_t delete_value(const ::vnx::Variant& key, const std::function<void()>& _callback = std::function<void()>());
+	uint64_t delete_value(const ::vnx::Variant& key, 
+			const std::function<void()>& _callback = std::function<void()>());
 	
-	uint64_t get_value(const ::vnx::Variant& key, const std::function<void(::std::shared_ptr<const ::vnx::Value>)>& _callback = std::function<void(::std::shared_ptr<const ::vnx::Value>)>());
+	uint64_t get_value(const ::vnx::Variant& key, 
+			const std::function<void(::std::shared_ptr<const ::vnx::Value>)>& _callback = std::function<void(::std::shared_ptr<const ::vnx::Value>)>());
 	
-	uint64_t get_values(const ::std::vector<::vnx::Variant>& keys, const std::function<void(::std::vector<::std::shared_ptr<const ::vnx::Value>>)>& _callback = std::function<void(::std::vector<::std::shared_ptr<const ::vnx::Value>>)>());
+	uint64_t get_values(const ::std::vector<::vnx::Variant>& keys, 
+			const std::function<void(::std::vector<::std::shared_ptr<const ::vnx::Value>>)>& _callback = std::function<void(::std::vector<::std::shared_ptr<const ::vnx::Value>>)>());
 	
-	uint64_t store_value(const ::vnx::Variant& key, const ::std::shared_ptr<const ::vnx::Value>& value, const std::function<void()>& _callback = std::function<void()>());
+	uint64_t store_value(const ::vnx::Variant& key, const ::std::shared_ptr<const ::vnx::Value>& value, 
+			const std::function<void()>& _callback = std::function<void()>());
 	
-	uint64_t sync_all(const ::vnx::TopicPtr& topic, const std::function<void()>& _callback = std::function<void()>());
+	uint64_t sync_all(const ::vnx::TopicPtr& topic, 
+			const std::function<void()>& _callback = std::function<void()>());
 	
 	std::vector<uint64_t> vnx_get_pending_ids() const override;
 	
