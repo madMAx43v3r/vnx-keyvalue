@@ -243,7 +243,7 @@ void Server::enqueue_read(	std::shared_ptr<block_t> block,
 	{
 		std::unique_lock<std::mutex> lock(read_mutex);
 		while(vnx_do_run() && read_queue.size() > num_read_threads) {
-			read_condition.wait(lock);
+			notify_condition.wait(lock);
 		}
 		if(!vnx_do_run()) {
 			return;
@@ -702,6 +702,7 @@ void Server::read_loop()
 				break;
 			}
 		}
+		notify_condition.notify_all();
 		
 		std::shared_ptr<Value> value;
 		{
