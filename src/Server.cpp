@@ -226,6 +226,37 @@ void Server::main()
 	}
 }
 
+void Server::enqueue_read(	std::shared_ptr<block_t> block,
+							const key_index_t& index,
+							std::shared_ptr<read_result_t> result,
+							std::shared_ptr<read_result_many_t> result_many,
+							uint32_t result_index) const
+{
+	read_item_t item;
+	item.block = block;
+	item.result_index = result_index;
+	item.fd = ::fileno(block->value_file.get_handle());
+	item.offset = index.block_offset;
+	item.num_bytes = index.num_bytes;
+	item.result = result;
+	item.result_many = result_many;
+	{
+		std::unique_lock<std::mutex> lock(read_mutex);
+		while(vnx_do_run() && read_queue.size() > num_read_threads) {
+			read_condition.wait(lock);
+		}
+		if(!vnx_do_run()) {
+			return;
+		}
+		read_queue.emplace(std::move(item));
+		block->num_pending++;
+	}
+	read_condition.notify_one();
+	
+	read_counter++;
+	num_bytes_read += index.num_bytes;
+}
+
 void Server::get_value_async(	const Variant& key,
 								const std::function<void(const std::shared_ptr<const Value>&)>& callback,
 								const vnx::request_id_t& request_id) const
@@ -237,21 +268,7 @@ void Server::get_value_async(	const Variant& key,
 		auto result = std::make_shared<read_result_t>();
 		result->callback = callback;
 		
-		read_item_t item;
-		item.block = block;
-		item.fd = ::fileno(block->value_file.get_handle());
-		item.offset = index.block_offset;
-		item.num_bytes = index.num_bytes;
-		item.result = result;
-		{
-			std::lock_guard<std::mutex> lock(read_mutex);
-			read_queue.push(item);
-			block->num_pending++;
-		}
-		read_condition.notify_one();
-		
-		read_counter++;
-		num_bytes_read += index.num_bytes;
+		enqueue_read(block, index, result);
 	}
 	catch(const std::exception& ex) {
 		callback(0);	// return null
@@ -267,34 +284,16 @@ void Server::get_values_async(	const std::vector<Variant>& keys,
 	result->num_left = keys.size();
 	result->values.resize(keys.size());
 	
-	for(size_t i = 0; i < keys.size(); ++i)
-	{
-		key_index_t index;
-		std::shared_ptr<block_t> block;
+	for(size_t i = 0; i < keys.size(); ++i) {
 		try {
-			index = get_key_index(keys[i]);
-			block = get_block(index.block_index);
+			auto index = get_key_index(keys[i]);
+			auto block = get_block(index.block_index);
+			
+			enqueue_read(block, index, 0, result, i);
 		}
 		catch(...) {
-			continue;
+			// ignore
 		}
-		
-		read_item_t item;
-		item.block = block;
-		item.result_index = i;
-		item.fd = ::fileno(block->value_file.get_handle());
-		item.offset = index.block_offset;
-		item.num_bytes = index.num_bytes;
-		item.result_many = result;
-		{
-			std::lock_guard<std::mutex> lock(read_mutex);
-			read_queue.push(item);
-			block->num_pending++;
-		}
-		read_condition.notify_one();
-		
-		read_counter++;
-		num_bytes_read += index.num_bytes;
 	}
 }
 

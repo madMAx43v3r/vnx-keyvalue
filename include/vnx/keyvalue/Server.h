@@ -100,6 +100,12 @@ private:
 	
 	std::shared_ptr<block_t> add_new_block();
 	
+	void enqueue_read(	std::shared_ptr<block_t> block,
+						const key_index_t& index,
+						std::shared_ptr<read_result_t> result,
+						std::shared_ptr<read_result_many_t> result_many = 0,
+						uint32_t result_index = 0) const;
+	
 	key_index_t store_value_internal(const Variant& key, const std::shared_ptr<const Value>& value, uint64_t version);
 	
 	void block_sync_start(std::shared_ptr<sync_job_t> job);
