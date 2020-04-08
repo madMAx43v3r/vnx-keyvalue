@@ -186,6 +186,7 @@ void Server::main()
 		const auto out_pos = block->value_file.get_output_pos();
 		block->value_file.open("rb+");
 		block->value_file.seek_to(out_pos);
+		log(INFO).out << "Got " << key_map.size() << " entries.";
 	}
 	
 	write_index();

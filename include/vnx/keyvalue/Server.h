@@ -48,7 +48,7 @@ protected:
 private:
 	struct key_index_t {
 		int64_t block_index = -1;
-		int64_t block_offset = -1;
+		int64_t block_offset = 0;
 		int64_t num_bytes = 0;
 	};
 	
