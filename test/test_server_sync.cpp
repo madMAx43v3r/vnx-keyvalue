@@ -46,12 +46,13 @@ protected:
 						}
 						if(info->code == vnx::keyvalue::SyncInfo::END) {
 							vnx::log_info().out << "Sync END";
+							break;
 						}
 					}
 					auto pair = std::dynamic_pointer_cast<const vnx::keyvalue::KeyValuePair>(sample->value);
 					if(pair) {
 						counter++;
-						if(counter % 100 == 0) {
+						if(counter % 1000 == 0) {
 							vnx::log_info().out << "Got " << counter << " values";
 						}
 					}
@@ -60,6 +61,7 @@ protected:
 				break;
 			}
 		}
+		vnx::log_info().out << "Got " << counter << " values total.";
 	}
 	
 };
