@@ -727,6 +727,7 @@ void Server::read_loop()
 			}
 		}
 	}
+	notify_condition.notify_all();
 }
 
 void Server::sync_loop(std::shared_ptr<const sync_job_t> job)
