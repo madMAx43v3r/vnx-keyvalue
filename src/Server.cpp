@@ -335,7 +335,9 @@ void Server::block_sync_start(std::shared_ptr<sync_job_t> job)
 					if(index_entry) {
 						auto iter = key_map.find(index_entry->key);
 						if(iter != key_map.end()) {
-							if(iter->second.block_index == block->index) {
+							if(iter->second.block_index == block->index
+								&& iter->second.block_offset == index_entry->block_offset)
+							{
 								job->items.push_back(index_entry);
 							}
 						}
