@@ -616,7 +616,9 @@ void Server::rewrite_func()
 				if(index_entry) {
 					auto iter = key_map.find(index_entry->key);
 					if(iter != key_map.end()) {
-						if(iter->second.block_index == block->index) {
+						if(iter->second.block_index == block->index
+							&& iter->second.block_offset == index_entry->block_offset)
+						{
 							auto stream = block->value_file.mmap_read(index_entry->block_offset, index_entry->num_bytes);
 							TypeInput value_in(stream.get());
 							auto value = vnx::read(value_in);
