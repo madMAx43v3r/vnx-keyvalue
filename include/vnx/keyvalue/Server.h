@@ -133,7 +133,6 @@ private:
 	
 	mutable std::mutex read_mutex;
 	mutable std::condition_variable read_condition;
-	mutable std::condition_variable notify_condition;
 	
 	std::vector<std::thread> read_threads;
 	mutable std::queue<read_item_t> read_queue;

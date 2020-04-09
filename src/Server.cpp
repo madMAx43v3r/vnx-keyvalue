@@ -243,12 +243,6 @@ void Server::enqueue_read(	std::shared_ptr<block_t> block,
 	item.result_many = result_many;
 	{
 		std::unique_lock<std::mutex> lock(read_mutex);
-		while(vnx_do_run() && read_queue.size() > num_read_threads) {
-			notify_condition.wait(lock);
-		}
-		if(!vnx_do_run()) {
-			return;
-		}
 		read_queue.emplace(std::move(item));
 		block->num_pending++;
 	}
@@ -707,7 +701,6 @@ void Server::read_loop()
 				break;
 			}
 		}
-		notify_condition.notify_all();
 		
 		std::shared_ptr<Value> value;
 		{
@@ -731,7 +724,6 @@ void Server::read_loop()
 			}
 		}
 	}
-	notify_condition.notify_all();
 }
 
 void Server::sync_loop(std::shared_ptr<const sync_job_t> job)
