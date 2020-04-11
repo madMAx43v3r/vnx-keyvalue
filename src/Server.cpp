@@ -8,7 +8,6 @@
 #include <vnx/keyvalue/Server.h>
 #include <vnx/keyvalue/IndexEntry.hxx>
 #include <vnx/keyvalue/TypeEntry.hxx>
-#include <vnx/keyvalue/DeleteEntry.hxx>
 #include <vnx/keyvalue/CloseEntry.hxx>
 #include <vnx/keyvalue/KeyValuePair.hxx>
 #include <vnx/keyvalue/SyncInfo.hxx>
@@ -113,16 +112,6 @@ void Server::main()
 						curr_version = std::max(curr_version, index_entry->version);
 						block->num_bytes_used += index_entry->num_bytes;
 						block->num_bytes_total += index_entry->num_bytes;
-					}
-				}
-				{
-					auto delete_entry = std::dynamic_pointer_cast<DeleteEntry>(entry);
-					if(delete_entry) {
-						auto iter = key_map.find(delete_entry->key);
-						if(iter != key_map.end()) {
-							block->num_bytes_used -= iter->second.num_bytes;
-							key_map.erase(iter);
-						}
 					}
 				}
 				{
@@ -392,12 +381,14 @@ Server::key_index_t Server::store_value_internal(const Variant& key, const std::
 	
 	IndexEntry entry;
 	try {
-		auto type_code = value->get_type_code();
-		if(type_code) {
-			TypeEntry entry;
-			entry.block_offset = value_out.get_output_pos();
-			if(value_out.write_type_code(type_code)) {
-				vnx::write(key_out, entry);
+		if(value) {
+			auto type_code = value->get_type_code();
+			if(type_code) {
+				TypeEntry entry;
+				entry.block_offset = value_out.get_output_pos();
+				if(value_out.write_type_code(type_code)) {
+					vnx::write(key_out, entry);
+				}
 			}
 		}
 		entry.key = key;
@@ -444,34 +435,7 @@ Server::key_index_t Server::store_value_internal(const Variant& key, const std::
 
 void Server::store_value(const Variant& key, const std::shared_ptr<const Value>& value)
 {
-	if(value)
-	{
-		const auto index = store_value_internal(key, value, curr_version + 1);
-		curr_version++;
-		
-		if(update_topic) {
-			auto pair = KeyValuePair::create();
-			pair->collection = collection;
-			pair->version = curr_version;
-			pair->key = key;
-			pair->value = value;
-			publish(pair, update_topic, BLOCKING);
-		}
-		write_counter++;
-		num_bytes_written += index.num_bytes;
-	}
-	else {
-		delete_value(key);
-	}
-}
-
-void Server::delete_value(const Variant& key)
-{
-	auto iter = key_map.find(key);
-	if(iter == key_map.end()) {
-		throw std::runtime_error("unknown key");
-	}
-	delete_value_internal(key, iter->second, curr_version + 1);
+	const auto index = store_value_internal(key, value, curr_version + 1);
 	curr_version++;
 	
 	if(update_topic) {
@@ -479,30 +443,16 @@ void Server::delete_value(const Variant& key)
 		pair->collection = collection;
 		pair->version = curr_version;
 		pair->key = key;
-		pair->value = 0;
+		pair->value = value;
 		publish(pair, update_topic, BLOCKING);
 	}
-	key_map.erase(iter);
+	write_counter++;
+	num_bytes_written += index.num_bytes;
 }
 
-void Server::delete_value_internal(const Variant& key, const key_index_t& index, uint64_t version)
+void Server::delete_value(const Variant& key)
 {
-	auto block = get_current_block();
-	auto& key_out = block->key_file.out;
-	const int64_t prev_key_pos = key_out.get_output_pos();
-	try {
-		DeleteEntry entry;
-		entry.key = key;
-		entry.version = version;
-		vnx::write(key_out, entry);
-		block->key_file.flush();
-		block->num_bytes_used -= index.num_bytes;
-	}
-	catch(const std::exception& ex) {
-		block->key_file.seek_to(prev_key_pos);
-		log(WARN).out << "delete_value(): " << ex.what();
-		throw;
-	}
+	store_value(key, 0);
 }
 
 std::string Server::get_file_path(const std::string& name, int64_t index) const

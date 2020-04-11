@@ -114,8 +114,6 @@ private:
 	
 	void block_sync_start(std::shared_ptr<sync_job_t> job);
 	
-	void delete_value_internal(const Variant& key, const key_index_t& index, uint64_t version);
-	
 	void check_rewrite();
 	
 	void rewrite_func();
