@@ -5,7 +5,6 @@
 
 #include <vnx/keyvalue/CloseEntry.hxx>
 #include <vnx/keyvalue/Collection.hxx>
-#include <vnx/keyvalue/DeleteEntry.hxx>
 #include <vnx/keyvalue/IndexEntry.hxx>
 #include <vnx/keyvalue/KeyValuePair.hxx>
 #include <vnx/keyvalue/ServerBase.hxx>
@@ -21,7 +20,6 @@ namespace keyvalue {
 static void register_all_types() {
 	vnx::register_type_code(vnx::keyvalue::CloseEntry::static_create_type_code());
 	vnx::register_type_code(vnx::keyvalue::Collection::static_create_type_code());
-	vnx::register_type_code(vnx::keyvalue::DeleteEntry::static_create_type_code());
 	vnx::register_type_code(vnx::keyvalue::IndexEntry::static_create_type_code());
 	vnx::register_type_code(vnx::keyvalue::KeyValuePair::static_create_type_code());
 	vnx::register_type_code(vnx::keyvalue::ServerBase::static_create_type_code());
@@ -37,7 +35,6 @@ static struct vnx_static_init {
 
 const vnx::TypeCode* const vnx_native_type_code_CloseEntry = vnx::get_type_code(vnx::Hash64(0xc06cd9d036102eefull));
 const vnx::TypeCode* const vnx_native_type_code_Collection = vnx::get_type_code(vnx::Hash64(0xf1b6072fecc4ebf8ull));
-const vnx::TypeCode* const vnx_native_type_code_DeleteEntry = vnx::get_type_code(vnx::Hash64(0x9ab5cee749685660ull));
 const vnx::TypeCode* const vnx_native_type_code_IndexEntry = vnx::get_type_code(vnx::Hash64(0xbcae33addff34e23ull));
 const vnx::TypeCode* const vnx_native_type_code_KeyValuePair = vnx::get_type_code(vnx::Hash64(0xf87436237449d8afull));
 const vnx::TypeCode* const vnx_native_type_code_Server = vnx::get_type_code(vnx::Hash64(0xbb28aa6f1d808048ull));
