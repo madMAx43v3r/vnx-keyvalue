@@ -90,6 +90,8 @@ private:
 		int fd = -1;
 	};
 	
+	void lock_file_exclusive(const File& file);
+	
 	std::string get_file_path(const std::string& name, int64_t index) const;
 	
 	std::shared_ptr<block_t> get_current_block() const;

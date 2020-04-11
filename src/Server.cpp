@@ -15,6 +15,7 @@
 #include <vnx/keyvalue/ServerClient.hxx>
 
 #include <sys/mman.h>
+#include <sys/file.h>
 #include <unistd.h>
 
 
@@ -29,6 +30,14 @@ Server::Server(const std::string& _vnx_name)
 void Server::init()
 {
 	vnx::open_pipe(vnx_name, this, max_queue_ms);
+}
+
+void Server::lock_file_exclusive(const File& file)
+{
+	while(::flock(::fileno(file.get_handle()), LOCK_EX | LOCK_NB)) {
+		log(WARN).out << "Cannot lock file: '" << file.get_name() << "'";
+		::usleep(1000 * 1000);
+	}
 }
 
 void Server::main()
@@ -72,6 +81,8 @@ void Server::main()
 		block->index = block_index;
 		block->key_file.open(get_file_path("key", block_index), "rb+");
 		block->value_file.open(get_file_path("value", block_index), "rb");
+		lock_file_exclusive(block->key_file);
+		lock_file_exclusive(block->value_file);
 		block_map[block_index] = block;
 		
 		auto& key_in = block->key_file.in;
@@ -544,6 +555,9 @@ std::shared_ptr<Server::block_t> Server::add_new_block()
 		block->value_file.open("rb+");
 		block->key_file.seek_end();
 		block->value_file.seek_end();
+		
+		lock_file_exclusive(block->key_file);
+		lock_file_exclusive(block->value_file);
 		
 		block_map[block->index] = block;
 		write_index();
