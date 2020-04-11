@@ -16,6 +16,7 @@ class DeleteEntry : public ::vnx::Value {
 public:
 	
 	::vnx::Variant key;
+	::uint64_t version = 0;
 	
 	typedef ::vnx::Value Super;
 	

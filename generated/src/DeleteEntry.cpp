@@ -15,7 +15,7 @@ namespace keyvalue {
 
 
 const vnx::Hash64 DeleteEntry::VNX_TYPE_HASH(0x9ab5cee749685660ull);
-const vnx::Hash64 DeleteEntry::VNX_CODE_HASH(0xebbd6f4a00197af4ull);
+const vnx::Hash64 DeleteEntry::VNX_CODE_HASH(0x4b11c5ca778fac0cull);
 
 vnx::Hash64 DeleteEntry::get_type_hash() const {
 	return VNX_TYPE_HASH;
@@ -48,12 +48,14 @@ void DeleteEntry::accept(vnx::Visitor& _visitor) const {
 	const vnx::TypeCode* _type_code = vnx::keyvalue::vnx_native_type_code_DeleteEntry;
 	_visitor.type_begin(*_type_code);
 	_visitor.type_field(_type_code->fields[0], 0); vnx::accept(_visitor, key);
+	_visitor.type_field(_type_code->fields[1], 1); vnx::accept(_visitor, version);
 	_visitor.type_end(*_type_code);
 }
 
 void DeleteEntry::write(std::ostream& _out) const {
 	_out << "{";
 	_out << "\"key\": "; vnx::write(_out, key);
+	_out << ", \"version\": "; vnx::write(_out, version);
 	_out << "}";
 }
 
@@ -63,6 +65,8 @@ void DeleteEntry::read(std::istream& _in) {
 	for(const auto& _entry : _object) {
 		if(_entry.first == "key") {
 			vnx::from_string(_entry.second, key);
+		} else if(_entry.first == "version") {
+			vnx::from_string(_entry.second, version);
 		}
 	}
 }
@@ -70,6 +74,7 @@ void DeleteEntry::read(std::istream& _in) {
 vnx::Object DeleteEntry::to_object() const {
 	vnx::Object _object;
 	_object["key"] = key;
+	_object["version"] = version;
 	return _object;
 }
 
@@ -77,6 +82,8 @@ void DeleteEntry::from_object(const vnx::Object& _object) {
 	for(const auto& _entry : _object.field) {
 		if(_entry.first == "key") {
 			_entry.second.to(key);
+		} else if(_entry.first == "version") {
+			_entry.second.to(version);
 		}
 	}
 }
@@ -105,16 +112,21 @@ std::shared_ptr<vnx::TypeCode> DeleteEntry::static_create_type_code() {
 	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>(true);
 	type_code->name = "vnx.keyvalue.DeleteEntry";
 	type_code->type_hash = vnx::Hash64(0x9ab5cee749685660ull);
-	type_code->code_hash = vnx::Hash64(0xebbd6f4a00197af4ull);
+	type_code->code_hash = vnx::Hash64(0x4b11c5ca778fac0cull);
 	type_code->is_class = true;
 	type_code->create_value = []() -> std::shared_ptr<vnx::Value> { return std::make_shared<DeleteEntry>(); };
 	type_code->methods.resize(0);
-	type_code->fields.resize(1);
+	type_code->fields.resize(2);
 	{
 		vnx::TypeField& field = type_code->fields[0];
 		field.is_extended = true;
 		field.name = "key";
 		field.code = {17};
+	}
+	{
+		vnx::TypeField& field = type_code->fields[1];
+		field.name = "version";
+		field.code = {4};
 	}
 	type_code->build();
 	return type_code;
@@ -140,6 +152,12 @@ void read(TypeInput& in, ::vnx::keyvalue::DeleteEntry& value, const TypeCode* ty
 	}
 	const char* const _buf = in.read(type_code->total_field_size);
 	if(type_code->is_matched) {
+		{
+			const vnx::TypeField* const _field = type_code->field_map[1];
+			if(_field) {
+				vnx::read_value(_buf + _field->offset, value.version, _field->code.data());
+			}
+		}
 	}
 	for(const vnx::TypeField* _field : type_code->ext_fields) {
 		switch(_field->native_index) {
@@ -158,6 +176,8 @@ void write(TypeOutput& out, const ::vnx::keyvalue::DeleteEntry& value, const Typ
 	if(code && code[0] == CODE_STRUCT) {
 		type_code = type_code->depends[code[1]];
 	}
+	char* const _buf = out.write(8);
+	vnx::write_value(_buf + 0, value.version);
 	vnx::write(out, value.key, type_code, type_code->fields[0].code.data());
 }
 
