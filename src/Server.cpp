@@ -211,6 +211,12 @@ void Server::main()
 	
 	Super::main();
 	
+	for(const auto& entry : sync_jobs) {
+		if(entry.second->thread.joinable()) {
+			entry.second->thread.join();
+		}
+	}
+	
 	read_condition.notify_all();
 	for(auto& thread : read_threads) {
 		if(thread.joinable()) {
@@ -708,6 +714,9 @@ void Server::sync_loop(std::shared_ptr<const sync_job_t> job)
 	
 	for(const auto& entry : job->items)
 	{
+		if(!vnx_do_run()) {
+			break;
+		}
 		std::shared_ptr<Value> value;
 		{
 			MappedMemoryInputStream stream(job->fd, entry->num_bytes, entry->block_offset);
