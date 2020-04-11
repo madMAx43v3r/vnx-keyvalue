@@ -157,6 +157,8 @@ private:
 	int64_t next_sync_id = 0;
 	std::map<int64_t, std::shared_ptr<sync_job_t>> sync_jobs;
 	
+	static const int NUM_INDEX = 3;
+	
 };
 
 

@@ -42,8 +42,9 @@ void Server::lock_file_exclusive(const File& file)
 
 void Server::main()
 {
-	for(int i = 0; i < 3; ++i) {
-		coll_index = vnx::read_from_file<Collection>(get_file_path("index", i));
+	for(int i = 0; i < NUM_INDEX; ++i) {
+		const auto path = get_file_path("index", i);
+		coll_index = vnx::read_from_file<Collection>(path);
 		if(coll_index) {
 			break;
 		}
@@ -677,7 +678,7 @@ void Server::write_index()
 	for(const auto& entry : block_map) {
 		coll_index->block_list.push_back(entry.first);
 	}
-	for(int i = 0; i < 3; ++i) {
+	for(int i = 0; i < NUM_INDEX; ++i) {
 		try {
 			vnx::write_to_file(get_file_path("index", i), coll_index);
 		} catch(const std::exception& ex) {
