@@ -100,6 +100,8 @@ private:
 	
 	key_index_t get_key_index(const Variant& key) const;
 	
+	void close_block(std::shared_ptr<block_t> block);
+	
 	std::shared_ptr<block_t> add_new_block();
 	
 	void enqueue_read(	std::shared_ptr<block_t> block,
@@ -112,7 +114,7 @@ private:
 	
 	void block_sync_start(std::shared_ptr<sync_job_t> job);
 	
-	void delete_value_internal(const Variant& key, const key_index_t& index);
+	void delete_value_internal(const Variant& key, const key_index_t& index, uint64_t version);
 	
 	void check_rewrite();
 	

@@ -80,7 +80,7 @@ void Server::main()
 		
 		auto block = std::make_shared<block_t>();
 		block->index = block_index;
-		block->key_file.open(get_file_path("key", block_index), "rb+");
+		block->key_file.open(get_file_path("key", block_index), "rb");
 		block->value_file.open(get_file_path("value", block_index), "rb");
 		lock_file_exclusive(block->key_file);
 		lock_file_exclusive(block->value_file);
@@ -195,9 +195,16 @@ void Server::main()
 		add_new_block();
 	} else {
 		auto block = get_current_block();
-		const auto out_pos = block->value_file.get_output_pos();
-		block->value_file.open("rb+");
-		block->value_file.seek_to(out_pos);
+		{
+			const auto out_pos = block->key_file.get_output_pos();
+			block->key_file.open("rb+");
+			block->key_file.seek_to(out_pos);
+		}
+		{
+			const auto out_pos = block->value_file.get_output_pos();
+			block->value_file.open("rb+");
+			block->value_file.seek_to(out_pos);
+		}
 		log(INFO).out << "Got " << key_map.size() << " entries.";
 	}
 	
@@ -222,21 +229,7 @@ void Server::main()
 		}
 	}
 	
-	for(const auto& entry : block_map)
-	{
-		auto block = entry.second;
-		try {
-			CloseEntry entry;
-			entry.block_offset = block->value_file.get_output_pos();
-			vnx::write(block->key_file.out, entry);
-			block->key_file.flush();
-		}
-		catch(const std::exception& ex) {
-			log(ERROR).out << "Failed to close block " << block->index << ": " << ex.what();
-		}
-		block->key_file.close();
-		block->value_file.close();
-	}
+	close_block(get_current_block());
 }
 
 void Server::enqueue_read(	std::shared_ptr<block_t> block,
@@ -478,7 +471,8 @@ void Server::delete_value(const Variant& key)
 	if(iter == key_map.end()) {
 		throw std::runtime_error("unknown key");
 	}
-	delete_value_internal(key, iter->second);
+	delete_value_internal(key, iter->second, curr_version + 1);
+	curr_version++;
 	
 	if(update_topic) {
 		auto pair = KeyValuePair::create();
@@ -491,14 +485,15 @@ void Server::delete_value(const Variant& key)
 	key_map.erase(iter);
 }
 
-void Server::delete_value_internal(const Variant& key, const key_index_t& index)
+void Server::delete_value_internal(const Variant& key, const key_index_t& index, uint64_t version)
 {
-	auto block = get_block(index.block_index);
+	auto block = get_current_block();
 	auto& key_out = block->key_file.out;
 	const int64_t prev_key_pos = key_out.get_output_pos();
 	try {
 		DeleteEntry entry;
 		entry.key = key;
+		entry.version = version;
 		vnx::write(key_out, entry);
 		block->key_file.flush();
 		block->num_bytes_used -= index.num_bytes;
@@ -541,6 +536,19 @@ Server::key_index_t Server::get_key_index(const Variant& key) const
 	return iter->second;
 }
 
+void Server::close_block(std::shared_ptr<block_t> block)
+{
+	try {
+		CloseEntry entry;
+		entry.block_offset = block->value_file.get_output_pos();
+		vnx::write(block->key_file.out, entry);
+		block->key_file.flush();
+	}
+	catch(const std::exception& ex) {
+		log(ERROR).out << "Failed to close block " << block->index << ": " << ex.what();
+	}
+}
+
 std::shared_ptr<Server::block_t> Server::add_new_block()
 {
 	auto curr_block = get_current_block();
@@ -566,6 +574,9 @@ std::shared_ptr<Server::block_t> Server::add_new_block()
 	catch(const std::exception& ex) {
 		log(ERROR).out << "Failed to write new block " << block->index << ": " << ex.what();
 		return curr_block;
+	}
+	if(curr_block) {
+		close_block(curr_block);
 	}
 	log(INFO).out << "Added new block " << block->index;
 	return block;

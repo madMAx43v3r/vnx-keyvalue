@@ -6,4 +6,6 @@ class DeleteEntry {
 	
 	Variant key;
 	
+	ulong version;
+	
 }
