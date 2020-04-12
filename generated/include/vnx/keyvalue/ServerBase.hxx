@@ -22,6 +22,9 @@ public:
 	::std::string storage_path;
 	::int64_t max_block_size = 268435456;
 	::vnx::float32_t rewrite_threshold = 0.5;
+	::vnx::float32_t idle_rewrite_threshold = 0.9;
+	::int32_t rewrite_interval = 10;
+	::int32_t idle_rewrite_interval = 1000;
 	::int32_t num_read_threads = 10;
 	::int32_t max_queue_ms = 1000;
 	::vnx::bool_t do_verify_rewrite = false;
