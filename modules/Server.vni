@@ -24,8 +24,6 @@ module Server {
 	
 	int num_read_threads = 10;
 	
-	int max_queue_ms = 1000;
-	
 	bool do_verify_rewrite = false;
 	
 	
