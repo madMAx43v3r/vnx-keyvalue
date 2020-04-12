@@ -16,6 +16,12 @@ module Server {
 	
 	float rewrite_threshold = 0.5;
 	
+	float idle_rewrite_threshold = 0.9;
+	
+	int rewrite_interval = 10;
+	
+	int idle_rewrite_interval = 1000;
+	
 	int num_read_threads = 10;
 	
 	int max_queue_ms = 1000;

@@ -114,7 +114,7 @@ private:
 	
 	void block_sync_start(std::shared_ptr<sync_job_t> job);
 	
-	void check_rewrite();
+	void check_rewrite(bool is_idle);
 	
 	void rewrite_func();
 	

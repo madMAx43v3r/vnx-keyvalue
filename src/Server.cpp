@@ -205,7 +205,8 @@ void Server::main()
 	}
 	
 	set_timer_millis(1000, std::bind(&Server::print_stats, this));
-	set_timer_millis(10 * 1000, std::bind(&Server::check_rewrite, this));
+	set_timer_millis(rewrite_interval * 1000, std::bind(&Server::check_rewrite, this, false));
+	set_timer_millis(idle_rewrite_interval * 1000, std::bind(&Server::check_rewrite, this, true));
 	
 	rewrite.timer = add_timer(std::bind(&Server::rewrite_func, this));
 	
@@ -538,14 +539,14 @@ std::shared_ptr<Server::block_t> Server::add_new_block()
 	return block;
 }
 
-void Server::check_rewrite()
+void Server::check_rewrite(bool is_idle)
 {
 	if(!rewrite.block) {
 		for(auto entry : block_map) {
 			if(entry.first != get_current_block()->index) {
 				auto block = entry.second;
 				const double use_factor = double(block->num_bytes_used) / block->num_bytes_total;
-				if(use_factor < rewrite_threshold)
+				if(use_factor < rewrite_threshold || (is_idle && use_factor < idle_rewrite_threshold))
 				{
 					log(INFO).out << "Rewriting block " << block->index << " with use factor " << float(100 * use_factor) << " % ...";
 					rewrite.block = block;
@@ -632,11 +633,11 @@ void Server::rewrite_func()
 		rewrite.key_in = 0;
 		rewrite.key_stream = 0;
 		rewrite.block = 0;
+		check_rewrite(false);
 	}
 	catch(const std::exception& ex) {
 		log(ERROR).out << "Block " << block->index << " rewrite: " << ex.what();
 	}
-	check_rewrite();
 }
 
 void Server::write_index()
