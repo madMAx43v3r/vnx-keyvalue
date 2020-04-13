@@ -64,7 +64,7 @@ private:
 		int64_t index = -1;
 		int64_t num_bytes_used = 0;
 		int64_t num_bytes_total = 0;
-		std::atomic<size_t> num_pending;
+		std::atomic<size_t> num_pending {0};
 	};
 	
 	struct read_result_t {
@@ -72,7 +72,7 @@ private:
 	};
 	
 	struct read_result_many_t {
-		std::atomic<size_t> num_left;
+		std::atomic<size_t> num_left {0};
 		std::vector<std::shared_ptr<const Value>> values;
 		std::function<void(const std::vector<std::shared_ptr<const Value>>&)> callback;
 	};
@@ -145,11 +145,11 @@ private:
 	mutable std::queue<std::shared_ptr<KeyValuePair>> update_queue;
 	std::thread update_thread;
 	
-	mutable std::atomic<uint64_t> read_counter;
-	mutable std::atomic<uint64_t> num_bytes_read;
+	mutable std::atomic<uint64_t> read_counter {0};
+	mutable std::atomic<uint64_t> num_bytes_read {0};
 	
-	mutable std::atomic<uint64_t> write_counter;
-	mutable std::atomic<uint64_t> num_bytes_written;
+	mutable std::atomic<uint64_t> write_counter {0};
+	mutable std::atomic<uint64_t> num_bytes_written {0};
 	
 	struct rewrite_t {
 		std::shared_ptr<block_t> block;
