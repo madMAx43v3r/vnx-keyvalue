@@ -31,14 +31,6 @@ void Server::init()
 	vnx::open_pipe(vnx_name, this, max_queue_ms);
 }
 
-void Server::lock_file_exclusive(const File& file)
-{
-	while(::flock(::fileno(file.get_handle()), LOCK_EX | LOCK_NB)) {
-		log(WARN).out << "Cannot lock file: '" << file.get_name() << "'";
-		::usleep(1000 * 1000);
-	}
-}
-
 void Server::main()
 {
 	for(int i = 0; i < NUM_INDEX; ++i) {
@@ -100,18 +92,24 @@ void Server::main()
 				{
 					auto index_entry = std::dynamic_pointer_cast<IndexEntry>(entry);
 					if(index_entry) {
-						auto& index = key_map[index_entry->key];
-						if(index.block_index >= 0) {
-							auto old_block = get_block(index.block_index);
-							old_block->num_bytes_used -= index_entry->num_bytes;
+						auto& key_version = key_map[index_entry->key];
+						if(index_entry->version > key_version) {
+							if(key_version) {
+								delete_version(key_version);
+							}
+							key_version = index_entry->version;
+							
+							auto& index = index_map[index_entry->version];
+							index.block_index = block_index;
+							index.block_offset = index_entry->block_offset;
+							index.block_offset_key = prev_key_pos;
+							index.num_bytes = index_entry->num_bytes;
+							index.num_bytes_key = key_in.get_input_pos() - prev_key_pos;
+							
+							curr_version = std::max(curr_version, index_entry->version);
+							block->num_bytes_used += index_entry->num_bytes;
+							block->num_bytes_total += index_entry->num_bytes;
 						}
-						index.block_index = block_index;
-						index.block_offset = index_entry->block_offset;
-						index.num_bytes = index_entry->num_bytes;
-						
-						curr_version = std::max(curr_version, index_entry->version);
-						block->num_bytes_used += index_entry->num_bytes;
-						block->num_bytes_total += index_entry->num_bytes;
 					}
 				}
 				{
@@ -166,6 +164,15 @@ void Server::main()
 					break;
 				}
 			}
+			{
+				// TODO: test this
+				block->key_file.open("rb+");
+				block->key_file.seek_to(prev_key_pos);
+				block->value_file.seek_to(value_end_pos);
+				close_block(block);
+				block->key_file.open("rb");
+				lock_file_exclusive(block->key_file);
+			}
 			log(INFO).out << "Done verifying block " << block->index << ": " << value_end_pos << " bytes";
 		}
 		
@@ -194,6 +201,8 @@ void Server::main()
 			block->value_file.open("rb+");
 			block->value_file.seek_to(out_pos);
 		}
+		lock_file_exclusive(block->key_file);
+		lock_file_exclusive(block->value_file);
 		log(INFO).out << "Got " << key_map.size() << " entries.";
 	}
 	
@@ -204,6 +213,10 @@ void Server::main()
 		read_threads[i] = std::thread(&Server::read_loop, this);
 	}
 	
+	if(update_topic) {
+		update_thread = std::thread(&Server::update_loop, this);
+	}
+	
 	set_timer_millis(1000, std::bind(&Server::print_stats, this));
 	set_timer_millis(rewrite_interval * 1000, std::bind(&Server::check_rewrite, this, false));
 	set_timer_millis(idle_rewrite_interval * 1000, std::bind(&Server::check_rewrite, this, true));
@@ -212,10 +225,17 @@ void Server::main()
 	
 	Super::main();
 	
-	for(const auto& entry : sync_jobs) {
-		if(entry.second->thread.joinable()) {
-			entry.second->thread.join();
+	close_block(get_current_block());
+	
+	for(auto& entry : sync_jobs) {
+		if(entry.second.joinable()) {
+			entry.second.join();
 		}
+	}
+	
+	update_condition.notify_all();
+	if(update_thread.joinable()) {
+		update_thread.join();
 	}
 	
 	read_condition.notify_all();
@@ -224,8 +244,6 @@ void Server::main()
 			thread.join();
 		}
 	}
-	
-	close_block(get_current_block());
 }
 
 void Server::enqueue_read(	std::shared_ptr<block_t> block,
@@ -293,83 +311,34 @@ void Server::get_values_async(	const std::vector<Variant>& keys,
 	}
 }
 
-void Server::sync_all(const TopicPtr& topic)
+void Server::sync_from(const TopicPtr& topic, const uint64_t& version)
 {
-	if(block_map.empty()) {
-		throw std::runtime_error("collection empty");
-	}
-	
-	auto job = std::make_shared<sync_job_t>();
-	job->id = next_sync_id++;
-	job->topic = topic;
-	job->curr_block = block_map.begin()->second;
-	sync_jobs[job->id] = job;
-	
-	auto info = SyncInfo::create();
-	info->collection = collection;
-	info->code = SyncInfo::BEGIN;
-	publish(info, topic, BLOCKING);
-	
-	block_sync_start(job);
-	log(INFO).out << "Started sync job " << job->id << " ...";
+	sync_range(topic, version, 0);
 }
 
-void Server::block_sync_start(std::shared_ptr<sync_job_t> job)
+void Server::sync_range(const TopicPtr& topic, const uint64_t& begin, const uint64_t& end)
 {
-	auto block = job->curr_block;
-	job->items.clear();
-	{
-		auto key_stream = block->key_file.mmap_read();
-		TypeInput key_in(key_stream.get());
-		try {
-			while(vnx_do_run())
-			{
-				auto entry = vnx::read(key_in);
-				{
-					auto index_entry = std::dynamic_pointer_cast<IndexEntry>(entry);
-					if(index_entry) {
-						auto iter = key_map.find(index_entry->key);
-						if(iter != key_map.end()) {
-							if(iter->second.block_index == block->index
-								&& iter->second.block_offset == index_entry->block_offset)
-							{
-								job->items.push_back(index_entry);
-							}
-						}
-					}
-				}
-			}
-		} catch(const std::underflow_error& ex) {
-			// all good
-		}
-	}
-	block->num_pending++;
-	job->fd = ::fileno(block->value_file.get_handle());
-	job->thread = std::thread(&Server::sync_loop, this, job);
+	const auto job_id = next_sync_id++;
+	sync_jobs[job_id] = std::thread(&Server::sync_loop, this, job_id, topic, begin, end);
+	
+	log(INFO).out << "Started sync job " << job_id << " ...";
+}
+
+void Server::sync_all(const TopicPtr& topic)
+{
+	sync_range(topic, 0, 0);
 }
 
 void Server::block_sync_finished(const int64_t& job_id)
 {
 	auto iter = sync_jobs.find(job_id);
-	if(iter == sync_jobs.end()) {
-		return;
-	}
-	auto job = iter->second;
-	if(job->thread.joinable()) {
-		job->thread.join();
-	}
-	auto next = block_map.upper_bound(job->curr_block->index);
-	if(next != block_map.end()) {
-		job->curr_block = next->second;
-		block_sync_start(job);
-	} else {
-		auto info = SyncInfo::create();
-		info->collection = collection;
-		info->code = SyncInfo::END;
-		publish(info, job->topic, BLOCKING);
-		
-		log(INFO).out << "Finished sync job " << job->id;
+	if(iter != sync_jobs.end()) {
+		if(iter->second.joinable()) {
+			iter->second.detach();
+		}
 		sync_jobs.erase(iter);
+		
+		log(INFO).out << "Finished sync job " << job_id;
 	}
 }
 
@@ -383,10 +352,9 @@ Server::key_index_t Server::store_value_internal(const Variant& key, const std::
 	auto& key_out = block->key_file.out;
 	auto& value_out = block->value_file.out;
 	
-	const int64_t prev_key_pos = key_out.get_output_pos();
-	const int64_t prev_value_pos = value_out.get_output_pos();
+	auto prev_key_pos = key_out.get_output_pos();
+	auto prev_value_pos = value_out.get_output_pos();
 	
-	IndexEntry entry;
 	try {
 		if(value) {
 			auto type_code = value->get_type_code();
@@ -395,18 +363,11 @@ Server::key_index_t Server::store_value_internal(const Variant& key, const std::
 				entry.block_offset = value_out.get_output_pos();
 				if(value_out.write_type_code(type_code)) {
 					vnx::write(key_out, entry);
+					block->key_file.flush();
+					block->value_file.flush();
 				}
 			}
 		}
-		entry.key = key;
-		entry.version = version;
-		entry.block_offset = value_out.get_output_pos();
-		vnx::write(value_out, value);
-		block->value_file.flush();
-		
-		entry.num_bytes = value_out.get_output_pos() - entry.block_offset;
-		vnx::write(key_out, entry);
-		block->key_file.flush();	// key file last
 	}
 	catch(const std::exception& ex)
 	{
@@ -416,28 +377,54 @@ Server::key_index_t Server::store_value_internal(const Variant& key, const std::
 		throw;
 	}
 	
-	key_index_t& index = key_map[key];
+	prev_key_pos = key_out.get_output_pos();
+	prev_value_pos = value_out.get_output_pos();
 	
-	if(index.block_index >= 0) {
-		try {
-			auto old_block = get_block(index.block_index);
-			old_block->num_bytes_used -= index.num_bytes;
-		} catch(...) {
-			// ignore
-		}
+	IndexEntry entry;
+	try {
+		entry.key = key;
+		entry.version = version;
+		entry.block_offset = prev_value_pos;
+		vnx::write(value_out, value);
+		block->value_file.flush();
+		
+		entry.num_bytes = value_out.get_output_pos() - entry.block_offset;
+		vnx::write(key_out, entry);
+		block->key_file.flush();
+	}
+	catch(const std::exception& ex)
+	{
+		block->key_file.seek_to(prev_key_pos);
+		block->value_file.seek_to(prev_value_pos);
+		log(WARN).out << "store_value(): " << ex.what();
+		throw;
 	}
 	
-	index.block_index = block->index;
-	index.block_offset = entry.block_offset;
-	index.num_bytes = entry.num_bytes;
-	
+	key_index_t ret;
+	{
+		std::lock_guard<std::mutex> lock(index_mutex);
+		
+		auto& key_version = key_map[key];
+		if(key_version) {
+			delete_version(key_version);
+		}
+		key_version = version;
+		
+		key_index_t& index = index_map[version];
+		index.block_index = block->index;
+		index.block_offset = entry.block_offset;
+		index.block_offset_key = prev_key_pos;
+		index.num_bytes = entry.num_bytes;
+		index.num_bytes_key = key_out.get_output_pos() - prev_key_pos;
+		ret = index;
+	}
 	block->num_bytes_used += entry.num_bytes;
 	block->num_bytes_total += entry.num_bytes;
 	
 	if(block->num_bytes_total >= max_block_size) {
 		add_new_block();
 	}
-	return index;
+	return ret;
 }
 
 void Server::store_value(const Variant& key, const std::shared_ptr<const Value>& value)
@@ -451,7 +438,11 @@ void Server::store_value(const Variant& key, const std::shared_ptr<const Value>&
 		pair->version = curr_version;
 		pair->key = key;
 		pair->value = value;
-		publish(pair, update_topic, BLOCKING);
+		{
+			std::unique_lock<std::mutex> lock(update_mutex);
+			update_queue.push(pair);
+		}
+		update_condition.notify_one();
 	}
 	write_counter++;
 	num_bytes_written += index.num_bytes;
@@ -490,7 +481,29 @@ Server::key_index_t Server::get_key_index(const Variant& key) const
 	if(iter == key_map.end()) {
 		throw std::runtime_error("unknown key");
 	}
-	return iter->second;
+	auto iter2 = index_map.find(iter->second);
+	if(iter2 == index_map.end()) {
+		throw std::runtime_error("unknown version: " + std::to_string(iter->second));
+	}
+	return iter2->second;
+}
+
+void Server::delete_version(uint64_t version)
+{
+	// index_mutex needs to be locked by caller
+	auto iter = index_map.find(version);
+	if(iter != index_map.end()) {
+		const auto& index = iter->second;
+		if(index.block_index >= 0) {
+			try {
+				auto old_block = get_block(index.block_index);
+				old_block->num_bytes_used -= index.num_bytes;
+			} catch(...) {
+				// ignore
+			}
+		}
+		index_map.erase(iter);
+	}
 }
 
 void Server::close_block(std::shared_ptr<block_t> block)
@@ -524,8 +537,10 @@ std::shared_ptr<Server::block_t> Server::add_new_block()
 		
 		lock_file_exclusive(block->key_file);
 		lock_file_exclusive(block->value_file);
-		
-		block_map[block->index] = block;
+		{
+			std::lock_guard<std::mutex> lock(index_mutex);
+			block_map[block->index] = block;
+		}
 		write_index();
 	}
 	catch(const std::exception& ex) {
@@ -542,7 +557,7 @@ std::shared_ptr<Server::block_t> Server::add_new_block()
 void Server::check_rewrite(bool is_idle)
 {
 	if(!rewrite.block) {
-		for(auto entry : block_map) {
+		for(const auto& entry : block_map) {
 			if(entry.first != get_current_block()->index) {
 				auto block = entry.second;
 				const double use_factor = double(block->num_bytes_used) / block->num_bytes_total;
@@ -556,16 +571,19 @@ void Server::check_rewrite(bool is_idle)
 			}
 		}
 	}
-	
-	auto iter = delete_list.begin();
-	while(iter != delete_list.end()) {
-		auto block = *iter;
-		if(block->num_pending == 0) {
-			block->key_file.remove();
-			block->value_file.remove();
-			iter = delete_list.erase(iter);
-		} else {
-			iter++;
+	{
+		std::lock_guard<std::mutex> lock(index_mutex);
+		
+		auto iter = delete_list.begin();
+		while(iter != delete_list.end()) {
+			auto block = *iter;
+			if(block->num_pending == 0) {
+				block->key_file.remove();
+				block->value_file.remove();
+				iter = delete_list.erase(iter);
+			} else {
+				iter++;
+			}
 		}
 	}
 }
@@ -586,20 +604,22 @@ void Server::rewrite_func()
 		rewrite.key_in = std::make_shared<TypeInput>(stream.get());
 	}
 	try {
+		uint64_t num_bytes = 0;
 		for(int i = 0; i < 100; ++i) {
 			auto entry = vnx::read(*rewrite.key_in);
-			{
-				auto index_entry = std::dynamic_pointer_cast<IndexEntry>(entry);
-				if(index_entry) {
-					auto iter = key_map.find(index_entry->key);
-					if(iter != key_map.end()) {
-						if(iter->second.block_index == block->index
-							&& iter->second.block_offset == index_entry->block_offset)
-						{
-							auto stream = block->value_file.mmap_read(index_entry->block_offset, index_entry->num_bytes);
-							TypeInput value_in(stream.get());
-							auto value = vnx::read(value_in);
-							store_value_internal(index_entry->key, value, index_entry->version);
+			auto index_entry = std::dynamic_pointer_cast<IndexEntry>(entry);
+			if(index_entry) {
+				auto iter = key_map.find(index_entry->key);
+				if(iter != key_map.end()) {
+					if(index_entry->version == iter->second)
+					{
+						auto stream = block->value_file.mmap_read(index_entry->block_offset, index_entry->num_bytes);
+						TypeInput value_in(stream.get());
+						auto value = vnx::read(value_in);
+						store_value_internal(index_entry->key, value, index_entry->version);
+						
+						num_bytes += index_entry->num_bytes;
+						if(num_bytes >= 16384) {
 							break;
 						}
 					}
@@ -612,7 +632,7 @@ void Server::rewrite_func()
 	{
 		if(do_verify_rewrite) {
 			bool is_fail = false;
-			for(const auto& entry : key_map) {
+			for(const auto& entry : index_map) {
 				if(entry.second.block_index == block->index) {
 					log(ERROR).out << "Key '" << entry.first << "' still points to block " << block->index;
 					is_fail = true;
@@ -625,11 +645,14 @@ void Server::rewrite_func()
 		}
 		log(INFO).out << "Rewrite of block " << block->index << " finished.";
 		
-		block_map.erase(block->index);
+		{
+			std::lock_guard<std::mutex> lock(index_mutex);
+			block_map.erase(block->index);
+			delete_list.push_back(block);
+		}
 		coll_index->delete_list.push_back(block->index);
 		write_index();
 		
-		delete_list.push_back(block);
 		rewrite.key_in = 0;
 		rewrite.key_stream = 0;
 		rewrite.block = 0;
@@ -655,6 +678,14 @@ void Server::write_index()
 	}
 }
 
+void Server::lock_file_exclusive(const File& file)
+{
+	while(::flock(::fileno(file.get_handle()), LOCK_EX | LOCK_NB)) {
+		log(WARN).out << "Cannot lock file: '" << file.get_name() << "'";
+		::usleep(1000 * 1000);
+	}
+}
+
 void Server::print_stats()
 {
 	log(INFO).out << read_counter << " reads/s, " << num_bytes_read/1024 << " KB/s read, "
@@ -665,7 +696,7 @@ void Server::print_stats()
 	num_bytes_written = 0;
 }
 
-void Server::read_loop()
+void Server::read_loop() const
 {
 	const int page_size = ::sysconf(_SC_PAGE_SIZE);
 	
@@ -709,37 +740,110 @@ void Server::read_loop()
 	}
 }
 
-void Server::sync_loop(std::shared_ptr<const sync_job_t> job)
+void Server::update_loop() const
 {
 	Publisher publisher;
 	
-	for(const auto& entry : job->items)
+	while(vnx_do_run())
 	{
-		if(!vnx_do_run()) {
-			break;
-		}
-		std::shared_ptr<Value> value;
+		std::shared_ptr<KeyValuePair> value;
 		{
-			MappedMemoryInputStream stream(job->fd, entry->num_bytes, entry->block_offset);
-			TypeInput in(&stream);
-			try {
-				value = vnx::read(in);
-			} catch(...) {
-				// ignore for now
+			std::unique_lock<std::mutex> lock(update_mutex);
+			while(vnx_do_run() && update_queue.empty()) {
+				update_condition.wait(lock);
+			}
+			if(vnx_do_run()) {
+				value = update_queue.front();
+				update_queue.pop();
+			} else {
+				break;
 			}
 		}
-		
-		auto pair = KeyValuePair::create();
-		pair->collection = collection;
-		pair->version = entry->version;
-		pair->key = entry->key;
-		pair->value = value;
-		publisher.publish(pair, job->topic, BLOCKING);
+		publisher.publish(value, update_topic);
 	}
-	job->curr_block->num_pending--;
+}
+
+void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t end) const
+{
+	Publisher publisher;
+	uint64_t version = begin;
 	
-	ServerClient client(vnx_name);
-	client.block_sync_finished_async(job->id);
+	auto info = SyncInfo::create();
+	info->collection = collection;
+	info->version = begin;
+	info->code = SyncInfo::BEGIN;
+	publisher.publish(info, topic, BLOCKING);
+	
+	while(vnx_do_run())
+	{
+		key_index_t index;
+		std::shared_ptr<block_t> block;
+		{
+			std::unique_lock<std::mutex> lock(index_mutex);
+			
+			auto next = index_map.upper_bound(version);
+			if(next != index_map.end()) {
+				version = next->first;
+				if(end > 0 && version >= end) {
+					break;
+				}
+				try {
+					index = next->second;
+					block = get_block(index.block_index);
+					block->num_pending++;
+				}
+				catch(...) {
+					// ignore
+				}
+			} else {
+				break;
+			}
+		}
+		if(block) {
+			std::shared_ptr<IndexEntry> entry;
+			{
+				auto stream = block->key_file.mmap_read(index.block_offset_key, index.num_bytes_key);
+				TypeInput in(stream.get());
+				try {
+					entry = std::dynamic_pointer_cast<IndexEntry>(vnx::read(in));
+				} catch(...) {
+					// ignore
+				}
+			}
+			if(entry) {
+				std::shared_ptr<Value> value;
+				{
+					auto stream = block->value_file.mmap_read(index.block_offset, index.num_bytes);
+					TypeInput in(stream.get());
+					try {
+						value = vnx::read(in);
+					} catch(...) {
+						// ignore
+					}
+				}
+				auto pair = KeyValuePair::create();
+				pair->collection = collection;
+				pair->version = entry->version;
+				pair->key = entry->key;
+				pair->value = value;
+				publisher.publish(pair, topic, BLOCKING);
+			}
+			block->num_pending--;
+			read_counter++;
+			num_bytes_read += index.num_bytes;
+		}
+	}
+	if(vnx_do_run())
+	{
+		auto info = SyncInfo::create();
+		info->collection = collection;
+		info->version = version;
+		info->code = SyncInfo::END;
+		publisher.publish(info, topic, BLOCKING);
+		
+		ServerClient client(vnx_name);
+		client.block_sync_finished(job_id);
+	}
 }
 
 

@@ -37,6 +37,10 @@ protected:
 							const std::function<void(const std::vector<std::shared_ptr<const Value>>&)>& callback,
 							const vnx::request_id_t& request_id) const override;
 	
+	void sync_from(const TopicPtr& topic, const uint64_t& version) override;
+	
+	void sync_range(const TopicPtr& topic, const uint64_t& begin, const uint64_t& end) override;
+	
 	void sync_all(const TopicPtr& topic) override;
 	
 	void store_value(const Variant& key, const std::shared_ptr<const Value>& value) override;
@@ -49,7 +53,9 @@ private:
 	struct key_index_t {
 		int64_t block_index = -1;
 		int64_t block_offset = 0;
+		int64_t block_offset_key = 0;
 		int64_t num_bytes = 0;
+		int64_t num_bytes_key = 0;
 	};
 	
 	struct block_t {
@@ -81,14 +87,11 @@ private:
 		std::shared_ptr<read_result_many_t> result_many;
 	};
 	
-	struct sync_job_t {
-		int64_t id = -1;
-		TopicPtr topic;
-		std::thread thread;
-		std::shared_ptr<block_t> curr_block;
-		std::vector<std::shared_ptr<IndexEntry>> items;
-		int fd = -1;
-	};
+	void enqueue_read(	std::shared_ptr<block_t> block,
+						const key_index_t& index,
+						std::shared_ptr<read_result_t> result,
+						std::shared_ptr<read_result_many_t> result_many = 0,
+						uint32_t result_index = 0) const;
 	
 	void lock_file_exclusive(const File& file);
 	
@@ -100,19 +103,13 @@ private:
 	
 	key_index_t get_key_index(const Variant& key) const;
 	
+	void delete_version(uint64_t version);
+	
 	void close_block(std::shared_ptr<block_t> block);
 	
 	std::shared_ptr<block_t> add_new_block();
 	
-	void enqueue_read(	std::shared_ptr<block_t> block,
-						const key_index_t& index,
-						std::shared_ptr<read_result_t> result,
-						std::shared_ptr<read_result_many_t> result_many = 0,
-						uint32_t result_index = 0) const;
-	
 	key_index_t store_value_internal(const Variant& key, const std::shared_ptr<const Value>& value, uint64_t version);
-	
-	void block_sync_start(std::shared_ptr<sync_job_t> job);
 	
 	void check_rewrite(bool is_idle);
 	
@@ -122,28 +119,37 @@ private:
 	
 	void print_stats();
 	
-	void read_loop();
+	void read_loop() const;
 	
-	void sync_loop(std::shared_ptr<const sync_job_t> job);
+	void update_loop() const;
+	
+	void sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t end) const;
 	
 private:
 	uint64_t curr_version = 0;
 	std::shared_ptr<Collection> coll_index;
 	
+	mutable std::mutex index_mutex;		// needs to be locked when modifying index, other threads only read
 	std::map<int64_t, std::shared_ptr<block_t>> block_map;
-	std::unordered_map<Variant, key_index_t> key_map;
+	std::map<uint64_t, key_index_t> index_map;
+	std::unordered_map<Variant, uint64_t> key_map;
+	std::list<std::shared_ptr<block_t>> delete_list;
 	
 	mutable std::mutex read_mutex;
 	mutable std::condition_variable read_condition;
-	
-	std::vector<std::thread> read_threads;
 	mutable std::queue<read_item_t> read_queue;
+	std::vector<std::thread> read_threads;
 	
-	mutable uint64_t read_counter = 0;
-	mutable uint64_t num_bytes_read = 0;
+	mutable std::mutex update_mutex;
+	mutable std::condition_variable update_condition;
+	mutable std::queue<std::shared_ptr<KeyValuePair>> update_queue;
+	std::thread update_thread;
 	
-	uint64_t write_counter = 0;
-	uint64_t num_bytes_written = 0;
+	mutable std::atomic<uint64_t> read_counter;
+	mutable std::atomic<uint64_t> num_bytes_read;
+	
+	mutable std::atomic<uint64_t> write_counter;
+	mutable std::atomic<uint64_t> num_bytes_written;
 	
 	struct rewrite_t {
 		std::shared_ptr<block_t> block;
@@ -152,10 +158,8 @@ private:
 		std::shared_ptr<TypeInput> key_in;
 	} rewrite;
 	
-	std::list<std::shared_ptr<block_t>> delete_list;
-	
 	int64_t next_sync_id = 0;
-	std::map<int64_t, std::shared_ptr<sync_job_t>> sync_jobs;
+	std::map<int64_t, std::thread> sync_jobs;
 	
 	static const int NUM_INDEX = 3;
 	

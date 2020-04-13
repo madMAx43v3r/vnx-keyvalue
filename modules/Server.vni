@@ -33,6 +33,10 @@ module Server {
 	
 	vector<Value*> get_values(vector<Variant> keys) const async;
 	
+	void sync_from(TopicPtr topic, ulong version);				// sync all greater than version
+	
+	void sync_range(TopicPtr topic, ulong begin, ulong end);	// sync greater than begin and up to less than end
+	
 	void sync_all(TopicPtr topic);
 	
 	void store_value(Variant key, Value* value);
