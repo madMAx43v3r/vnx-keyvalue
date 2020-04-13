@@ -38,6 +38,12 @@ public:
 	uint64_t sync_all(const ::vnx::TopicPtr& topic, 
 			const std::function<void()>& _callback = std::function<void()>());
 	
+	uint64_t sync_from(const ::vnx::TopicPtr& topic, const ::uint64_t& version, 
+			const std::function<void()>& _callback = std::function<void()>());
+	
+	uint64_t sync_range(const ::vnx::TopicPtr& topic, const ::uint64_t& begin, const ::uint64_t& end, 
+			const std::function<void()>& _callback = std::function<void()>());
+	
 	std::vector<uint64_t> vnx_get_pending_ids() const override;
 	
 protected:
@@ -52,6 +58,8 @@ private:
 	std::map<uint64_t, std::function<void(::std::vector<::std::shared_ptr<const ::vnx::Value>>)>> vnx_queue_get_values;
 	std::map<uint64_t, std::function<void()>> vnx_queue_store_value;
 	std::map<uint64_t, std::function<void()>> vnx_queue_sync_all;
+	std::map<uint64_t, std::function<void()>> vnx_queue_sync_from;
+	std::map<uint64_t, std::function<void()>> vnx_queue_sync_range;
 	
 };
 

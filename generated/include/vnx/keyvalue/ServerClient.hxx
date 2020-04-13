@@ -40,6 +40,14 @@ public:
 	
 	void sync_all_async(const ::vnx::TopicPtr& topic);
 	
+	void sync_from(const ::vnx::TopicPtr& topic, const ::uint64_t& version);
+	
+	void sync_from_async(const ::vnx::TopicPtr& topic, const ::uint64_t& version);
+	
+	void sync_range(const ::vnx::TopicPtr& topic, const ::uint64_t& begin, const ::uint64_t& end);
+	
+	void sync_range_async(const ::vnx::TopicPtr& topic, const ::uint64_t& begin, const ::uint64_t& end);
+	
 };
 
 

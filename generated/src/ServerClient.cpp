@@ -154,6 +154,47 @@ void ServerClient::sync_all_async(const ::vnx::TopicPtr& topic) {
 	sync_all(topic);
 }
 
+void ServerClient::sync_from(const ::vnx::TopicPtr& topic, const ::uint64_t& version) {
+	std::shared_ptr<vnx::Binary> _argument_data = vnx::Binary::create();
+	vnx::BinaryOutputStream _stream_out(_argument_data.get());
+	vnx::TypeOutput _out(&_stream_out);
+	const vnx::TypeCode* _type_code = vnx::keyvalue::vnx_native_type_code_Server_sync_from;
+	{
+		char* const _buf = _out.write(8);
+		vnx::write_value(_buf + 0, version);
+		vnx::write(_out, topic, _type_code, _type_code->fields[0].code.data());
+	}
+	_out.flush();
+	_argument_data->type_code = _type_code;
+	vnx_request(_argument_data);
+}
+
+void ServerClient::sync_from_async(const ::vnx::TopicPtr& topic, const ::uint64_t& version) {
+	vnx_is_async = true;
+	sync_from(topic, version);
+}
+
+void ServerClient::sync_range(const ::vnx::TopicPtr& topic, const ::uint64_t& begin, const ::uint64_t& end) {
+	std::shared_ptr<vnx::Binary> _argument_data = vnx::Binary::create();
+	vnx::BinaryOutputStream _stream_out(_argument_data.get());
+	vnx::TypeOutput _out(&_stream_out);
+	const vnx::TypeCode* _type_code = vnx::keyvalue::vnx_native_type_code_Server_sync_range;
+	{
+		char* const _buf = _out.write(16);
+		vnx::write_value(_buf + 0, begin);
+		vnx::write_value(_buf + 8, end);
+		vnx::write(_out, topic, _type_code, _type_code->fields[0].code.data());
+	}
+	_out.flush();
+	_argument_data->type_code = _type_code;
+	vnx_request(_argument_data);
+}
+
+void ServerClient::sync_range_async(const ::vnx::TopicPtr& topic, const ::uint64_t& begin, const ::uint64_t& end) {
+	vnx_is_async = true;
+	sync_range(topic, begin, end);
+}
+
 
 } // namespace vnx
 } // namespace keyvalue

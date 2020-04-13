@@ -17,6 +17,7 @@ public:
 	static const ::uint32_t END = 2;
 	
 	::std::string collection;
+	::uint64_t version = 0;
 	::uint32_t code = 0;
 	
 	typedef ::vnx::Value Super;

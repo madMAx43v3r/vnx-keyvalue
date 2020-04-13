@@ -50,6 +50,10 @@ const vnx::TypeCode* const vnx_native_type_code_Server_store_value = vnx::get_ty
 const vnx::TypeCode* const vnx_native_type_code_Server_store_value_return = vnx::get_type_code(vnx::Hash64(0x8bc8f7e913889f88ull));
 const vnx::TypeCode* const vnx_native_type_code_Server_sync_all = vnx::get_type_code(vnx::Hash64(0x6173affeadaf11ddull));
 const vnx::TypeCode* const vnx_native_type_code_Server_sync_all_return = vnx::get_type_code(vnx::Hash64(0x964de09bdefcfc87ull));
+const vnx::TypeCode* const vnx_native_type_code_Server_sync_from = vnx::get_type_code(vnx::Hash64(0xc10ef313be34be0full));
+const vnx::TypeCode* const vnx_native_type_code_Server_sync_from_return = vnx::get_type_code(vnx::Hash64(0x68661d3bb01d2b6bull));
+const vnx::TypeCode* const vnx_native_type_code_Server_sync_range = vnx::get_type_code(vnx::Hash64(0x21592a9e03b544fdull));
+const vnx::TypeCode* const vnx_native_type_code_Server_sync_range_return = vnx::get_type_code(vnx::Hash64(0xd451dace3153346bull));
 const vnx::TypeCode* const vnx_native_type_code_SyncInfo = vnx::get_type_code(vnx::Hash64(0x4f9820ae95813502ull));
 const vnx::TypeCode* const vnx_native_type_code_TypeEntry = vnx::get_type_code(vnx::Hash64(0x5d3011caa7dadfd3ull));
 
