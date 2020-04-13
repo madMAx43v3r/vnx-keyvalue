@@ -15,6 +15,20 @@
 #include <unistd.h>
 
 
+void gen_random(char *s, const int len) {
+    static const char alphanum[] =
+        "0123456789"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz";
+
+    for (int i = 0; i < len; ++i) {
+        s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+    }
+
+    s[len] = 0;
+}
+
+
 int main(int argc, char** argv)
 {
 	std::map<std::string, std::string> options;
@@ -47,6 +61,10 @@ int main(int argc, char** argv)
 	while(vnx::do_run())
 	{
 		const uint64_t key = counter % 65536;
+//		const uint64_t key = counter;
+//		char tmp[129];
+//		gen_random(tmp, std::max(::rand() % 128, 16));
+//		const std::string key(tmp);
 		client.store_value(key, value.clone());
 		counter++;
 		::usleep(1 * 1000);
