@@ -17,6 +17,7 @@ public:
 	
 	::std::string collection;
 	::uint64_t version = 0;
+	::uint64_t previous = 0;
 	::vnx::Variant key;
 	::std::shared_ptr<const ::vnx::Value> value;
 	

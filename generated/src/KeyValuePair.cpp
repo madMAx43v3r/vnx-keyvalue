@@ -15,7 +15,7 @@ namespace keyvalue {
 
 
 const vnx::Hash64 KeyValuePair::VNX_TYPE_HASH(0xf87436237449d8afull);
-const vnx::Hash64 KeyValuePair::VNX_CODE_HASH(0x2e24f7f578564c19ull);
+const vnx::Hash64 KeyValuePair::VNX_CODE_HASH(0x24d2022787f2112full);
 
 vnx::Hash64 KeyValuePair::get_type_hash() const {
 	return VNX_TYPE_HASH;
@@ -49,8 +49,9 @@ void KeyValuePair::accept(vnx::Visitor& _visitor) const {
 	_visitor.type_begin(*_type_code);
 	_visitor.type_field(_type_code->fields[0], 0); vnx::accept(_visitor, collection);
 	_visitor.type_field(_type_code->fields[1], 1); vnx::accept(_visitor, version);
-	_visitor.type_field(_type_code->fields[2], 2); vnx::accept(_visitor, key);
-	_visitor.type_field(_type_code->fields[3], 3); vnx::accept(_visitor, value);
+	_visitor.type_field(_type_code->fields[2], 2); vnx::accept(_visitor, previous);
+	_visitor.type_field(_type_code->fields[3], 3); vnx::accept(_visitor, key);
+	_visitor.type_field(_type_code->fields[4], 4); vnx::accept(_visitor, value);
 	_visitor.type_end(*_type_code);
 }
 
@@ -58,6 +59,7 @@ void KeyValuePair::write(std::ostream& _out) const {
 	_out << "{";
 	_out << "\"collection\": "; vnx::write(_out, collection);
 	_out << ", \"version\": "; vnx::write(_out, version);
+	_out << ", \"previous\": "; vnx::write(_out, previous);
 	_out << ", \"key\": "; vnx::write(_out, key);
 	_out << ", \"value\": "; vnx::write(_out, value);
 	_out << "}";
@@ -71,6 +73,8 @@ void KeyValuePair::read(std::istream& _in) {
 			vnx::from_string(_entry.second, collection);
 		} else if(_entry.first == "key") {
 			vnx::from_string(_entry.second, key);
+		} else if(_entry.first == "previous") {
+			vnx::from_string(_entry.second, previous);
 		} else if(_entry.first == "value") {
 			vnx::from_string(_entry.second, value);
 		} else if(_entry.first == "version") {
@@ -83,6 +87,7 @@ vnx::Object KeyValuePair::to_object() const {
 	vnx::Object _object;
 	_object["collection"] = collection;
 	_object["version"] = version;
+	_object["previous"] = previous;
 	_object["key"] = key;
 	_object["value"] = value;
 	return _object;
@@ -94,6 +99,8 @@ void KeyValuePair::from_object(const vnx::Object& _object) {
 			_entry.second.to(collection);
 		} else if(_entry.first == "key") {
 			_entry.second.to(key);
+		} else if(_entry.first == "previous") {
+			_entry.second.to(previous);
 		} else if(_entry.first == "value") {
 			_entry.second.to(value);
 		} else if(_entry.first == "version") {
@@ -126,11 +133,11 @@ std::shared_ptr<vnx::TypeCode> KeyValuePair::static_create_type_code() {
 	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>(true);
 	type_code->name = "vnx.keyvalue.KeyValuePair";
 	type_code->type_hash = vnx::Hash64(0xf87436237449d8afull);
-	type_code->code_hash = vnx::Hash64(0x2e24f7f578564c19ull);
+	type_code->code_hash = vnx::Hash64(0x24d2022787f2112full);
 	type_code->is_class = true;
 	type_code->create_value = []() -> std::shared_ptr<vnx::Value> { return std::make_shared<KeyValuePair>(); };
 	type_code->methods.resize(0);
-	type_code->fields.resize(4);
+	type_code->fields.resize(5);
 	{
 		vnx::TypeField& field = type_code->fields[0];
 		field.is_extended = true;
@@ -144,12 +151,17 @@ std::shared_ptr<vnx::TypeCode> KeyValuePair::static_create_type_code() {
 	}
 	{
 		vnx::TypeField& field = type_code->fields[2];
+		field.name = "previous";
+		field.code = {4};
+	}
+	{
+		vnx::TypeField& field = type_code->fields[3];
 		field.is_extended = true;
 		field.name = "key";
 		field.code = {17};
 	}
 	{
-		vnx::TypeField& field = type_code->fields[3];
+		vnx::TypeField& field = type_code->fields[4];
 		field.is_extended = true;
 		field.name = "value";
 		field.code = {16};
@@ -184,12 +196,18 @@ void read(TypeInput& in, ::vnx::keyvalue::KeyValuePair& value, const TypeCode* t
 				vnx::read_value(_buf + _field->offset, value.version, _field->code.data());
 			}
 		}
+		{
+			const vnx::TypeField* const _field = type_code->field_map[2];
+			if(_field) {
+				vnx::read_value(_buf + _field->offset, value.previous, _field->code.data());
+			}
+		}
 	}
 	for(const vnx::TypeField* _field : type_code->ext_fields) {
 		switch(_field->native_index) {
 			case 0: vnx::read(in, value.collection, type_code, _field->code.data()); break;
-			case 2: vnx::read(in, value.key, type_code, _field->code.data()); break;
-			case 3: vnx::read(in, value.value, type_code, _field->code.data()); break;
+			case 3: vnx::read(in, value.key, type_code, _field->code.data()); break;
+			case 4: vnx::read(in, value.value, type_code, _field->code.data()); break;
 			default: vnx::skip(in, type_code, _field->code.data());
 		}
 	}
@@ -204,11 +222,12 @@ void write(TypeOutput& out, const ::vnx::keyvalue::KeyValuePair& value, const Ty
 	if(code && code[0] == CODE_STRUCT) {
 		type_code = type_code->depends[code[1]];
 	}
-	char* const _buf = out.write(8);
+	char* const _buf = out.write(16);
 	vnx::write_value(_buf + 0, value.version);
+	vnx::write_value(_buf + 8, value.previous);
 	vnx::write(out, value.collection, type_code, type_code->fields[0].code.data());
-	vnx::write(out, value.key, type_code, type_code->fields[2].code.data());
-	vnx::write(out, value.value, type_code, type_code->fields[3].code.data());
+	vnx::write(out, value.key, type_code, type_code->fields[3].code.data());
+	vnx::write(out, value.value, type_code, type_code->fields[4].code.data());
 }
 
 void read(std::istream& in, ::vnx::keyvalue::KeyValuePair& value) {
