@@ -9,6 +9,8 @@ class KeyValuePair {
 	
 	ulong version;
 	
+	ulong previous;
+	
 	Variant key;
 	
 	Value* value;

@@ -767,6 +767,7 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 {
 	Publisher publisher;
 	uint64_t version = begin;
+	uint64_t previous = begin;
 	
 	auto info = SyncInfo::create();
 	info->collection = collection;
@@ -774,43 +775,58 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 	info->code = SyncInfo::BEGIN;
 	publisher.publish(info, topic, BLOCKING);
 	
-	while(vnx_do_run())
-	{
+	struct entry_t {
+		uint64_t version;
 		key_index_t index;
 		std::shared_ptr<block_t> block;
+	};
+	
+	std::vector<entry_t> list;
+	
+	while(vnx_do_run())
+	{
+		list.clear();
 		{
 			std::unique_lock<std::mutex> lock(index_mutex);
 			
-			auto next = index_map.upper_bound(version);
-			if(next != index_map.end()) {
-				version = next->first;
+			auto iter = index_map.upper_bound(version);
+			for(int i = 0; iter != index_map.end() && i < 100; ++iter, ++i)
+			{
+				version = iter->first;
 				if(end > 0 && version >= end) {
 					break;
 				}
 				try {
-					index = next->second;
-					block = get_block(index.block_index);
-					block->num_pending++;
+					entry_t entry;
+					entry.version = version;
+					entry.index = iter->second;
+					entry.block = get_block(entry.index.block_index);
+					entry.block->num_pending++;
+					list.emplace_back(std::move(entry));
 				}
 				catch(...) {
 					// ignore
 				}
-			} else {
-				break;
 			}
 		}
-		if(block) {
-			std::shared_ptr<IndexEntry> entry;
+		if(list.empty()) {
+			break;
+		}
+		for(const auto& entry : list)
+		{
+			const auto& block = entry.block;
+			const auto& index = entry.index;
+			std::shared_ptr<IndexEntry> index_entry;
 			{
 				auto stream = block->key_file.mmap_read(index.block_offset_key, index.num_bytes_key);
 				TypeInput in(stream.get());
 				try {
-					entry = std::dynamic_pointer_cast<IndexEntry>(vnx::read(in));
+					index_entry = std::dynamic_pointer_cast<IndexEntry>(vnx::read(in));
 				} catch(...) {
 					// ignore
 				}
 			}
-			if(entry) {
+			if(index_entry) {
 				std::shared_ptr<Value> value;
 				{
 					auto stream = block->value_file.mmap_read(index.block_offset, index.num_bytes);
@@ -823,14 +839,16 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 				}
 				auto pair = KeyValuePair::create();
 				pair->collection = collection;
-				pair->version = entry->version;
-				pair->key = entry->key;
+				pair->version = entry.version;
+				pair->previous = previous;
+				pair->key = index_entry->key;
 				pair->value = value;
 				publisher.publish(pair, topic, BLOCKING);
+				previous = entry.version;
 			}
 			block->num_pending--;
 			read_counter++;
-			num_bytes_read += index.num_bytes;
+			num_bytes_read += index.num_bytes_key + index.num_bytes;
 		}
 	}
 	if(vnx_do_run())
