@@ -119,11 +119,11 @@ private:
 	
 	void print_stats();
 	
-	void read_loop() const;
+	void read_loop() const noexcept;
 	
-	void update_loop() const;
+	void update_loop() const noexcept;
 	
-	void sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t end) const;
+	void sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t end) const noexcept;
 	
 private:
 	uint64_t curr_version = 0;

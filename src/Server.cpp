@@ -696,7 +696,7 @@ void Server::print_stats()
 	num_bytes_written = 0;
 }
 
-void Server::read_loop() const
+void Server::read_loop() const noexcept
 {
 	const int page_size = ::sysconf(_SC_PAGE_SIZE);
 	
@@ -740,7 +740,7 @@ void Server::read_loop() const
 	}
 }
 
-void Server::update_loop() const
+void Server::update_loop() const noexcept
 {
 	Publisher publisher;
 	
@@ -763,7 +763,7 @@ void Server::update_loop() const
 	}
 }
 
-void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t end) const
+void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t end) const noexcept
 {
 	Publisher publisher;
 	uint64_t version = begin;
