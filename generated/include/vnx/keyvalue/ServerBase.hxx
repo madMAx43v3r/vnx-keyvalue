@@ -27,7 +27,8 @@ public:
 	::int32_t idle_rewrite_interval = 1000;
 	::int32_t num_read_threads = 10;
 	::int32_t max_queue_ms = 1000;
-	::vnx::bool_t do_verify_rewrite = false;
+	::vnx::bool_t do_verify_rewrite = 0;
+	::vnx::bool_t ignore_errors = 0;
 	
 	typedef ::vnx::Module Super;
 	

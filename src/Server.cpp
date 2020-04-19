@@ -33,6 +33,13 @@ void Server::init()
 
 void Server::main()
 {
+	if(collection.empty()) {
+		throw std::logic_error("invalid collection config");
+	}
+	if(num_read_threads < 1) {
+		throw std::logic_error("invalid num_read_threads config");
+	}
+	
 	for(int i = 0; i < NUM_INDEX; ++i) {
 		const auto path = get_file_path("index", i);
 		coll_index = vnx::read_from_file<Collection>(path);
@@ -68,116 +75,124 @@ void Server::main()
 	for(const auto block_index : coll_index->block_list)
 	{
 		log(INFO).out << "Reading block " << block_index << " ...";
-		
-		auto block = std::make_shared<block_t>();
-		block->index = block_index;
-		block->key_file.open(get_file_path("key", block_index), "rb");
-		block->value_file.open(get_file_path("value", block_index), "rb");
-		lock_file_exclusive(block->key_file);
-		lock_file_exclusive(block->value_file);
-		block_map[block_index] = block;
-		
-		auto& key_in = block->key_file.in;
-		auto& value_in = block->value_file.in;
-		
-		bool is_error = false;
-		int64_t prev_key_pos = 0;
-		int64_t value_end_pos = -1;
-		
-		while(vnx_do_run())
-		{
-			prev_key_pos = key_in.get_input_pos();
-			try {
-				auto entry = vnx::read(key_in);
-				{
-					auto index_entry = std::dynamic_pointer_cast<IndexEntry>(entry);
-					if(index_entry) {
-						auto& key_version = key_map[index_entry->key];
-						if(index_entry->version > key_version) {
-							if(key_version) {
-								delete_version(key_version);
-							}
-							key_version = index_entry->version;
-							
-							auto& index = index_map[index_entry->version];
-							index.block_index = block_index;
-							index.block_offset = index_entry->block_offset;
-							index.block_offset_key = prev_key_pos;
-							index.num_bytes = index_entry->num_bytes;
-							index.num_bytes_key = key_in.get_input_pos() - prev_key_pos;
-							
-							curr_version = std::max(curr_version, index_entry->version);
-							block->num_bytes_used += index_entry->num_bytes;
-							block->num_bytes_total += index_entry->num_bytes;
-						}
-					}
-				}
-				{
-					auto type_entry = std::dynamic_pointer_cast<TypeEntry>(entry);
-					if(type_entry) {
-						value_in.reset();
-						block->value_file.seek_to(type_entry->block_offset);
-						while(vnx_do_run()) {
-							try {
-								uint16_t code = 0;
-								vnx::read(value_in, code);
-								if(code == CODE_TYPE_CODE || code == CODE_ALT_TYPE_CODE) {
-									vnx::read_type_code(value_in);
-								} else {
-									break;
-								}
-							} catch(const std::underflow_error& ex) {
-								break;
-							} catch(const std::exception& ex) {
-								log(WARN).out << "Error while reading type codes from block "
-										<< block_index << ": " << ex.what();
-								break;
-							}
-						}
-					}
-				}
-				{
-					auto close_entry = std::dynamic_pointer_cast<CloseEntry>(entry);
-					if(close_entry) {
-						value_end_pos = close_entry->block_offset;
-						break;
-					}
-				}
-			}
-			catch(const std::exception& ex) {
-				log(WARN).out << "Error reading block " << block_index << " key file: " << ex.what();
-				is_error = true;
-				break;
-			}
-		}
-		
-		if(is_error) {
-			log(INFO).out << "Verifying block " << block->index << " ...";
-			value_in.reset();
-			block->value_file.seek_begin();
+		try {
+			auto block = std::make_shared<block_t>();
+			block->index = block_index;
+			block->key_file.open(get_file_path("key", block_index), "rb");
+			block->value_file.open(get_file_path("value", block_index), "rb");
+			lock_file_exclusive(block->key_file);
+			lock_file_exclusive(block->value_file);
+			block_map[block_index] = block;
+			
+			auto& key_in = block->key_file.in;
+			auto& value_in = block->value_file.in;
+			
+			bool is_error = false;
+			int64_t prev_key_pos = 0;
+			int64_t value_end_pos = -1;
+			
 			while(vnx_do_run())
 			{
-				value_end_pos = value_in.get_input_pos();
+				prev_key_pos = key_in.get_input_pos();
 				try {
-					vnx::skip(value_in);
-				} catch(...) {
+					auto entry = vnx::read(key_in);
+					{
+						auto index_entry = std::dynamic_pointer_cast<IndexEntry>(entry);
+						if(index_entry) {
+							auto& key_version = key_map[index_entry->key];
+							if(index_entry->version > key_version) {
+								if(key_version) {
+									delete_version(key_version);
+								}
+								key_version = index_entry->version;
+								
+								auto& index = index_map[index_entry->version];
+								index.block_index = block_index;
+								index.block_offset = index_entry->block_offset;
+								index.block_offset_key = prev_key_pos;
+								index.num_bytes = index_entry->num_bytes;
+								index.num_bytes_key = key_in.get_input_pos() - prev_key_pos;
+								
+								curr_version = std::max(curr_version, index_entry->version);
+								block->num_bytes_used += index_entry->num_bytes;
+								block->num_bytes_total += index_entry->num_bytes;
+							}
+						}
+					}
+					{
+						auto type_entry = std::dynamic_pointer_cast<TypeEntry>(entry);
+						if(type_entry) {
+							value_in.reset();
+							block->value_file.seek_to(type_entry->block_offset);
+							while(vnx_do_run()) {
+								try {
+									uint16_t code = 0;
+									vnx::read(value_in, code);
+									if(code == CODE_TYPE_CODE || code == CODE_ALT_TYPE_CODE) {
+										vnx::read_type_code(value_in);
+									} else {
+										break;
+									}
+								} catch(const std::underflow_error& ex) {
+									break;
+								} catch(const std::exception& ex) {
+									log(WARN).out << "Error while reading type codes from block "
+											<< block_index << ": " << ex.what();
+									break;
+								}
+							}
+						}
+					}
+					{
+						auto close_entry = std::dynamic_pointer_cast<CloseEntry>(entry);
+						if(close_entry) {
+							value_end_pos = close_entry->block_offset;
+							break;
+						}
+					}
+				}
+				catch(const std::exception& ex) {
+					log(WARN).out << "Error reading block " << block_index << " key file: " << ex.what();
+					is_error = true;
 					break;
 				}
 			}
-			{
-				// TODO: test this
-				block->key_file.open("rb+");
-				block->key_file.seek_to(prev_key_pos);
-				block->value_file.seek_to(value_end_pos);
-				close_block(block);
-				block->key_file.open("rb");
-				lock_file_exclusive(block->key_file);
+			
+			if(is_error) {
+				log(INFO).out << "Verifying block " << block->index << " ...";
+				value_in.reset();
+				block->value_file.seek_begin();
+				while(vnx_do_run())
+				{
+					value_end_pos = value_in.get_input_pos();
+					try {
+						vnx::skip(value_in);
+					} catch(...) {
+						break;
+					}
+				}
+				{
+					// TODO: test this
+					block->key_file.open("rb+");
+					block->key_file.seek_to(prev_key_pos);
+					block->value_file.seek_to(value_end_pos);
+					close_block(block);
+					block->key_file.open("rb");
+					lock_file_exclusive(block->key_file);
+				}
+				log(INFO).out << "Done verifying block " << block->index << ": " << value_end_pos << " bytes";
 			}
-			log(INFO).out << "Done verifying block " << block->index << ": " << value_end_pos << " bytes";
+			
+			block->key_file.seek_to(prev_key_pos);
+			block->value_file.seek_to(value_end_pos);
 		}
-		
-		block->key_file.seek_to(prev_key_pos);
-		block->value_file.seek_to(value_end_pos);
+		catch(const std::exception& ex) {
+			if(ignore_errors) {
+				log(ERROR).out << "Failed to read block " << block_index << ": " << ex.what();
+			} else {
+				throw;
+			}
+		}
 	}
 	
 	for(const auto& entry : block_map) {

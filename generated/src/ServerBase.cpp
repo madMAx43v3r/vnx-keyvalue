@@ -18,7 +18,7 @@ namespace keyvalue {
 
 
 const vnx::Hash64 ServerBase::VNX_TYPE_HASH(0xbb28aa6f1d808048ull);
-const vnx::Hash64 ServerBase::VNX_CODE_HASH(0x901f7a27fe1da42full);
+const vnx::Hash64 ServerBase::VNX_CODE_HASH(0xbbc3377b4cc3fa8eull);
 
 ServerBase::ServerBase(const std::string& _vnx_name)
 	:	Module::Module(_vnx_name)
@@ -27,6 +27,7 @@ ServerBase::ServerBase(const std::string& _vnx_name)
 	vnx::read_config(vnx_name + ".do_verify_rewrite", do_verify_rewrite);
 	vnx::read_config(vnx_name + ".idle_rewrite_interval", idle_rewrite_interval);
 	vnx::read_config(vnx_name + ".idle_rewrite_threshold", idle_rewrite_threshold);
+	vnx::read_config(vnx_name + ".ignore_errors", ignore_errors);
 	vnx::read_config(vnx_name + ".max_block_size", max_block_size);
 	vnx::read_config(vnx_name + ".max_queue_ms", max_queue_ms);
 	vnx::read_config(vnx_name + ".num_read_threads", num_read_threads);
@@ -61,6 +62,7 @@ void ServerBase::accept(vnx::Visitor& _visitor) const {
 	_visitor.type_field(_type_code->fields[8], 8); vnx::accept(_visitor, num_read_threads);
 	_visitor.type_field(_type_code->fields[9], 9); vnx::accept(_visitor, max_queue_ms);
 	_visitor.type_field(_type_code->fields[10], 10); vnx::accept(_visitor, do_verify_rewrite);
+	_visitor.type_field(_type_code->fields[11], 11); vnx::accept(_visitor, ignore_errors);
 	_visitor.type_end(*_type_code);
 }
 
@@ -77,6 +79,7 @@ void ServerBase::write(std::ostream& _out) const {
 	_out << ", \"num_read_threads\": "; vnx::write(_out, num_read_threads);
 	_out << ", \"max_queue_ms\": "; vnx::write(_out, max_queue_ms);
 	_out << ", \"do_verify_rewrite\": "; vnx::write(_out, do_verify_rewrite);
+	_out << ", \"ignore_errors\": "; vnx::write(_out, ignore_errors);
 	_out << "}";
 }
 
@@ -92,6 +95,8 @@ void ServerBase::read(std::istream& _in) {
 			vnx::from_string(_entry.second, idle_rewrite_interval);
 		} else if(_entry.first == "idle_rewrite_threshold") {
 			vnx::from_string(_entry.second, idle_rewrite_threshold);
+		} else if(_entry.first == "ignore_errors") {
+			vnx::from_string(_entry.second, ignore_errors);
 		} else if(_entry.first == "max_block_size") {
 			vnx::from_string(_entry.second, max_block_size);
 		} else if(_entry.first == "max_queue_ms") {
@@ -123,6 +128,7 @@ vnx::Object ServerBase::to_object() const {
 	_object["num_read_threads"] = num_read_threads;
 	_object["max_queue_ms"] = max_queue_ms;
 	_object["do_verify_rewrite"] = do_verify_rewrite;
+	_object["ignore_errors"] = ignore_errors;
 	return _object;
 }
 
@@ -136,6 +142,8 @@ void ServerBase::from_object(const vnx::Object& _object) {
 			_entry.second.to(idle_rewrite_interval);
 		} else if(_entry.first == "idle_rewrite_threshold") {
 			_entry.second.to(idle_rewrite_threshold);
+		} else if(_entry.first == "ignore_errors") {
+			_entry.second.to(ignore_errors);
 		} else if(_entry.first == "max_block_size") {
 			_entry.second.to(max_block_size);
 		} else if(_entry.first == "max_queue_ms") {
@@ -178,7 +186,7 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>(true);
 	type_code->name = "vnx.keyvalue.Server";
 	type_code->type_hash = vnx::Hash64(0xbb28aa6f1d808048ull);
-	type_code->code_hash = vnx::Hash64(0x901f7a27fe1da42full);
+	type_code->code_hash = vnx::Hash64(0xbbc3377b4cc3fa8eull);
 	type_code->methods.resize(8);
 	{
 		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>(true);
@@ -414,7 +422,7 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 		call_type->build();
 		type_code->methods[7] = vnx::register_type_code(call_type);
 	}
-	type_code->fields.resize(11);
+	type_code->fields.resize(12);
 	{
 		vnx::TypeField& field = type_code->fields[0];
 		field.is_extended = true;
@@ -479,7 +487,11 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 	{
 		vnx::TypeField& field = type_code->fields[10];
 		field.name = "do_verify_rewrite";
-		field.value = vnx::to_string(false);
+		field.code = {1};
+	}
+	{
+		vnx::TypeField& field = type_code->fields[11];
+		field.name = "ignore_errors";
 		field.code = {1};
 	}
 	type_code->build();
@@ -774,6 +786,12 @@ void read(TypeInput& in, ::vnx::keyvalue::ServerBase& value, const TypeCode* typ
 				vnx::read_value(_buf + _field->offset, value.do_verify_rewrite, _field->code.data());
 			}
 		}
+		{
+			const vnx::TypeField* const _field = type_code->field_map[11];
+			if(_field) {
+				vnx::read_value(_buf + _field->offset, value.ignore_errors, _field->code.data());
+			}
+		}
 	}
 	for(const vnx::TypeField* _field : type_code->ext_fields) {
 		switch(_field->native_index) {
@@ -794,7 +812,7 @@ void write(TypeOutput& out, const ::vnx::keyvalue::ServerBase& value, const Type
 	if(code && code[0] == CODE_STRUCT) {
 		type_code = type_code->depends[code[1]];
 	}
-	char* const _buf = out.write(33);
+	char* const _buf = out.write(34);
 	vnx::write_value(_buf + 0, value.max_block_size);
 	vnx::write_value(_buf + 8, value.rewrite_threshold);
 	vnx::write_value(_buf + 12, value.idle_rewrite_threshold);
@@ -803,6 +821,7 @@ void write(TypeOutput& out, const ::vnx::keyvalue::ServerBase& value, const Type
 	vnx::write_value(_buf + 24, value.num_read_threads);
 	vnx::write_value(_buf + 28, value.max_queue_ms);
 	vnx::write_value(_buf + 32, value.do_verify_rewrite);
+	vnx::write_value(_buf + 33, value.ignore_errors);
 	vnx::write(out, value.update_topic, type_code, type_code->fields[0].code.data());
 	vnx::write(out, value.collection, type_code, type_code->fields[1].code.data());
 	vnx::write(out, value.storage_path, type_code, type_code->fields[2].code.data());

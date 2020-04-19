@@ -26,7 +26,9 @@ module Server {
 	
 	int max_queue_ms = 1000;
 	
-	bool do_verify_rewrite = false;
+	bool do_verify_rewrite;
+	
+	bool ignore_errors;
 	
 	
 	Value* get_value(Variant key) const async;
