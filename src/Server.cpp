@@ -619,23 +619,30 @@ void Server::rewrite_func()
 		rewrite.key_in = std::make_shared<TypeInput>(stream.get());
 	}
 	try {
-		uint64_t num_bytes = 0;
-		for(int i = 0; i < 100; ++i) {
+		int64_t num_bytes = 0;
+		for(int i = 0; i < 1000; ++i)
+		{
 			auto entry = vnx::read(*rewrite.key_in);
 			auto index_entry = std::dynamic_pointer_cast<IndexEntry>(entry);
 			if(index_entry) {
 				auto iter = key_map.find(index_entry->key);
-				if(iter != key_map.end()) {
-					if(index_entry->version == iter->second)
+				if(iter != key_map.end() && index_entry->version == iter->second)
+				{
+					auto iter2 = index_map.find(iter->second);
+					if(iter2 != index_map.end())
 					{
-						auto stream = block->value_file.mmap_read(index_entry->block_offset, index_entry->num_bytes);
-						TypeInput value_in(stream.get());
-						auto value = vnx::read(value_in);
-						store_value_internal(index_entry->key, value, index_entry->version);
-						
-						num_bytes += index_entry->num_bytes;
-						if(num_bytes >= 16384) {
-							break;
+						const auto& index = iter2->second;
+						if(block->index == index.block_index && index_entry->block_offset == index.block_offset)
+						{
+							auto stream = block->value_file.mmap_read(index_entry->block_offset, index_entry->num_bytes);
+							TypeInput value_in(stream.get());
+							auto value = vnx::read(value_in);
+							store_value_internal(index_entry->key, value, index_entry->version);
+							
+							num_bytes += index_entry->num_bytes;
+							if(num_bytes >= rewrite_chunk_size) {
+								break;
+							}
 						}
 					}
 				}

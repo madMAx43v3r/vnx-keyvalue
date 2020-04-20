@@ -12,7 +12,9 @@ module Server {
 	
 	string storage_path;
 	
-	long max_block_size = 268435456;
+	long max_block_size = 268435456;			// [bytes]
+	
+	long rewrite_chunk_size = 262144;			// [bytes]
 	
 	float rewrite_threshold = 0.5;
 	
