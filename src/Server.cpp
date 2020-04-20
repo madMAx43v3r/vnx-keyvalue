@@ -704,7 +704,8 @@ void Server::lock_file_exclusive(const File& file)
 void Server::print_stats()
 {
 	log(INFO).out << read_counter << " reads/s, " << num_bytes_read/1024 << " KB/s read, "
-			<< write_counter << " writes/s, " << num_bytes_written/1024 << " KB/s write";
+			<< write_counter << " writes/s, " << num_bytes_written/1024 << " KB/s write, "
+			<< sync_jobs.size() << " sync jobs";
 	read_counter = 0;
 	write_counter = 0;
 	num_bytes_read = 0;
