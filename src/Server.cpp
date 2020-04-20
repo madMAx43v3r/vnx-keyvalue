@@ -748,7 +748,7 @@ void Server::read_loop() const noexcept
 		}
 		if(request.result_many) {
 			request.result_many->values[request.result_index] = value;
-			if(++request.result_many->num_left == 0) {
+			if(--request.result_many->num_left == 0) {
 				request.result_many->callback(request.result_many->values);
 			}
 		}
