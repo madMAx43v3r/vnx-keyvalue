@@ -115,8 +115,8 @@ void Server::main()
 								
 								curr_version = std::max(curr_version, index_entry->version);
 								block->num_bytes_used += index_entry->num_bytes;
-								block->num_bytes_total += index_entry->num_bytes;
 							}
+							block->num_bytes_total += index_entry->num_bytes;
 						}
 					}
 					{
