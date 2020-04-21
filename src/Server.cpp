@@ -767,6 +767,7 @@ void Server::read_loop() const noexcept
 void Server::update_loop() const noexcept
 {
 	Publisher publisher;
+	uint64_t previous = 0;
 	
 	while(vnx_do_run())
 	{
@@ -783,7 +784,9 @@ void Server::update_loop() const noexcept
 				break;
 			}
 		}
+		value->previous = previous;
 		publisher.publish(value, update_topic);
+		previous = value->version;
 	}
 }
 
