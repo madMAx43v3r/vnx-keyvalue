@@ -625,24 +625,20 @@ void Server::rewrite_func()
 			auto entry = vnx::read(*rewrite.key_in);
 			auto index_entry = std::dynamic_pointer_cast<IndexEntry>(entry);
 			if(index_entry) {
-				auto iter = key_map.find(index_entry->key);
-				if(iter != key_map.end() && index_entry->version == iter->second)
+				auto iter = index_map.find(index_entry->version);
+				if(iter != index_map.end())
 				{
-					auto iter2 = index_map.find(iter->second);
-					if(iter2 != index_map.end())
+					const auto& index = iter->second;
+					if(block->index == index.block_index && index_entry->block_offset == index.block_offset)
 					{
-						const auto& index = iter2->second;
-						if(block->index == index.block_index && index_entry->block_offset == index.block_offset)
-						{
-							auto stream = block->value_file.mmap_read(index_entry->block_offset, index_entry->num_bytes);
-							TypeInput value_in(stream.get());
-							auto value = vnx::read(value_in);
-							store_value_internal(index_entry->key, value, index_entry->version);
-							
-							num_bytes += index_entry->num_bytes;
-							if(num_bytes >= rewrite_chunk_size) {
-								break;
-							}
+						auto stream = block->value_file.mmap_read(index_entry->block_offset, index_entry->num_bytes);
+						TypeInput value_in(stream.get());
+						auto value = vnx::read(value_in);
+						store_value_internal(index_entry->key, value, index_entry->version);
+						
+						num_bytes += index_entry->num_bytes;
+						if(num_bytes >= rewrite_chunk_size) {
+							break;
 						}
 					}
 				}
