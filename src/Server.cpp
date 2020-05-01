@@ -810,7 +810,7 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 	{
 		list.clear();
 		{
-			std::unique_lock<std::mutex> lock(index_mutex);
+			std::lock_guard<std::mutex> lock(index_mutex);
 			
 			auto iter = index_map.upper_bound(version);
 			for(int i = 0; iter != index_map.end() && i < 100; ++iter, ++i)
