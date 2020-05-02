@@ -43,6 +43,8 @@ protected:
 	
 	void sync_all(const TopicPtr& topic) override;
 	
+	void sync_all_keys(const TopicPtr& topic) override;
+	
 	void store_value(const Variant& key, const std::shared_ptr<const Value>& value) override;
 	
 	void delete_value(const Variant& key) override;
@@ -111,6 +113,8 @@ private:
 	
 	key_index_t store_value_internal(const Variant& key, const std::shared_ptr<const Value>& value, uint64_t version);
 	
+	void sync_range_ex(TopicPtr topic, uint64_t begin, uint64_t end, bool key_only);
+	
 	void check_rewrite(bool is_idle);
 	
 	void rewrite_func();
@@ -123,7 +127,7 @@ private:
 	
 	void update_loop() const noexcept;
 	
-	void sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t end) const noexcept;
+	void sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t end, bool key_only) const noexcept;
 	
 private:
 	uint64_t curr_version = 0;

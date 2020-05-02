@@ -43,6 +43,8 @@ module Server {
 	
 	void sync_all(TopicPtr topic);
 	
+	void sync_all_keys(TopicPtr topic);
+	
 	void store_value(Variant key, Value* value);
 	
 	void delete_value(Variant key);

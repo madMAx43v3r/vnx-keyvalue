@@ -326,6 +326,14 @@ void Server::get_values_async(	const std::vector<Variant>& keys,
 	}
 }
 
+void Server::sync_range_ex(TopicPtr topic, uint64_t begin, uint64_t end, bool key_only)
+{
+	const auto job_id = next_sync_id++;
+	sync_jobs[job_id] = std::thread(&Server::sync_loop, this, job_id, topic, begin, end, key_only);
+	
+	log(INFO).out << "Started sync job " << job_id << " ...";
+}
+
 void Server::sync_from(const TopicPtr& topic, const uint64_t& version)
 {
 	sync_range(topic, version, 0);
@@ -333,15 +341,17 @@ void Server::sync_from(const TopicPtr& topic, const uint64_t& version)
 
 void Server::sync_range(const TopicPtr& topic, const uint64_t& begin, const uint64_t& end)
 {
-	const auto job_id = next_sync_id++;
-	sync_jobs[job_id] = std::thread(&Server::sync_loop, this, job_id, topic, begin, end);
-	
-	log(INFO).out << "Started sync job " << job_id << " ...";
+	sync_range_ex(topic, begin, end, false);
 }
 
 void Server::sync_all(const TopicPtr& topic)
 {
 	sync_range(topic, 0, 0);
+}
+
+void Server::sync_all_keys(const TopicPtr& topic)
+{
+	sync_range_ex(topic, 0, 0, true);
 }
 
 void Server::block_sync_finished(const int64_t& job_id)
@@ -786,7 +796,7 @@ void Server::update_loop() const noexcept
 	}
 }
 
-void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t end) const noexcept
+void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t end, bool key_only) const noexcept
 {
 	Publisher publisher;
 	uint64_t version = begin;
@@ -851,7 +861,7 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 			}
 			if(index_entry) {
 				std::shared_ptr<Value> value;
-				{
+				if(!key_only) {
 					auto stream = block->value_file.mmap_read(index.block_offset, index.num_bytes);
 					TypeInput in(stream.get());
 					try {
