@@ -18,7 +18,7 @@ namespace keyvalue {
 
 
 const vnx::Hash64 ServerBase::VNX_TYPE_HASH(0xbb28aa6f1d808048ull);
-const vnx::Hash64 ServerBase::VNX_CODE_HASH(0x2d3a97d38ea69e60ull);
+const vnx::Hash64 ServerBase::VNX_CODE_HASH(0x8cc5266550312dd1ull);
 
 ServerBase::ServerBase(const std::string& _vnx_name)
 	:	Module::Module(_vnx_name)
@@ -194,7 +194,7 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>(true);
 	type_code->name = "vnx.keyvalue.Server";
 	type_code->type_hash = vnx::Hash64(0xbb28aa6f1d808048ull);
-	type_code->code_hash = vnx::Hash64(0x2d3a97d38ea69e60ull);
+	type_code->code_hash = vnx::Hash64(0x8cc5266550312dd1ull);
 	type_code->methods.resize(9);
 	{
 		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>(true);
@@ -508,7 +508,7 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 	{
 		vnx::TypeField& field = type_code->fields[8];
 		field.name = "idle_rewrite_interval";
-		field.value = vnx::to_string(1000);
+		field.value = vnx::to_string(100);
 		field.code = {7};
 	}
 	{

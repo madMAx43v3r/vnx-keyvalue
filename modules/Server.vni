@@ -22,7 +22,7 @@ module Server {
 	
 	int rewrite_interval = 10;
 	
-	int idle_rewrite_interval = 1000;
+	int idle_rewrite_interval = 100;
 	
 	int num_read_threads = 10;
 	
