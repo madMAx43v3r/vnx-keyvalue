@@ -63,6 +63,7 @@ protected:
 	virtual void get_values_async(const ::std::vector<::vnx::Variant>& keys, const std::function<void(const ::std::vector<::std::shared_ptr<const ::vnx::Value>>&)>& _callback, const vnx::request_id_t& _request_id) const = 0;
 	virtual void store_value(const ::vnx::Variant& key, const ::std::shared_ptr<const ::vnx::Value>& value) = 0;
 	virtual void sync_all(const ::vnx::TopicPtr& topic) = 0;
+	virtual void sync_all_keys(const ::vnx::TopicPtr& topic) = 0;
 	virtual void sync_from(const ::vnx::TopicPtr& topic, const ::uint64_t& version) = 0;
 	virtual void sync_range(const ::vnx::TopicPtr& topic, const ::uint64_t& begin, const ::uint64_t& end) = 0;
 	

@@ -40,6 +40,10 @@ public:
 	
 	void sync_all_async(const ::vnx::TopicPtr& topic);
 	
+	void sync_all_keys(const ::vnx::TopicPtr& topic);
+	
+	void sync_all_keys_async(const ::vnx::TopicPtr& topic);
+	
 	void sync_from(const ::vnx::TopicPtr& topic, const ::uint64_t& version);
 	
 	void sync_from_async(const ::vnx::TopicPtr& topic, const ::uint64_t& version);

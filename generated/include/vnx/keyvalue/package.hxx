@@ -37,6 +37,8 @@ extern const vnx::TypeCode* const vnx_native_type_code_Server_store_value; ///< 
 extern const vnx::TypeCode* const vnx_native_type_code_Server_store_value_return; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_Server_sync_all; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_Server_sync_all_return; ///< \private
+extern const vnx::TypeCode* const vnx_native_type_code_Server_sync_all_keys; ///< \private
+extern const vnx::TypeCode* const vnx_native_type_code_Server_sync_all_keys_return; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_Server_sync_from; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_Server_sync_from_return; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_Server_sync_range; ///< \private

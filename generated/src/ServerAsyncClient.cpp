@@ -118,6 +118,22 @@ uint64_t ServerAsyncClient::sync_all(const ::vnx::TopicPtr& topic, const std::fu
 	return _request_id;
 }
 
+uint64_t ServerAsyncClient::sync_all_keys(const ::vnx::TopicPtr& topic, const std::function<void()>& _callback) {
+	std::shared_ptr<vnx::Binary> _argument_data = vnx::Binary::create();
+	vnx::BinaryOutputStream _stream_out(_argument_data.get());
+	vnx::TypeOutput _out(&_stream_out);
+	const vnx::TypeCode* _type_code = vnx::keyvalue::vnx_native_type_code_Server_sync_all_keys;
+	{
+		vnx::write(_out, topic, _type_code, _type_code->fields[0].code.data());
+	}
+	_out.flush();
+	_argument_data->type_code = _type_code;
+	const uint64_t _request_id = vnx_request(_argument_data);
+	vnx_queue_sync_all_keys[_request_id] = _callback;
+	vnx_num_pending++;
+	return _request_id;
+}
+
 uint64_t ServerAsyncClient::sync_from(const ::vnx::TopicPtr& topic, const ::uint64_t& version, const std::function<void()>& _callback) {
 	std::shared_ptr<vnx::Binary> _argument_data = vnx::Binary::create();
 	vnx::BinaryOutputStream _stream_out(_argument_data.get());
@@ -175,6 +191,9 @@ std::vector<uint64_t>ServerAsyncClient::vnx_get_pending_ids() const {
 	for(const auto& entry : vnx_queue_sync_all) {
 		_list.push_back(entry.first);
 	}
+	for(const auto& entry : vnx_queue_sync_all_keys) {
+		_list.push_back(entry.first);
+	}
 	for(const auto& entry : vnx_queue_sync_from) {
 		_list.push_back(entry.first);
 	}
@@ -191,6 +210,7 @@ void ServerAsyncClient::vnx_purge_request(uint64_t _request_id) {
 	vnx_num_pending -= vnx_queue_get_values.erase(_request_id);
 	vnx_num_pending -= vnx_queue_store_value.erase(_request_id);
 	vnx_num_pending -= vnx_queue_sync_all.erase(_request_id);
+	vnx_num_pending -= vnx_queue_sync_all_keys.erase(_request_id);
 	vnx_num_pending -= vnx_queue_sync_from.erase(_request_id);
 	vnx_num_pending -= vnx_queue_sync_range.erase(_request_id);
 }
@@ -284,6 +304,17 @@ void ServerAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_pt
 		if(_iter != vnx_queue_sync_all.end()) {
 			const auto _callback = std::move(_iter->second);
 			vnx_queue_sync_all.erase(_iter);
+			vnx_num_pending--;
+			if(_callback) {
+				_callback();
+			}
+		}
+	}
+	else if(_return_type->type_hash == vnx::Hash64(0xd419b32d0bc488e3ull)) {
+		auto _iter = vnx_queue_sync_all_keys.find(_request_id);
+		if(_iter != vnx_queue_sync_all_keys.end()) {
+			const auto _callback = std::move(_iter->second);
+			vnx_queue_sync_all_keys.erase(_iter);
 			vnx_num_pending--;
 			if(_callback) {
 				_callback();

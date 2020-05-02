@@ -154,6 +154,24 @@ void ServerClient::sync_all_async(const ::vnx::TopicPtr& topic) {
 	sync_all(topic);
 }
 
+void ServerClient::sync_all_keys(const ::vnx::TopicPtr& topic) {
+	std::shared_ptr<vnx::Binary> _argument_data = vnx::Binary::create();
+	vnx::BinaryOutputStream _stream_out(_argument_data.get());
+	vnx::TypeOutput _out(&_stream_out);
+	const vnx::TypeCode* _type_code = vnx::keyvalue::vnx_native_type_code_Server_sync_all_keys;
+	{
+		vnx::write(_out, topic, _type_code, _type_code->fields[0].code.data());
+	}
+	_out.flush();
+	_argument_data->type_code = _type_code;
+	vnx_request(_argument_data);
+}
+
+void ServerClient::sync_all_keys_async(const ::vnx::TopicPtr& topic) {
+	vnx_is_async = true;
+	sync_all_keys(topic);
+}
+
 void ServerClient::sync_from(const ::vnx::TopicPtr& topic, const ::uint64_t& version) {
 	std::shared_ptr<vnx::Binary> _argument_data = vnx::Binary::create();
 	vnx::BinaryOutputStream _stream_out(_argument_data.get());
