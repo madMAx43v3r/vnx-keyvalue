@@ -25,8 +25,8 @@ extern const vnx::TypeCode* const vnx_native_type_code_Collection; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_IndexEntry; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_KeyValuePair; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_Server; ///< \private
-extern const vnx::TypeCode* const vnx_native_type_code_Server_block_sync_finished; ///< \private
-extern const vnx::TypeCode* const vnx_native_type_code_Server_block_sync_finished_return; ///< \private
+extern const vnx::TypeCode* const vnx_native_type_code_Server__sync_finished; ///< \private
+extern const vnx::TypeCode* const vnx_native_type_code_Server__sync_finished_return; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_Server_delete_value; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_Server_delete_value_return; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_Server_get_value; ///< \private

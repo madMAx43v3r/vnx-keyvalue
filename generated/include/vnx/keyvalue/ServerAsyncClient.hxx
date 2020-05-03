@@ -20,7 +20,7 @@ public:
 	
 	ServerAsyncClient(vnx::Hash64 service_addr);
 	
-	uint64_t block_sync_finished(const ::int64_t& job_id, 
+	uint64_t _sync_finished(const ::int64_t& job_id, 
 			const std::function<void()>& _callback = std::function<void()>());
 	
 	uint64_t delete_value(const ::vnx::Variant& key, 
@@ -36,16 +36,16 @@ public:
 			const std::function<void()>& _callback = std::function<void()>());
 	
 	uint64_t sync_all(const ::vnx::TopicPtr& topic, 
-			const std::function<void()>& _callback = std::function<void()>());
+			const std::function<void(::int64_t)>& _callback = std::function<void(::int64_t)>());
 	
 	uint64_t sync_all_keys(const ::vnx::TopicPtr& topic, 
-			const std::function<void()>& _callback = std::function<void()>());
+			const std::function<void(::int64_t)>& _callback = std::function<void(::int64_t)>());
 	
 	uint64_t sync_from(const ::vnx::TopicPtr& topic, const ::uint64_t& version, 
-			const std::function<void()>& _callback = std::function<void()>());
+			const std::function<void(::int64_t)>& _callback = std::function<void(::int64_t)>());
 	
 	uint64_t sync_range(const ::vnx::TopicPtr& topic, const ::uint64_t& begin, const ::uint64_t& end, 
-			const std::function<void()>& _callback = std::function<void()>());
+			const std::function<void(::int64_t)>& _callback = std::function<void(::int64_t)>());
 	
 	std::vector<uint64_t> vnx_get_pending_ids() const override;
 	
@@ -55,15 +55,15 @@ protected:
 	void vnx_callback_switch(uint64_t _request_id, std::shared_ptr<const vnx::Binary> _data) override;
 	
 private:
-	std::map<uint64_t, std::function<void()>> vnx_queue_block_sync_finished;
+	std::map<uint64_t, std::function<void()>> vnx_queue__sync_finished;
 	std::map<uint64_t, std::function<void()>> vnx_queue_delete_value;
 	std::map<uint64_t, std::function<void(::std::shared_ptr<const ::vnx::Value>)>> vnx_queue_get_value;
 	std::map<uint64_t, std::function<void(::std::vector<::std::shared_ptr<const ::vnx::Value>>)>> vnx_queue_get_values;
 	std::map<uint64_t, std::function<void()>> vnx_queue_store_value;
-	std::map<uint64_t, std::function<void()>> vnx_queue_sync_all;
-	std::map<uint64_t, std::function<void()>> vnx_queue_sync_all_keys;
-	std::map<uint64_t, std::function<void()>> vnx_queue_sync_from;
-	std::map<uint64_t, std::function<void()>> vnx_queue_sync_range;
+	std::map<uint64_t, std::function<void(::int64_t)>> vnx_queue_sync_all;
+	std::map<uint64_t, std::function<void(::int64_t)>> vnx_queue_sync_all_keys;
+	std::map<uint64_t, std::function<void(::int64_t)>> vnx_queue_sync_from;
+	std::map<uint64_t, std::function<void(::int64_t)>> vnx_queue_sync_range;
 	
 };
 

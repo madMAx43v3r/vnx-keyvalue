@@ -20,11 +20,11 @@ ServerAsyncClient::ServerAsyncClient(vnx::Hash64 service_addr)
 {
 }
 
-uint64_t ServerAsyncClient::block_sync_finished(const ::int64_t& job_id, const std::function<void()>& _callback) {
+uint64_t ServerAsyncClient::_sync_finished(const ::int64_t& job_id, const std::function<void()>& _callback) {
 	std::shared_ptr<vnx::Binary> _argument_data = vnx::Binary::create();
 	vnx::BinaryOutputStream _stream_out(_argument_data.get());
 	vnx::TypeOutput _out(&_stream_out);
-	const vnx::TypeCode* _type_code = vnx::keyvalue::vnx_native_type_code_Server_block_sync_finished;
+	const vnx::TypeCode* _type_code = vnx::keyvalue::vnx_native_type_code_Server__sync_finished;
 	{
 		char* const _buf = _out.write(8);
 		vnx::write_value(_buf + 0, job_id);
@@ -32,7 +32,7 @@ uint64_t ServerAsyncClient::block_sync_finished(const ::int64_t& job_id, const s
 	_out.flush();
 	_argument_data->type_code = _type_code;
 	const uint64_t _request_id = vnx_request(_argument_data);
-	vnx_queue_block_sync_finished[_request_id] = _callback;
+	vnx_queue__sync_finished[_request_id] = _callback;
 	vnx_num_pending++;
 	return _request_id;
 }
@@ -102,7 +102,7 @@ uint64_t ServerAsyncClient::store_value(const ::vnx::Variant& key, const ::std::
 	return _request_id;
 }
 
-uint64_t ServerAsyncClient::sync_all(const ::vnx::TopicPtr& topic, const std::function<void()>& _callback) {
+uint64_t ServerAsyncClient::sync_all(const ::vnx::TopicPtr& topic, const std::function<void(::int64_t)>& _callback) {
 	std::shared_ptr<vnx::Binary> _argument_data = vnx::Binary::create();
 	vnx::BinaryOutputStream _stream_out(_argument_data.get());
 	vnx::TypeOutput _out(&_stream_out);
@@ -118,7 +118,7 @@ uint64_t ServerAsyncClient::sync_all(const ::vnx::TopicPtr& topic, const std::fu
 	return _request_id;
 }
 
-uint64_t ServerAsyncClient::sync_all_keys(const ::vnx::TopicPtr& topic, const std::function<void()>& _callback) {
+uint64_t ServerAsyncClient::sync_all_keys(const ::vnx::TopicPtr& topic, const std::function<void(::int64_t)>& _callback) {
 	std::shared_ptr<vnx::Binary> _argument_data = vnx::Binary::create();
 	vnx::BinaryOutputStream _stream_out(_argument_data.get());
 	vnx::TypeOutput _out(&_stream_out);
@@ -134,7 +134,7 @@ uint64_t ServerAsyncClient::sync_all_keys(const ::vnx::TopicPtr& topic, const st
 	return _request_id;
 }
 
-uint64_t ServerAsyncClient::sync_from(const ::vnx::TopicPtr& topic, const ::uint64_t& version, const std::function<void()>& _callback) {
+uint64_t ServerAsyncClient::sync_from(const ::vnx::TopicPtr& topic, const ::uint64_t& version, const std::function<void(::int64_t)>& _callback) {
 	std::shared_ptr<vnx::Binary> _argument_data = vnx::Binary::create();
 	vnx::BinaryOutputStream _stream_out(_argument_data.get());
 	vnx::TypeOutput _out(&_stream_out);
@@ -152,7 +152,7 @@ uint64_t ServerAsyncClient::sync_from(const ::vnx::TopicPtr& topic, const ::uint
 	return _request_id;
 }
 
-uint64_t ServerAsyncClient::sync_range(const ::vnx::TopicPtr& topic, const ::uint64_t& begin, const ::uint64_t& end, const std::function<void()>& _callback) {
+uint64_t ServerAsyncClient::sync_range(const ::vnx::TopicPtr& topic, const ::uint64_t& begin, const ::uint64_t& end, const std::function<void(::int64_t)>& _callback) {
 	std::shared_ptr<vnx::Binary> _argument_data = vnx::Binary::create();
 	vnx::BinaryOutputStream _stream_out(_argument_data.get());
 	vnx::TypeOutput _out(&_stream_out);
@@ -173,7 +173,7 @@ uint64_t ServerAsyncClient::sync_range(const ::vnx::TopicPtr& topic, const ::uin
 
 std::vector<uint64_t>ServerAsyncClient::vnx_get_pending_ids() const {
 	std::vector<uint64_t> _list;
-	for(const auto& entry : vnx_queue_block_sync_finished) {
+	for(const auto& entry : vnx_queue__sync_finished) {
 		_list.push_back(entry.first);
 	}
 	for(const auto& entry : vnx_queue_delete_value) {
@@ -204,7 +204,7 @@ std::vector<uint64_t>ServerAsyncClient::vnx_get_pending_ids() const {
 }
 
 void ServerAsyncClient::vnx_purge_request(uint64_t _request_id) {
-	vnx_num_pending -= vnx_queue_block_sync_finished.erase(_request_id);
+	vnx_num_pending -= vnx_queue__sync_finished.erase(_request_id);
 	vnx_num_pending -= vnx_queue_delete_value.erase(_request_id);
 	vnx_num_pending -= vnx_queue_get_value.erase(_request_id);
 	vnx_num_pending -= vnx_queue_get_values.erase(_request_id);
@@ -220,11 +220,11 @@ void ServerAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_pt
 	vnx::TypeInput _in(&_stream_in);
 	const vnx::TypeCode* _return_type = _data->type_code;
 	
-	if(_return_type->type_hash == vnx::Hash64(0xe5d95a7b370db191ull)) {
-		auto _iter = vnx_queue_block_sync_finished.find(_request_id);
-		if(_iter != vnx_queue_block_sync_finished.end()) {
+	if(_return_type->type_hash == vnx::Hash64(0x4039b73e1e85b062ull)) {
+		auto _iter = vnx_queue__sync_finished.find(_request_id);
+		if(_iter != vnx_queue__sync_finished.end()) {
 			const auto _callback = std::move(_iter->second);
-			vnx_queue_block_sync_finished.erase(_iter);
+			vnx_queue__sync_finished.erase(_iter);
 			vnx_num_pending--;
 			if(_callback) {
 				_callback();
@@ -300,46 +300,114 @@ void ServerAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_pt
 		}
 	}
 	else if(_return_type->type_hash == vnx::Hash64(0x964de09bdefcfc87ull)) {
+		::int64_t _ret_0 = 0;
+		{
+			const char* const _buf = _in.read(_return_type->total_field_size);
+			if(_return_type->is_matched) {
+				{
+					const vnx::TypeField* const _field = _return_type->field_map[0];
+					if(_field) {
+						vnx::read_value(_buf + _field->offset, _ret_0, _field->code.data());
+					}
+				}
+			}
+			for(const vnx::TypeField* _field : _return_type->ext_fields) {
+				switch(_field->native_index) {
+					default: vnx::skip(_in, _return_type, _field->code.data());
+				}
+			}
+		}
 		auto _iter = vnx_queue_sync_all.find(_request_id);
 		if(_iter != vnx_queue_sync_all.end()) {
 			const auto _callback = std::move(_iter->second);
 			vnx_queue_sync_all.erase(_iter);
 			vnx_num_pending--;
 			if(_callback) {
-				_callback();
+				_callback(_ret_0);
 			}
 		}
 	}
 	else if(_return_type->type_hash == vnx::Hash64(0xd419b32d0bc488e3ull)) {
+		::int64_t _ret_0 = 0;
+		{
+			const char* const _buf = _in.read(_return_type->total_field_size);
+			if(_return_type->is_matched) {
+				{
+					const vnx::TypeField* const _field = _return_type->field_map[0];
+					if(_field) {
+						vnx::read_value(_buf + _field->offset, _ret_0, _field->code.data());
+					}
+				}
+			}
+			for(const vnx::TypeField* _field : _return_type->ext_fields) {
+				switch(_field->native_index) {
+					default: vnx::skip(_in, _return_type, _field->code.data());
+				}
+			}
+		}
 		auto _iter = vnx_queue_sync_all_keys.find(_request_id);
 		if(_iter != vnx_queue_sync_all_keys.end()) {
 			const auto _callback = std::move(_iter->second);
 			vnx_queue_sync_all_keys.erase(_iter);
 			vnx_num_pending--;
 			if(_callback) {
-				_callback();
+				_callback(_ret_0);
 			}
 		}
 	}
 	else if(_return_type->type_hash == vnx::Hash64(0x68661d3bb01d2b6bull)) {
+		::int64_t _ret_0 = 0;
+		{
+			const char* const _buf = _in.read(_return_type->total_field_size);
+			if(_return_type->is_matched) {
+				{
+					const vnx::TypeField* const _field = _return_type->field_map[0];
+					if(_field) {
+						vnx::read_value(_buf + _field->offset, _ret_0, _field->code.data());
+					}
+				}
+			}
+			for(const vnx::TypeField* _field : _return_type->ext_fields) {
+				switch(_field->native_index) {
+					default: vnx::skip(_in, _return_type, _field->code.data());
+				}
+			}
+		}
 		auto _iter = vnx_queue_sync_from.find(_request_id);
 		if(_iter != vnx_queue_sync_from.end()) {
 			const auto _callback = std::move(_iter->second);
 			vnx_queue_sync_from.erase(_iter);
 			vnx_num_pending--;
 			if(_callback) {
-				_callback();
+				_callback(_ret_0);
 			}
 		}
 	}
 	else if(_return_type->type_hash == vnx::Hash64(0xd451dace3153346bull)) {
+		::int64_t _ret_0 = 0;
+		{
+			const char* const _buf = _in.read(_return_type->total_field_size);
+			if(_return_type->is_matched) {
+				{
+					const vnx::TypeField* const _field = _return_type->field_map[0];
+					if(_field) {
+						vnx::read_value(_buf + _field->offset, _ret_0, _field->code.data());
+					}
+				}
+			}
+			for(const vnx::TypeField* _field : _return_type->ext_fields) {
+				switch(_field->native_index) {
+					default: vnx::skip(_in, _return_type, _field->code.data());
+				}
+			}
+		}
 		auto _iter = vnx_queue_sync_range.find(_request_id);
 		if(_iter != vnx_queue_sync_range.end()) {
 			const auto _callback = std::move(_iter->second);
 			vnx_queue_sync_range.erase(_iter);
 			vnx_num_pending--;
 			if(_callback) {
-				_callback();
+				_callback(_ret_0);
 			}
 		}
 	}

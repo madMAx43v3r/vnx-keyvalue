@@ -20,11 +20,11 @@ ServerClient::ServerClient(vnx::Hash64 service_addr)
 {
 }
 
-void ServerClient::block_sync_finished(const ::int64_t& job_id) {
+void ServerClient::_sync_finished(const ::int64_t& job_id) {
 	std::shared_ptr<vnx::Binary> _argument_data = vnx::Binary::create();
 	vnx::BinaryOutputStream _stream_out(_argument_data.get());
 	vnx::TypeOutput _out(&_stream_out);
-	const vnx::TypeCode* _type_code = vnx::keyvalue::vnx_native_type_code_Server_block_sync_finished;
+	const vnx::TypeCode* _type_code = vnx::keyvalue::vnx_native_type_code_Server__sync_finished;
 	{
 		char* const _buf = _out.write(8);
 		vnx::write_value(_buf + 0, job_id);
@@ -34,9 +34,9 @@ void ServerClient::block_sync_finished(const ::int64_t& job_id) {
 	vnx_request(_argument_data);
 }
 
-void ServerClient::block_sync_finished_async(const ::int64_t& job_id) {
+void ServerClient::_sync_finished_async(const ::int64_t& job_id) {
 	vnx_is_async = true;
-	block_sync_finished(job_id);
+	_sync_finished(job_id);
 }
 
 void ServerClient::delete_value(const ::vnx::Variant& key) {
@@ -136,7 +136,7 @@ void ServerClient::store_value_async(const ::vnx::Variant& key, const ::std::sha
 	store_value(key, value);
 }
 
-void ServerClient::sync_all(const ::vnx::TopicPtr& topic) {
+::int64_t ServerClient::sync_all(const ::vnx::TopicPtr& topic) {
 	std::shared_ptr<vnx::Binary> _argument_data = vnx::Binary::create();
 	vnx::BinaryOutputStream _stream_out(_argument_data.get());
 	vnx::TypeOutput _out(&_stream_out);
@@ -147,14 +147,31 @@ void ServerClient::sync_all(const ::vnx::TopicPtr& topic) {
 	_out.flush();
 	_argument_data->type_code = _type_code;
 	vnx_request(_argument_data);
+	
+	vnx::BinaryInputStream _stream_in(vnx_return_data.get());
+	vnx::TypeInput _in(&_stream_in);
+	const vnx::TypeCode* _return_type = _type_code->return_type;
+	::int64_t _ret_0 = 0;
+	{
+		const char* const _buf = _in.read(_return_type->total_field_size);
+		if(_return_type->is_matched) {
+			{
+				const vnx::TypeField* const _field = _return_type->field_map[0];
+				if(_field) {
+					vnx::read_value(_buf + _field->offset, _ret_0, _field->code.data());
+				}
+			}
+		}
+		for(const vnx::TypeField* _field : _return_type->ext_fields) {
+			switch(_field->native_index) {
+				default: vnx::skip(_in, _return_type, _field->code.data());
+			}
+		}
+	}
+	return _ret_0;
 }
 
-void ServerClient::sync_all_async(const ::vnx::TopicPtr& topic) {
-	vnx_is_async = true;
-	sync_all(topic);
-}
-
-void ServerClient::sync_all_keys(const ::vnx::TopicPtr& topic) {
+::int64_t ServerClient::sync_all_keys(const ::vnx::TopicPtr& topic) {
 	std::shared_ptr<vnx::Binary> _argument_data = vnx::Binary::create();
 	vnx::BinaryOutputStream _stream_out(_argument_data.get());
 	vnx::TypeOutput _out(&_stream_out);
@@ -165,14 +182,31 @@ void ServerClient::sync_all_keys(const ::vnx::TopicPtr& topic) {
 	_out.flush();
 	_argument_data->type_code = _type_code;
 	vnx_request(_argument_data);
+	
+	vnx::BinaryInputStream _stream_in(vnx_return_data.get());
+	vnx::TypeInput _in(&_stream_in);
+	const vnx::TypeCode* _return_type = _type_code->return_type;
+	::int64_t _ret_0 = 0;
+	{
+		const char* const _buf = _in.read(_return_type->total_field_size);
+		if(_return_type->is_matched) {
+			{
+				const vnx::TypeField* const _field = _return_type->field_map[0];
+				if(_field) {
+					vnx::read_value(_buf + _field->offset, _ret_0, _field->code.data());
+				}
+			}
+		}
+		for(const vnx::TypeField* _field : _return_type->ext_fields) {
+			switch(_field->native_index) {
+				default: vnx::skip(_in, _return_type, _field->code.data());
+			}
+		}
+	}
+	return _ret_0;
 }
 
-void ServerClient::sync_all_keys_async(const ::vnx::TopicPtr& topic) {
-	vnx_is_async = true;
-	sync_all_keys(topic);
-}
-
-void ServerClient::sync_from(const ::vnx::TopicPtr& topic, const ::uint64_t& version) {
+::int64_t ServerClient::sync_from(const ::vnx::TopicPtr& topic, const ::uint64_t& version) {
 	std::shared_ptr<vnx::Binary> _argument_data = vnx::Binary::create();
 	vnx::BinaryOutputStream _stream_out(_argument_data.get());
 	vnx::TypeOutput _out(&_stream_out);
@@ -185,14 +219,31 @@ void ServerClient::sync_from(const ::vnx::TopicPtr& topic, const ::uint64_t& ver
 	_out.flush();
 	_argument_data->type_code = _type_code;
 	vnx_request(_argument_data);
+	
+	vnx::BinaryInputStream _stream_in(vnx_return_data.get());
+	vnx::TypeInput _in(&_stream_in);
+	const vnx::TypeCode* _return_type = _type_code->return_type;
+	::int64_t _ret_0 = 0;
+	{
+		const char* const _buf = _in.read(_return_type->total_field_size);
+		if(_return_type->is_matched) {
+			{
+				const vnx::TypeField* const _field = _return_type->field_map[0];
+				if(_field) {
+					vnx::read_value(_buf + _field->offset, _ret_0, _field->code.data());
+				}
+			}
+		}
+		for(const vnx::TypeField* _field : _return_type->ext_fields) {
+			switch(_field->native_index) {
+				default: vnx::skip(_in, _return_type, _field->code.data());
+			}
+		}
+	}
+	return _ret_0;
 }
 
-void ServerClient::sync_from_async(const ::vnx::TopicPtr& topic, const ::uint64_t& version) {
-	vnx_is_async = true;
-	sync_from(topic, version);
-}
-
-void ServerClient::sync_range(const ::vnx::TopicPtr& topic, const ::uint64_t& begin, const ::uint64_t& end) {
+::int64_t ServerClient::sync_range(const ::vnx::TopicPtr& topic, const ::uint64_t& begin, const ::uint64_t& end) {
 	std::shared_ptr<vnx::Binary> _argument_data = vnx::Binary::create();
 	vnx::BinaryOutputStream _stream_out(_argument_data.get());
 	vnx::TypeOutput _out(&_stream_out);
@@ -206,11 +257,28 @@ void ServerClient::sync_range(const ::vnx::TopicPtr& topic, const ::uint64_t& be
 	_out.flush();
 	_argument_data->type_code = _type_code;
 	vnx_request(_argument_data);
-}
-
-void ServerClient::sync_range_async(const ::vnx::TopicPtr& topic, const ::uint64_t& begin, const ::uint64_t& end) {
-	vnx_is_async = true;
-	sync_range(topic, begin, end);
+	
+	vnx::BinaryInputStream _stream_in(vnx_return_data.get());
+	vnx::TypeInput _in(&_stream_in);
+	const vnx::TypeCode* _return_type = _type_code->return_type;
+	::int64_t _ret_0 = 0;
+	{
+		const char* const _buf = _in.read(_return_type->total_field_size);
+		if(_return_type->is_matched) {
+			{
+				const vnx::TypeField* const _field = _return_type->field_map[0];
+				if(_field) {
+					vnx::read_value(_buf + _field->offset, _ret_0, _field->code.data());
+				}
+			}
+		}
+		for(const vnx::TypeField* _field : _return_type->ext_fields) {
+			switch(_field->native_index) {
+				default: vnx::skip(_in, _return_type, _field->code.data());
+			}
+		}
+	}
+	return _ret_0;
 }
 
 

@@ -57,15 +57,15 @@ public:
 	static std::shared_ptr<vnx::TypeCode> static_create_type_code();
 	
 protected:
-	virtual void block_sync_finished(const ::int64_t& job_id) = 0;
+	virtual void _sync_finished(const ::int64_t& job_id) = 0;
 	virtual void delete_value(const ::vnx::Variant& key) = 0;
 	virtual void get_value_async(const ::vnx::Variant& key, const std::function<void(const ::std::shared_ptr<const ::vnx::Value>&)>& _callback, const vnx::request_id_t& _request_id) const = 0;
 	virtual void get_values_async(const ::std::vector<::vnx::Variant>& keys, const std::function<void(const ::std::vector<::std::shared_ptr<const ::vnx::Value>>&)>& _callback, const vnx::request_id_t& _request_id) const = 0;
 	virtual void store_value(const ::vnx::Variant& key, const ::std::shared_ptr<const ::vnx::Value>& value) = 0;
-	virtual void sync_all(const ::vnx::TopicPtr& topic) = 0;
-	virtual void sync_all_keys(const ::vnx::TopicPtr& topic) = 0;
-	virtual void sync_from(const ::vnx::TopicPtr& topic, const ::uint64_t& version) = 0;
-	virtual void sync_range(const ::vnx::TopicPtr& topic, const ::uint64_t& begin, const ::uint64_t& end) = 0;
+	virtual ::int64_t sync_all(const ::vnx::TopicPtr& topic) const = 0;
+	virtual ::int64_t sync_all_keys(const ::vnx::TopicPtr& topic) const = 0;
+	virtual ::int64_t sync_from(const ::vnx::TopicPtr& topic, const ::uint64_t& version) const = 0;
+	virtual ::int64_t sync_range(const ::vnx::TopicPtr& topic, const ::uint64_t& begin, const ::uint64_t& end) const = 0;
 	
 	void vnx_handle_switch(std::shared_ptr<const ::vnx::Sample> _sample) override;
 	std::shared_ptr<vnx::Value> vnx_call_switch(vnx::TypeInput& _in, const vnx::TypeCode* _call_type, const vnx::request_id_t& _request_id) override;

@@ -17,7 +17,7 @@ const ::uint32_t SyncInfo::BEGIN;
 const ::uint32_t SyncInfo::END;
 
 const vnx::Hash64 SyncInfo::VNX_TYPE_HASH(0x4f9820ae95813502ull);
-const vnx::Hash64 SyncInfo::VNX_CODE_HASH(0x2196a0f700505a7ull);
+const vnx::Hash64 SyncInfo::VNX_CODE_HASH(0x14df919a6f68ff58ull);
 
 vnx::Hash64 SyncInfo::get_type_hash() const {
 	return VNX_TYPE_HASH;
@@ -51,7 +51,8 @@ void SyncInfo::accept(vnx::Visitor& _visitor) const {
 	_visitor.type_begin(*_type_code);
 	_visitor.type_field(_type_code->fields[0], 0); vnx::accept(_visitor, collection);
 	_visitor.type_field(_type_code->fields[1], 1); vnx::accept(_visitor, version);
-	_visitor.type_field(_type_code->fields[2], 2); vnx::accept(_visitor, code);
+	_visitor.type_field(_type_code->fields[2], 2); vnx::accept(_visitor, job_id);
+	_visitor.type_field(_type_code->fields[3], 3); vnx::accept(_visitor, code);
 	_visitor.type_end(*_type_code);
 }
 
@@ -59,6 +60,7 @@ void SyncInfo::write(std::ostream& _out) const {
 	_out << "{";
 	_out << "\"collection\": "; vnx::write(_out, collection);
 	_out << ", \"version\": "; vnx::write(_out, version);
+	_out << ", \"job_id\": "; vnx::write(_out, job_id);
 	_out << ", \"code\": "; vnx::write(_out, code);
 	_out << "}";
 }
@@ -71,6 +73,8 @@ void SyncInfo::read(std::istream& _in) {
 			vnx::from_string(_entry.second, code);
 		} else if(_entry.first == "collection") {
 			vnx::from_string(_entry.second, collection);
+		} else if(_entry.first == "job_id") {
+			vnx::from_string(_entry.second, job_id);
 		} else if(_entry.first == "version") {
 			vnx::from_string(_entry.second, version);
 		}
@@ -81,6 +85,7 @@ vnx::Object SyncInfo::to_object() const {
 	vnx::Object _object;
 	_object["collection"] = collection;
 	_object["version"] = version;
+	_object["job_id"] = job_id;
 	_object["code"] = code;
 	return _object;
 }
@@ -91,6 +96,8 @@ void SyncInfo::from_object(const vnx::Object& _object) {
 			_entry.second.to(code);
 		} else if(_entry.first == "collection") {
 			_entry.second.to(collection);
+		} else if(_entry.first == "job_id") {
+			_entry.second.to(job_id);
 		} else if(_entry.first == "version") {
 			_entry.second.to(version);
 		}
@@ -121,11 +128,11 @@ std::shared_ptr<vnx::TypeCode> SyncInfo::static_create_type_code() {
 	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>(true);
 	type_code->name = "vnx.keyvalue.SyncInfo";
 	type_code->type_hash = vnx::Hash64(0x4f9820ae95813502ull);
-	type_code->code_hash = vnx::Hash64(0x2196a0f700505a7ull);
+	type_code->code_hash = vnx::Hash64(0x14df919a6f68ff58ull);
 	type_code->is_class = true;
 	type_code->create_value = []() -> std::shared_ptr<vnx::Value> { return std::make_shared<SyncInfo>(); };
 	type_code->methods.resize(0);
-	type_code->fields.resize(3);
+	type_code->fields.resize(4);
 	{
 		vnx::TypeField& field = type_code->fields[0];
 		field.is_extended = true;
@@ -139,6 +146,11 @@ std::shared_ptr<vnx::TypeCode> SyncInfo::static_create_type_code() {
 	}
 	{
 		vnx::TypeField& field = type_code->fields[2];
+		field.name = "job_id";
+		field.code = {8};
+	}
+	{
+		vnx::TypeField& field = type_code->fields[3];
 		field.name = "code";
 		field.code = {3};
 	}
@@ -175,6 +187,12 @@ void read(TypeInput& in, ::vnx::keyvalue::SyncInfo& value, const TypeCode* type_
 		{
 			const vnx::TypeField* const _field = type_code->field_map[2];
 			if(_field) {
+				vnx::read_value(_buf + _field->offset, value.job_id, _field->code.data());
+			}
+		}
+		{
+			const vnx::TypeField* const _field = type_code->field_map[3];
+			if(_field) {
 				vnx::read_value(_buf + _field->offset, value.code, _field->code.data());
 			}
 		}
@@ -196,9 +214,10 @@ void write(TypeOutput& out, const ::vnx::keyvalue::SyncInfo& value, const TypeCo
 	if(code && code[0] == CODE_STRUCT) {
 		type_code = type_code->depends[code[1]];
 	}
-	char* const _buf = out.write(12);
+	char* const _buf = out.write(20);
 	vnx::write_value(_buf + 0, value.version);
-	vnx::write_value(_buf + 8, value.code);
+	vnx::write_value(_buf + 8, value.job_id);
+	vnx::write_value(_buf + 16, value.code);
 	vnx::write(out, value.collection, type_code, type_code->fields[0].code.data());
 }
 

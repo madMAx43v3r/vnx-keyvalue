@@ -20,9 +20,9 @@ public:
 	
 	ServerClient(vnx::Hash64 service_addr);
 	
-	void block_sync_finished(const ::int64_t& job_id);
+	void _sync_finished(const ::int64_t& job_id);
 	
-	void block_sync_finished_async(const ::int64_t& job_id);
+	void _sync_finished_async(const ::int64_t& job_id);
 	
 	void delete_value(const ::vnx::Variant& key);
 	
@@ -36,21 +36,13 @@ public:
 	
 	void store_value_async(const ::vnx::Variant& key, const ::std::shared_ptr<const ::vnx::Value>& value);
 	
-	void sync_all(const ::vnx::TopicPtr& topic);
+	::int64_t sync_all(const ::vnx::TopicPtr& topic);
 	
-	void sync_all_async(const ::vnx::TopicPtr& topic);
+	::int64_t sync_all_keys(const ::vnx::TopicPtr& topic);
 	
-	void sync_all_keys(const ::vnx::TopicPtr& topic);
+	::int64_t sync_from(const ::vnx::TopicPtr& topic, const ::uint64_t& version);
 	
-	void sync_all_keys_async(const ::vnx::TopicPtr& topic);
-	
-	void sync_from(const ::vnx::TopicPtr& topic, const ::uint64_t& version);
-	
-	void sync_from_async(const ::vnx::TopicPtr& topic, const ::uint64_t& version);
-	
-	void sync_range(const ::vnx::TopicPtr& topic, const ::uint64_t& begin, const ::uint64_t& end);
-	
-	void sync_range_async(const ::vnx::TopicPtr& topic, const ::uint64_t& begin, const ::uint64_t& end);
+	::int64_t sync_range(const ::vnx::TopicPtr& topic, const ::uint64_t& begin, const ::uint64_t& end);
 	
 };
 

@@ -198,15 +198,15 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 	type_code->methods.resize(9);
 	{
 		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>(true);
-		call_type->name = "vnx.keyvalue.Server.block_sync_finished";
-		call_type->type_hash = vnx::Hash64(0xba90ce7bfd371653ull);
-		call_type->code_hash = vnx::Hash64(0x1ea478ca41e18707ull);
+		call_type->name = "vnx.keyvalue.Server._sync_finished";
+		call_type->type_hash = vnx::Hash64(0x2d6328ce038814bbull);
+		call_type->code_hash = vnx::Hash64(0x41b2a858a45ffb1dull);
 		call_type->is_method = true;
 		{
 			std::shared_ptr<vnx::TypeCode> return_type = std::make_shared<vnx::TypeCode>(true);
-			return_type->name = "vnx.keyvalue.Server.block_sync_finished.return";
-			return_type->type_hash = vnx::Hash64(0xe5d95a7b370db191ull);
-			return_type->code_hash = vnx::Hash64(0x2074747a5437b8f4ull);
+			return_type->name = "vnx.keyvalue.Server._sync_finished.return";
+			return_type->type_hash = vnx::Hash64(0x4039b73e1e85b062ull);
+			return_type->code_hash = vnx::Hash64(0x238c52a5525b6022ull);
 			return_type->is_return = true;
 			return_type->build();
 			call_type->return_type = vnx::register_type_code(return_type);
@@ -350,8 +350,14 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 			std::shared_ptr<vnx::TypeCode> return_type = std::make_shared<vnx::TypeCode>(true);
 			return_type->name = "vnx.keyvalue.Server.sync_all.return";
 			return_type->type_hash = vnx::Hash64(0x964de09bdefcfc87ull);
-			return_type->code_hash = vnx::Hash64(0x95c5d36cbdabb501ull);
+			return_type->code_hash = vnx::Hash64(0x3b433d51b4fa1c05ull);
 			return_type->is_return = true;
+			return_type->fields.resize(1);
+			{
+				vnx::TypeField& field = return_type->fields[0];
+				field.name = "_ret_0";
+				field.code = {8};
+			}
 			return_type->build();
 			call_type->return_type = vnx::register_type_code(return_type);
 		}
@@ -375,8 +381,14 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 			std::shared_ptr<vnx::TypeCode> return_type = std::make_shared<vnx::TypeCode>(true);
 			return_type->name = "vnx.keyvalue.Server.sync_all_keys.return";
 			return_type->type_hash = vnx::Hash64(0xd419b32d0bc488e3ull);
-			return_type->code_hash = vnx::Hash64(0xe1b2dbecc64a4ec2ull);
+			return_type->code_hash = vnx::Hash64(0xf8f70df95309081eull);
 			return_type->is_return = true;
+			return_type->fields.resize(1);
+			{
+				vnx::TypeField& field = return_type->fields[0];
+				field.name = "_ret_0";
+				field.code = {8};
+			}
 			return_type->build();
 			call_type->return_type = vnx::register_type_code(return_type);
 		}
@@ -400,8 +412,14 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 			std::shared_ptr<vnx::TypeCode> return_type = std::make_shared<vnx::TypeCode>(true);
 			return_type->name = "vnx.keyvalue.Server.sync_from.return";
 			return_type->type_hash = vnx::Hash64(0x68661d3bb01d2b6bull);
-			return_type->code_hash = vnx::Hash64(0x946e4399ec4b6852ull);
+			return_type->code_hash = vnx::Hash64(0xe668d33f3c7484e8ull);
 			return_type->is_return = true;
+			return_type->fields.resize(1);
+			{
+				vnx::TypeField& field = return_type->fields[0];
+				field.name = "_ret_0";
+				field.code = {8};
+			}
 			return_type->build();
 			call_type->return_type = vnx::register_type_code(return_type);
 		}
@@ -430,8 +448,14 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 			std::shared_ptr<vnx::TypeCode> return_type = std::make_shared<vnx::TypeCode>(true);
 			return_type->name = "vnx.keyvalue.Server.sync_range.return";
 			return_type->type_hash = vnx::Hash64(0xd451dace3153346bull);
-			return_type->code_hash = vnx::Hash64(0x6c5b04fb445f8a88ull);
+			return_type->code_hash = vnx::Hash64(0xddcd13b0f6bf350bull);
 			return_type->is_return = true;
+			return_type->fields.resize(1);
+			{
+				vnx::TypeField& field = return_type->fields[0];
+				field.name = "_ret_0";
+				field.code = {8};
+			}
 			return_type->build();
 			call_type->return_type = vnx::register_type_code(return_type);
 		}
@@ -542,7 +566,7 @@ void ServerBase::vnx_handle_switch(std::shared_ptr<const ::vnx::Sample> _sample)
 }
 
 std::shared_ptr<vnx::Value> ServerBase::vnx_call_switch(vnx::TypeInput& _in, const vnx::TypeCode* _call_type, const vnx::request_id_t& _request_id) {
-	if(_call_type->type_hash == vnx::Hash64(0xba90ce7bfd371653ull)) {
+	if(_call_type->type_hash == vnx::Hash64(0x2d6328ce038814bbull)) {
 		::int64_t job_id = 0;
 		{
 			const char* const _buf = _in.read(_call_type->total_field_size);
@@ -560,10 +584,10 @@ std::shared_ptr<vnx::Value> ServerBase::vnx_call_switch(vnx::TypeInput& _in, con
 				}
 			}
 		}
-		block_sync_finished(job_id);
+		_sync_finished(job_id);
 		std::shared_ptr<vnx::Binary> _return_value;
 		{
-			const vnx::TypeCode* _return_type = vnx::keyvalue::vnx_native_type_code_Server_block_sync_finished_return;
+			const vnx::TypeCode* _return_type = vnx::keyvalue::vnx_native_type_code_Server__sync_finished_return;
 			_return_value = vnx::Binary::create();
 			_return_value->type_code = _return_type;
 		}
@@ -655,12 +679,18 @@ std::shared_ptr<vnx::Value> ServerBase::vnx_call_switch(vnx::TypeInput& _in, con
 				}
 			}
 		}
-		sync_all(topic);
+		::int64_t _ret_0 = 0;
+		_ret_0 = sync_all(topic);
 		std::shared_ptr<vnx::Binary> _return_value;
 		{
 			const vnx::TypeCode* _return_type = vnx::keyvalue::vnx_native_type_code_Server_sync_all_return;
 			_return_value = vnx::Binary::create();
 			_return_value->type_code = _return_type;
+			vnx::BinaryOutputStream _stream_out(_return_value.get());
+			vnx::TypeOutput _out(&_stream_out);
+			char* const _buf = _out.write(8);
+			vnx::write_value(_buf + 0, _ret_0);
+			_out.flush();
 		}
 		return _return_value;
 	} else if(_call_type->type_hash == vnx::Hash64(0x5f4cae900d6d7f69ull)) {
@@ -676,12 +706,18 @@ std::shared_ptr<vnx::Value> ServerBase::vnx_call_switch(vnx::TypeInput& _in, con
 				}
 			}
 		}
-		sync_all_keys(topic);
+		::int64_t _ret_0 = 0;
+		_ret_0 = sync_all_keys(topic);
 		std::shared_ptr<vnx::Binary> _return_value;
 		{
 			const vnx::TypeCode* _return_type = vnx::keyvalue::vnx_native_type_code_Server_sync_all_keys_return;
 			_return_value = vnx::Binary::create();
 			_return_value->type_code = _return_type;
+			vnx::BinaryOutputStream _stream_out(_return_value.get());
+			vnx::TypeOutput _out(&_stream_out);
+			char* const _buf = _out.write(8);
+			vnx::write_value(_buf + 0, _ret_0);
+			_out.flush();
 		}
 		return _return_value;
 	} else if(_call_type->type_hash == vnx::Hash64(0xc10ef313be34be0full)) {
@@ -704,12 +740,18 @@ std::shared_ptr<vnx::Value> ServerBase::vnx_call_switch(vnx::TypeInput& _in, con
 				}
 			}
 		}
-		sync_from(topic, version);
+		::int64_t _ret_0 = 0;
+		_ret_0 = sync_from(topic, version);
 		std::shared_ptr<vnx::Binary> _return_value;
 		{
 			const vnx::TypeCode* _return_type = vnx::keyvalue::vnx_native_type_code_Server_sync_from_return;
 			_return_value = vnx::Binary::create();
 			_return_value->type_code = _return_type;
+			vnx::BinaryOutputStream _stream_out(_return_value.get());
+			vnx::TypeOutput _out(&_stream_out);
+			char* const _buf = _out.write(8);
+			vnx::write_value(_buf + 0, _ret_0);
+			_out.flush();
 		}
 		return _return_value;
 	} else if(_call_type->type_hash == vnx::Hash64(0x21592a9e03b544fdull)) {
@@ -739,12 +781,18 @@ std::shared_ptr<vnx::Value> ServerBase::vnx_call_switch(vnx::TypeInput& _in, con
 				}
 			}
 		}
-		sync_range(topic, begin, end);
+		::int64_t _ret_0 = 0;
+		_ret_0 = sync_range(topic, begin, end);
 		std::shared_ptr<vnx::Binary> _return_value;
 		{
 			const vnx::TypeCode* _return_type = vnx::keyvalue::vnx_native_type_code_Server_sync_range_return;
 			_return_value = vnx::Binary::create();
 			_return_value->type_code = _return_type;
+			vnx::BinaryOutputStream _stream_out(_return_value.get());
+			vnx::TypeOutput _out(&_stream_out);
+			char* const _buf = _out.write(8);
+			vnx::write_value(_buf + 0, _ret_0);
+			_out.flush();
 		}
 		return _return_value;
 	}

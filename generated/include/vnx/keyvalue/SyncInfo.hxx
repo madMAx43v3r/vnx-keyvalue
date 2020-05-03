@@ -18,6 +18,7 @@ public:
 	
 	::std::string collection;
 	::uint64_t version = 0;
+	::int64_t job_id = 0;
 	::uint32_t code = 0;
 	
 	typedef ::vnx::Value Super;
