@@ -37,19 +37,19 @@ protected:
 							const std::function<void(const std::vector<std::shared_ptr<const Value>>&)>& callback,
 							const vnx::request_id_t& request_id) const override;
 	
-	void sync_from(const TopicPtr& topic, const uint64_t& version) override;
+	int64_t sync_from(const TopicPtr& topic, const uint64_t& version) const override;
 	
-	void sync_range(const TopicPtr& topic, const uint64_t& begin, const uint64_t& end) override;
+	int64_t sync_range(const TopicPtr& topic, const uint64_t& begin, const uint64_t& end) const override;
 	
-	void sync_all(const TopicPtr& topic) override;
+	int64_t sync_all(const TopicPtr& topic) const override;
 	
-	void sync_all_keys(const TopicPtr& topic) override;
+	int64_t sync_all_keys(const TopicPtr& topic) const override;
 	
 	void store_value(const Variant& key, const std::shared_ptr<const Value>& value) override;
 	
 	void delete_value(const Variant& key) override;
 	
-	void block_sync_finished(const int64_t& job_id) override;
+	void _sync_finished(const int64_t& job_id) override;
 	
 private:
 	struct key_index_t {
@@ -113,7 +113,7 @@ private:
 	
 	key_index_t store_value_internal(const Variant& key, const std::shared_ptr<const Value>& value, uint64_t version);
 	
-	void sync_range_ex(TopicPtr topic, uint64_t begin, uint64_t end, bool key_only);
+	int64_t sync_range_ex(TopicPtr topic, uint64_t begin, uint64_t end, bool key_only) const;
 	
 	void check_rewrite(bool is_idle);
 	
@@ -162,8 +162,8 @@ private:
 		std::shared_ptr<TypeInput> key_in;
 	} rewrite;
 	
-	int64_t next_sync_id = 0;
-	std::map<int64_t, std::thread> sync_jobs;
+	mutable int64_t next_sync_id = 0;
+	mutable std::map<int64_t, std::thread> sync_jobs;
 	
 	static const int NUM_INDEX = 3;
 	
