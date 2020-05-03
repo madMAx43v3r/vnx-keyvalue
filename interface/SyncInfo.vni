@@ -9,6 +9,8 @@ class SyncInfo {
 	
 	ulong version;
 	
+	long job_id;
+	
 	uint code;
 	
 }

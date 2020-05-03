@@ -803,11 +803,14 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 	uint64_t version = begin;
 	uint64_t previous = begin;
 	
-	auto info = SyncInfo::create();
-	info->collection = collection;
-	info->version = begin;
-	info->code = SyncInfo::BEGIN;
-	publisher.publish(info, topic, BLOCKING);
+	{
+		auto info = SyncInfo::create();
+		info->collection = collection;
+		info->version = begin;
+		info->job_id = job_id;
+		info->code = SyncInfo::BEGIN;
+		publisher.publish(info, topic, BLOCKING);
+	}
 	
 	struct entry_t {
 		uint64_t version;
@@ -890,6 +893,7 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 		auto info = SyncInfo::create();
 		info->collection = collection;
 		info->version = version;
+		info->job_id = job_id;
 		info->code = SyncInfo::END;
 		publisher.publish(info, topic, BLOCKING);
 		
