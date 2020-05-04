@@ -629,10 +629,18 @@ void Server::rewrite_func()
 		rewrite.key_stream = stream;
 		rewrite.key_in = std::make_shared<TypeInput>(stream.get());
 	}
-	try {
-		int64_t num_bytes = 0;
-		for(int i = 0; i < 10000; ++i)
-		{
+	
+	struct pair_t {
+		std::shared_ptr<IndexEntry> index;
+		std::shared_ptr<Value> value;
+	};
+	
+	bool is_done = false;
+	int64_t num_bytes = 0;
+	std::vector<pair_t> list;
+	
+	for(int i = 0; i < 10000; ++i) {
+		try {
 			auto entry = vnx::read(*rewrite.key_in);
 			auto index_entry = std::dynamic_pointer_cast<IndexEntry>(entry);
 			if(index_entry) {
@@ -645,7 +653,7 @@ void Server::rewrite_func()
 						auto stream = block->value_file.mmap_read(index_entry->block_offset, index_entry->num_bytes);
 						TypeInput value_in(stream.get());
 						auto value = vnx::read(value_in);
-						store_value_internal(index_entry->key, value, index_entry->version);
+						list.emplace_back(pair_t{index_entry, value});
 						
 						num_bytes += index_entry->num_bytes;
 						if(num_bytes >= rewrite_chunk_size) {
@@ -655,10 +663,21 @@ void Server::rewrite_func()
 				}
 			}
 		}
-		rewrite.timer->set_millis(0);
+		catch(const std::underflow_error& ex) {
+			is_done = true;
+			break;
+		}
+		catch(const std::exception& ex) {
+			is_done = true;
+			log(ERROR).out << "Block " << block->index << " rewrite: " << ex.what();
+			break;
+		}
 	}
-	catch(const std::underflow_error& ex)
-	{
+	for(const auto& entry : list) {
+		store_value_internal(entry.index->key, entry.value, entry.index->version);
+	}
+	
+	if(is_done) {
 		if(do_verify_rewrite) {
 			bool is_fail = false;
 			for(const auto& entry : index_map) {
@@ -686,9 +705,8 @@ void Server::rewrite_func()
 		rewrite.key_stream = 0;
 		rewrite.block = 0;
 		check_rewrite(false);
-	}
-	catch(const std::exception& ex) {
-		log(ERROR).out << "Block " << block->index << " rewrite: " << ex.what();
+	} else {
+		rewrite.timer->set_millis(0);
 	}
 }
 
