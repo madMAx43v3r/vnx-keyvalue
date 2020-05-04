@@ -827,7 +827,7 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 			std::lock_guard<std::mutex> lock(index_mutex);
 			
 			auto iter = index_map.upper_bound(version);
-			for(int i = 0; iter != index_map.end() && i < 100; ++iter, ++i)
+			for(int i = 0; iter != index_map.end() && i < 1000; ++iter, ++i)
 			{
 				version = iter->first;
 				if(end > 0 && version >= end) {
