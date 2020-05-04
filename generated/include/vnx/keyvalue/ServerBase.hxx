@@ -21,7 +21,7 @@ public:
 	::std::string collection = "storage";
 	::std::string storage_path;
 	::int64_t max_block_size = 268435456;
-	::int64_t rewrite_chunk_size = 262144;
+	::int64_t rewrite_chunk_size = 4194304;
 	::vnx::float32_t rewrite_threshold = 0.5;
 	::vnx::float32_t idle_rewrite_threshold = 0.9;
 	::int32_t rewrite_interval = 10;

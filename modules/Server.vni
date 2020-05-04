@@ -14,7 +14,7 @@ module Server {
 	
 	long max_block_size = 268435456;			// [bytes]
 	
-	long rewrite_chunk_size = 262144;			// [bytes]
+	long rewrite_chunk_size = 4194304;			// [bytes]
 	
 	float rewrite_threshold = 0.5;
 	

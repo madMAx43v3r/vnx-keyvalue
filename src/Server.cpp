@@ -631,7 +631,7 @@ void Server::rewrite_func()
 	}
 	try {
 		int64_t num_bytes = 0;
-		for(int i = 0; i < 1000; ++i)
+		for(int i = 0; i < 10000; ++i)
 		{
 			auto entry = vnx::read(*rewrite.key_in);
 			auto index_entry = std::dynamic_pointer_cast<IndexEntry>(entry);
