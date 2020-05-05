@@ -650,11 +650,7 @@ void Server::rewrite_func()
 					const auto& index = iter->second;
 					if(block->index == index.block_index && index_entry->block_offset == index.block_offset)
 					{
-						auto stream = block->value_file.mmap_read(index_entry->block_offset, index_entry->num_bytes);
-						TypeInput value_in(stream.get());
-						auto value = vnx::read(value_in);
-						list.emplace_back(pair_t{index_entry, value});
-						
+						list.emplace_back(pair_t{index_entry, 0});
 						num_bytes += index_entry->num_bytes;
 						if(num_bytes >= rewrite_chunk_size) {
 							break;
@@ -672,6 +668,11 @@ void Server::rewrite_func()
 			log(ERROR).out << "Block " << block->index << " rewrite: " << ex.what();
 			break;
 		}
+	}
+	for(auto& entry : list) {
+		auto stream = block->value_file.mmap_read(entry.index->block_offset, entry.index->num_bytes);
+		TypeInput value_in(stream.get());
+		entry.value = vnx::read(value_in);
 	}
 	for(const auto& entry : list) {
 		store_value_internal(entry.index->key, entry.value, entry.index->version);
