@@ -43,10 +43,12 @@ int main(int argc, char** argv)
 	{
 		const uint64_t key = rand() % 65536;
 		auto value = client.get_value(key);
-		if(counter % 1000 == 0) {
-			std::cout << key << ": " << *value << std::endl;
+		if(value) {
+			if(counter % 1000 == 0) {
+				std::cout << key << ": " << *value << std::endl;
+			}
+			counter++;
 		}
-		counter++;
 		::usleep(1 * 1000);
 	}
 	
