@@ -99,12 +99,12 @@ void Server::main()
 					{
 						auto index_entry = std::dynamic_pointer_cast<IndexEntry>(entry);
 						if(index_entry) {
-							auto& key_version = key_map[index_entry->key];
-							if(index_entry->version > key_version) {
-								if(key_version) {
-									delete_version(key_version);
+							const auto key_iter = get_key_iter(index_entry->key);
+							if(key_iter == keyhash_map.cend() || index_entry->version > key_iter->second) {
+								if(key_iter != keyhash_map.cend()) {
+									delete_internal(key_iter);
 								}
-								key_version = index_entry->version;
+								keyhash_map.emplace(index_entry->key.get_hash(), index_entry->version);
 								
 								auto& index = index_map[index_entry->version];
 								index.block_index = block_index;
@@ -218,7 +218,7 @@ void Server::main()
 		}
 		lock_file_exclusive(block->key_file);
 		lock_file_exclusive(block->value_file);
-		log(INFO).out << "Got " << key_map.size() << " entries.";
+		log(INFO).out << "Got " << keyhash_map.size() << " entries.";
 	}
 	
 	write_index();
@@ -430,11 +430,11 @@ Server::key_index_t Server::store_value_internal(const Variant& key, const std::
 	{
 		std::lock_guard<std::mutex> lock(index_mutex);
 		
-		auto& key_version = key_map[key];
-		if(key_version) {
-			delete_version(key_version);
+		auto key_iter = get_key_iter(key);
+		if(key_iter != keyhash_map.end()) {
+			delete_internal(key_iter);
 		}
-		key_version = version;
+		keyhash_map.emplace(key.get_hash(), version);
 		
 		key_index_t& index = index_map[version];
 		index.block_index = block->index;
@@ -501,23 +501,57 @@ std::shared_ptr<Server::block_t> Server::get_block(int64_t index) const
 	return iter->second;
 }
 
-Server::key_index_t Server::get_key_index(const Variant& key) const
+std::unordered_multimap<uint64_t, uint64_t>::const_iterator Server::get_key_iter(const Variant& key) const
 {
-	auto iter = key_map.find(key);
-	if(iter == key_map.end()) {
-		throw std::runtime_error("unknown key");
+	std::unordered_multimap<uint64_t, uint64_t>::const_iterator iter = keyhash_map.end();
+	try {
+		get_key_index(key, iter);
+	} catch(...) {
+		// ignore
 	}
-	auto iter2 = index_map.find(iter->second);
-	if(iter2 == index_map.end()) {
-		throw std::runtime_error("unknown version: " + std::to_string(iter->second));
-	}
-	return iter2->second;
+	return iter;
 }
 
-void Server::delete_version(uint64_t version)
+const Server::key_index_t& Server::get_key_index(const Variant& key) const
+{
+	std::unordered_multimap<uint64_t, uint64_t>::const_iterator iter;
+	return get_key_index(key, iter);
+}
+
+const Server::key_index_t& Server::get_key_index(const Variant& key, std::unordered_multimap<uint64_t, uint64_t>::const_iterator& key_iter) const
+{
+	const auto range = keyhash_map.equal_range(key.get_hash());
+	for(auto entry = range.first; entry != range.second; ++entry)
+	{
+		auto iter = index_map.find(entry->second);
+		if(iter != index_map.end()) {
+			const auto& index = iter->second;
+			const auto block = get_block(index.block_index);
+			
+			std::shared_ptr<IndexEntry> index_entry;
+			{
+				auto stream = block->key_file.mmap_read(index.block_offset_key, index.num_bytes_key);
+				TypeInput in(stream.get());
+				try {
+					index_entry = std::dynamic_pointer_cast<IndexEntry>(vnx::read(in));
+				} catch(...) {
+					// ignore
+				}
+			}
+			if(index_entry && index_entry->key == key) {
+				key_iter = entry;
+				return index;
+			}
+		}
+	}
+	key_iter = keyhash_map.end();
+	throw std::runtime_error("unknown key");
+}
+
+void Server::delete_internal(std::unordered_multimap<uint64_t, uint64_t>::const_iterator key_iter)
 {
 	// index_mutex needs to be locked by caller
-	auto iter = index_map.find(version);
+	auto iter = index_map.find(key_iter->second);
 	if(iter != index_map.end()) {
 		const auto& index = iter->second;
 		if(index.block_index >= 0) {
@@ -530,6 +564,7 @@ void Server::delete_version(uint64_t version)
 		}
 		index_map.erase(iter);
 	}
+	keyhash_map.erase(key_iter);
 }
 
 void Server::close_block(std::shared_ptr<block_t> block)

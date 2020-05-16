@@ -103,9 +103,13 @@ private:
 	
 	std::shared_ptr<block_t> get_block(int64_t index) const;
 	
-	key_index_t get_key_index(const Variant& key) const;
+	std::unordered_multimap<uint64_t, uint64_t>::const_iterator get_key_iter(const Variant& key) const;
 	
-	void delete_version(uint64_t version);
+	const key_index_t& get_key_index(const Variant& key) const;
+	
+	const key_index_t& get_key_index(const Variant& key, std::unordered_multimap<uint64_t, uint64_t>::const_iterator& key_iter) const;
+	
+	void delete_internal(std::unordered_multimap<uint64_t, uint64_t>::const_iterator key_iter);
 	
 	void close_block(std::shared_ptr<block_t> block);
 	
@@ -136,7 +140,7 @@ private:
 	mutable std::mutex index_mutex;		// needs to be locked when modifying index, other threads only read
 	std::map<int64_t, std::shared_ptr<block_t>> block_map;
 	std::map<uint64_t, key_index_t> index_map;
-	std::unordered_map<Variant, uint64_t> key_map;
+	std::unordered_multimap<uint64_t, uint64_t> keyhash_map;
 	std::list<std::shared_ptr<block_t>> delete_list;
 	
 	mutable std::mutex read_mutex;
