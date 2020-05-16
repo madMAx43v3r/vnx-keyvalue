@@ -476,7 +476,10 @@ void Server::store_value(const Variant& key, const std::shared_ptr<const Value>&
 
 void Server::delete_value(const Variant& key)
 {
-	store_value(key, 0);
+	const auto key_iter = get_key_iter(key);
+	if(key_iter != keyhash_map.end()) {
+		store_value(key, 0);
+	}
 }
 
 std::string Server::get_file_path(const std::string& name, int64_t index) const
