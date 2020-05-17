@@ -16,6 +16,9 @@ target_link_libraries(vnx_keyvalue vnx_base)
 add_executable(vnx_keyvalue_server src/vnx_keyvalue_server.cpp)
 target_link_libraries(vnx_keyvalue_server vnx_keyvalue)
 
+add_executable(vnx_keyvalue_get src/vnx_keyvalue_get.cpp)
+target_link_libraries(vnx_keyvalue_get vnx_keyvalue)
+
 add_executable(test_server_get test/test_server_get.cpp)
 target_link_libraries(test_server_get vnx_keyvalue)
 
@@ -34,3 +37,4 @@ install(DIRECTORY interface/ DESTINATION interface/vnx/keyvalue)
 
 install(TARGETS vnx_keyvalue DESTINATION lib)
 install(TARGETS vnx_keyvalue_server DESTINATION bin)
+install(TARGETS vnx_keyvalue_get DESTINATION bin)
