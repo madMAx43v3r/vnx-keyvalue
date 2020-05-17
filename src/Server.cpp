@@ -919,6 +919,7 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 				} catch(...) {
 					// ignore
 				}
+				num_bytes_read += index.num_bytes_key;
 			}
 			if(index_entry) {
 				std::shared_ptr<Value> value;
@@ -930,6 +931,7 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 					} catch(...) {
 						// ignore
 					}
+					num_bytes_read += index.num_bytes;
 				}
 				auto pair = KeyValuePair::create();
 				pair->collection = collection;
@@ -942,7 +944,6 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 			}
 			block->num_pending--;
 			read_counter++;
-			num_bytes_read += index.num_bytes_key + index.num_bytes;
 		}
 	}
 	if(vnx_do_run())
