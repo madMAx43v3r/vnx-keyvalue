@@ -69,8 +69,8 @@ void ServerBase::accept(vnx::Visitor& _visitor) const {
 }
 
 void ServerBase::write(std::ostream& _out) const {
-	_out << "{";
-	_out << "\"update_topic\": "; vnx::write(_out, update_topic);
+	_out << "{\"__type\": \"vnx.keyvalue.Server\"";
+	_out << ", \"update_topic\": "; vnx::write(_out, update_topic);
 	_out << ", \"collection\": "; vnx::write(_out, collection);
 	_out << ", \"storage_path\": "; vnx::write(_out, storage_path);
 	_out << ", \"max_block_size\": "; vnx::write(_out, max_block_size);
@@ -191,22 +191,25 @@ const vnx::TypeCode* ServerBase::static_get_type_code() {
 }
 
 std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
-	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>(true);
+	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>();
 	type_code->name = "vnx.keyvalue.Server";
 	type_code->type_hash = vnx::Hash64(0xbb28aa6f1d808048ull);
 	type_code->code_hash = vnx::Hash64(0x9a19a17523c976d6ull);
+	type_code->is_native = true;
 	type_code->methods.resize(9);
 	{
-		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>(true);
+		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>();
 		call_type->name = "vnx.keyvalue.Server._sync_finished";
 		call_type->type_hash = vnx::Hash64(0x2d6328ce038814bbull);
 		call_type->code_hash = vnx::Hash64(0x41b2a858a45ffb1dull);
+		call_type->is_native = true;
 		call_type->is_method = true;
 		{
-			std::shared_ptr<vnx::TypeCode> return_type = std::make_shared<vnx::TypeCode>(true);
+			std::shared_ptr<vnx::TypeCode> return_type = std::make_shared<vnx::TypeCode>();
 			return_type->name = "vnx.keyvalue.Server._sync_finished.return";
 			return_type->type_hash = vnx::Hash64(0x4039b73e1e85b062ull);
 			return_type->code_hash = vnx::Hash64(0x238c52a5525b6022ull);
+			return_type->is_native = true;
 			return_type->is_return = true;
 			return_type->build();
 			call_type->return_type = vnx::register_type_code(return_type);
@@ -221,16 +224,18 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 		type_code->methods[0] = vnx::register_type_code(call_type);
 	}
 	{
-		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>(true);
+		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>();
 		call_type->name = "vnx.keyvalue.Server.delete_value";
 		call_type->type_hash = vnx::Hash64(0xf5f6c0eca92f8e82ull);
 		call_type->code_hash = vnx::Hash64(0xc12c0f582fad5c12ull);
+		call_type->is_native = true;
 		call_type->is_method = true;
 		{
-			std::shared_ptr<vnx::TypeCode> return_type = std::make_shared<vnx::TypeCode>(true);
+			std::shared_ptr<vnx::TypeCode> return_type = std::make_shared<vnx::TypeCode>();
 			return_type->name = "vnx.keyvalue.Server.delete_value.return";
 			return_type->type_hash = vnx::Hash64(0x6b26b84842654d71ull);
 			return_type->code_hash = vnx::Hash64(0x67950ac76d00959bull);
+			return_type->is_native = true;
 			return_type->is_return = true;
 			return_type->build();
 			call_type->return_type = vnx::register_type_code(return_type);
@@ -246,16 +251,18 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 		type_code->methods[1] = vnx::register_type_code(call_type);
 	}
 	{
-		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>(true);
+		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>();
 		call_type->name = "vnx.keyvalue.Server.get_value";
 		call_type->type_hash = vnx::Hash64(0xe2ff2d7a976abdb8ull);
 		call_type->code_hash = vnx::Hash64(0xb446025a8e0f3147ull);
+		call_type->is_native = true;
 		call_type->is_method = true;
 		{
-			std::shared_ptr<vnx::TypeCode> return_type = std::make_shared<vnx::TypeCode>(true);
+			std::shared_ptr<vnx::TypeCode> return_type = std::make_shared<vnx::TypeCode>();
 			return_type->name = "vnx.keyvalue.Server.get_value.return";
 			return_type->type_hash = vnx::Hash64(0x2eda7f8d6761272dull);
 			return_type->code_hash = vnx::Hash64(0xb2c4c250a6a88484ull);
+			return_type->is_native = true;
 			return_type->is_return = true;
 			return_type->fields.resize(1);
 			{
@@ -278,16 +285,18 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 		type_code->methods[2] = vnx::register_type_code(call_type);
 	}
 	{
-		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>(true);
+		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>();
 		call_type->name = "vnx.keyvalue.Server.get_values";
 		call_type->type_hash = vnx::Hash64(0x29edfe1764d9e55ull);
 		call_type->code_hash = vnx::Hash64(0x2611df7151fe65b8ull);
+		call_type->is_native = true;
 		call_type->is_method = true;
 		{
-			std::shared_ptr<vnx::TypeCode> return_type = std::make_shared<vnx::TypeCode>(true);
+			std::shared_ptr<vnx::TypeCode> return_type = std::make_shared<vnx::TypeCode>();
 			return_type->name = "vnx.keyvalue.Server.get_values.return";
 			return_type->type_hash = vnx::Hash64(0x92bdf340933764bcull);
 			return_type->code_hash = vnx::Hash64(0x2311bb8b41c5673eull);
+			return_type->is_native = true;
 			return_type->is_return = true;
 			return_type->fields.resize(1);
 			{
@@ -310,16 +319,18 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 		type_code->methods[3] = vnx::register_type_code(call_type);
 	}
 	{
-		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>(true);
+		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>();
 		call_type->name = "vnx.keyvalue.Server.store_value";
 		call_type->type_hash = vnx::Hash64(0xf6bea692aee1018cull);
 		call_type->code_hash = vnx::Hash64(0xf5b7514c84dd23acull);
+		call_type->is_native = true;
 		call_type->is_method = true;
 		{
-			std::shared_ptr<vnx::TypeCode> return_type = std::make_shared<vnx::TypeCode>(true);
+			std::shared_ptr<vnx::TypeCode> return_type = std::make_shared<vnx::TypeCode>();
 			return_type->name = "vnx.keyvalue.Server.store_value.return";
 			return_type->type_hash = vnx::Hash64(0x8bc8f7e913889f88ull);
 			return_type->code_hash = vnx::Hash64(0x12c5a07c502cfac0ull);
+			return_type->is_native = true;
 			return_type->is_return = true;
 			return_type->build();
 			call_type->return_type = vnx::register_type_code(return_type);
@@ -341,16 +352,18 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 		type_code->methods[4] = vnx::register_type_code(call_type);
 	}
 	{
-		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>(true);
+		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>();
 		call_type->name = "vnx.keyvalue.Server.sync_all";
 		call_type->type_hash = vnx::Hash64(0x6173affeadaf11ddull);
 		call_type->code_hash = vnx::Hash64(0x3586a46e6beccaf2ull);
+		call_type->is_native = true;
 		call_type->is_method = true;
 		{
-			std::shared_ptr<vnx::TypeCode> return_type = std::make_shared<vnx::TypeCode>(true);
+			std::shared_ptr<vnx::TypeCode> return_type = std::make_shared<vnx::TypeCode>();
 			return_type->name = "vnx.keyvalue.Server.sync_all.return";
 			return_type->type_hash = vnx::Hash64(0x964de09bdefcfc87ull);
 			return_type->code_hash = vnx::Hash64(0x3b433d51b4fa1c05ull);
+			return_type->is_native = true;
 			return_type->is_return = true;
 			return_type->fields.resize(1);
 			{
@@ -372,16 +385,18 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 		type_code->methods[5] = vnx::register_type_code(call_type);
 	}
 	{
-		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>(true);
+		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>();
 		call_type->name = "vnx.keyvalue.Server.sync_all_keys";
 		call_type->type_hash = vnx::Hash64(0x5f4cae900d6d7f69ull);
 		call_type->code_hash = vnx::Hash64(0xdf82d5d07c345cdeull);
+		call_type->is_native = true;
 		call_type->is_method = true;
 		{
-			std::shared_ptr<vnx::TypeCode> return_type = std::make_shared<vnx::TypeCode>(true);
+			std::shared_ptr<vnx::TypeCode> return_type = std::make_shared<vnx::TypeCode>();
 			return_type->name = "vnx.keyvalue.Server.sync_all_keys.return";
 			return_type->type_hash = vnx::Hash64(0xd419b32d0bc488e3ull);
 			return_type->code_hash = vnx::Hash64(0xf8f70df95309081eull);
+			return_type->is_native = true;
 			return_type->is_return = true;
 			return_type->fields.resize(1);
 			{
@@ -403,16 +418,18 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 		type_code->methods[6] = vnx::register_type_code(call_type);
 	}
 	{
-		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>(true);
+		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>();
 		call_type->name = "vnx.keyvalue.Server.sync_from";
 		call_type->type_hash = vnx::Hash64(0xc10ef313be34be0full);
 		call_type->code_hash = vnx::Hash64(0x943c3ebd3cea903bull);
+		call_type->is_native = true;
 		call_type->is_method = true;
 		{
-			std::shared_ptr<vnx::TypeCode> return_type = std::make_shared<vnx::TypeCode>(true);
+			std::shared_ptr<vnx::TypeCode> return_type = std::make_shared<vnx::TypeCode>();
 			return_type->name = "vnx.keyvalue.Server.sync_from.return";
 			return_type->type_hash = vnx::Hash64(0x68661d3bb01d2b6bull);
 			return_type->code_hash = vnx::Hash64(0xe668d33f3c7484e8ull);
+			return_type->is_native = true;
 			return_type->is_return = true;
 			return_type->fields.resize(1);
 			{
@@ -439,16 +456,18 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 		type_code->methods[7] = vnx::register_type_code(call_type);
 	}
 	{
-		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>(true);
+		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>();
 		call_type->name = "vnx.keyvalue.Server.sync_range";
 		call_type->type_hash = vnx::Hash64(0x21592a9e03b544fdull);
 		call_type->code_hash = vnx::Hash64(0xf1e3909762844225ull);
+		call_type->is_native = true;
 		call_type->is_method = true;
 		{
-			std::shared_ptr<vnx::TypeCode> return_type = std::make_shared<vnx::TypeCode>(true);
+			std::shared_ptr<vnx::TypeCode> return_type = std::make_shared<vnx::TypeCode>();
 			return_type->name = "vnx.keyvalue.Server.sync_range.return";
 			return_type->type_hash = vnx::Hash64(0xd451dace3153346bull);
 			return_type->code_hash = vnx::Hash64(0xddcd13b0f6bf350bull);
+			return_type->is_native = true;
 			return_type->is_return = true;
 			return_type->fields.resize(1);
 			{

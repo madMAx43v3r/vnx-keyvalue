@@ -52,8 +52,8 @@ void TypeEntry::accept(vnx::Visitor& _visitor) const {
 }
 
 void TypeEntry::write(std::ostream& _out) const {
-	_out << "{";
-	_out << "\"block_offset\": "; vnx::write(_out, block_offset);
+	_out << "{\"__type\": \"vnx.keyvalue.TypeEntry\"";
+	_out << ", \"block_offset\": "; vnx::write(_out, block_offset);
 	_out << "}";
 }
 
@@ -102,10 +102,11 @@ const vnx::TypeCode* TypeEntry::static_get_type_code() {
 }
 
 std::shared_ptr<vnx::TypeCode> TypeEntry::static_create_type_code() {
-	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>(true);
+	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>();
 	type_code->name = "vnx.keyvalue.TypeEntry";
 	type_code->type_hash = vnx::Hash64(0x5d3011caa7dadfd3ull);
 	type_code->code_hash = vnx::Hash64(0xe87a40502c1c3e56ull);
+	type_code->is_native = true;
 	type_code->is_class = true;
 	type_code->create_value = []() -> std::shared_ptr<vnx::Value> { return std::make_shared<TypeEntry>(); };
 	type_code->methods.resize(0);

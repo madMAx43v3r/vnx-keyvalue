@@ -52,8 +52,8 @@ void CloseEntry::accept(vnx::Visitor& _visitor) const {
 }
 
 void CloseEntry::write(std::ostream& _out) const {
-	_out << "{";
-	_out << "\"block_offset\": "; vnx::write(_out, block_offset);
+	_out << "{\"__type\": \"vnx.keyvalue.CloseEntry\"";
+	_out << ", \"block_offset\": "; vnx::write(_out, block_offset);
 	_out << "}";
 }
 
@@ -102,10 +102,11 @@ const vnx::TypeCode* CloseEntry::static_get_type_code() {
 }
 
 std::shared_ptr<vnx::TypeCode> CloseEntry::static_create_type_code() {
-	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>(true);
+	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>();
 	type_code->name = "vnx.keyvalue.CloseEntry";
 	type_code->type_hash = vnx::Hash64(0xc06cd9d036102eefull);
 	type_code->code_hash = vnx::Hash64(0x93f0edbd8bfc9895ull);
+	type_code->is_native = true;
 	type_code->is_class = true;
 	type_code->create_value = []() -> std::shared_ptr<vnx::Value> { return std::make_shared<CloseEntry>(); };
 	type_code->methods.resize(0);

@@ -57,8 +57,8 @@ void SyncInfo::accept(vnx::Visitor& _visitor) const {
 }
 
 void SyncInfo::write(std::ostream& _out) const {
-	_out << "{";
-	_out << "\"collection\": "; vnx::write(_out, collection);
+	_out << "{\"__type\": \"vnx.keyvalue.SyncInfo\"";
+	_out << ", \"collection\": "; vnx::write(_out, collection);
 	_out << ", \"version\": "; vnx::write(_out, version);
 	_out << ", \"job_id\": "; vnx::write(_out, job_id);
 	_out << ", \"code\": "; vnx::write(_out, code);
@@ -125,10 +125,11 @@ const vnx::TypeCode* SyncInfo::static_get_type_code() {
 }
 
 std::shared_ptr<vnx::TypeCode> SyncInfo::static_create_type_code() {
-	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>(true);
+	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>();
 	type_code->name = "vnx.keyvalue.SyncInfo";
 	type_code->type_hash = vnx::Hash64(0x4f9820ae95813502ull);
 	type_code->code_hash = vnx::Hash64(0x14df919a6f68ff58ull);
+	type_code->is_native = true;
 	type_code->is_class = true;
 	type_code->create_value = []() -> std::shared_ptr<vnx::Value> { return std::make_shared<SyncInfo>(); };
 	type_code->methods.resize(0);

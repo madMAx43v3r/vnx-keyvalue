@@ -55,8 +55,8 @@ void IndexEntry::accept(vnx::Visitor& _visitor) const {
 }
 
 void IndexEntry::write(std::ostream& _out) const {
-	_out << "{";
-	_out << "\"key\": "; vnx::write(_out, key);
+	_out << "{\"__type\": \"vnx.keyvalue.IndexEntry\"";
+	_out << ", \"key\": "; vnx::write(_out, key);
 	_out << ", \"version\": "; vnx::write(_out, version);
 	_out << ", \"block_offset\": "; vnx::write(_out, block_offset);
 	_out << ", \"num_bytes\": "; vnx::write(_out, num_bytes);
@@ -123,10 +123,11 @@ const vnx::TypeCode* IndexEntry::static_get_type_code() {
 }
 
 std::shared_ptr<vnx::TypeCode> IndexEntry::static_create_type_code() {
-	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>(true);
+	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>();
 	type_code->name = "vnx.keyvalue.IndexEntry";
 	type_code->type_hash = vnx::Hash64(0xbcae33addff34e23ull);
 	type_code->code_hash = vnx::Hash64(0x69531dbc2d15dd1eull);
+	type_code->is_native = true;
 	type_code->is_class = true;
 	type_code->create_value = []() -> std::shared_ptr<vnx::Value> { return std::make_shared<IndexEntry>(); };
 	type_code->methods.resize(0);

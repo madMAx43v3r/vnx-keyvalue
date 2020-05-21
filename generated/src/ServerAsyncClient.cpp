@@ -171,7 +171,7 @@ uint64_t ServerAsyncClient::sync_range(const ::vnx::TopicPtr& topic, const ::uin
 	return _request_id;
 }
 
-std::vector<uint64_t>ServerAsyncClient::vnx_get_pending_ids() const {
+std::vector<uint64_t> ServerAsyncClient::vnx_get_pending_ids() const {
 	std::vector<uint64_t> _list;
 	for(const auto& entry : vnx_queue__sync_finished) {
 		_list.push_back(entry.first);

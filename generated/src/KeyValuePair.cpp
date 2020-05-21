@@ -56,8 +56,8 @@ void KeyValuePair::accept(vnx::Visitor& _visitor) const {
 }
 
 void KeyValuePair::write(std::ostream& _out) const {
-	_out << "{";
-	_out << "\"collection\": "; vnx::write(_out, collection);
+	_out << "{\"__type\": \"vnx.keyvalue.KeyValuePair\"";
+	_out << ", \"collection\": "; vnx::write(_out, collection);
 	_out << ", \"version\": "; vnx::write(_out, version);
 	_out << ", \"previous\": "; vnx::write(_out, previous);
 	_out << ", \"key\": "; vnx::write(_out, key);
@@ -130,10 +130,11 @@ const vnx::TypeCode* KeyValuePair::static_get_type_code() {
 }
 
 std::shared_ptr<vnx::TypeCode> KeyValuePair::static_create_type_code() {
-	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>(true);
+	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>();
 	type_code->name = "vnx.keyvalue.KeyValuePair";
 	type_code->type_hash = vnx::Hash64(0xf87436237449d8afull);
 	type_code->code_hash = vnx::Hash64(0x24d2022787f2112full);
+	type_code->is_native = true;
 	type_code->is_class = true;
 	type_code->create_value = []() -> std::shared_ptr<vnx::Value> { return std::make_shared<KeyValuePair>(); };
 	type_code->methods.resize(0);

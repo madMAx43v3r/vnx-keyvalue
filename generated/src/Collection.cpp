@@ -54,8 +54,8 @@ void Collection::accept(vnx::Visitor& _visitor) const {
 }
 
 void Collection::write(std::ostream& _out) const {
-	_out << "{";
-	_out << "\"name\": "; vnx::write(_out, name);
+	_out << "{\"__type\": \"vnx.keyvalue.Collection\"";
+	_out << ", \"name\": "; vnx::write(_out, name);
 	_out << ", \"block_list\": "; vnx::write(_out, block_list);
 	_out << ", \"delete_list\": "; vnx::write(_out, delete_list);
 	_out << "}";
@@ -116,10 +116,11 @@ const vnx::TypeCode* Collection::static_get_type_code() {
 }
 
 std::shared_ptr<vnx::TypeCode> Collection::static_create_type_code() {
-	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>(true);
+	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>();
 	type_code->name = "vnx.keyvalue.Collection";
 	type_code->type_hash = vnx::Hash64(0xf1b6072fecc4ebf8ull);
 	type_code->code_hash = vnx::Hash64(0x131a332e6e934729ull);
+	type_code->is_native = true;
 	type_code->is_class = true;
 	type_code->create_value = []() -> std::shared_ptr<vnx::Value> { return std::make_shared<Collection>(); };
 	type_code->methods.resize(0);
