@@ -794,6 +794,7 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 		uint64_t version;
 		key_index_t index;
 		std::shared_ptr<block_t> block;
+		std::shared_ptr<IndexEntry> index_entry;
 	};
 	
 	std::vector<entry_t> list;
@@ -827,38 +828,43 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 		if(list.empty()) {
 			break;
 		}
-		for(const auto& entry : list)
+		for(auto& entry : list)
 		{
 			const auto& block = entry.block;
 			const auto& index = entry.index;
-			std::shared_ptr<IndexEntry> index_entry;
 			{
 				auto stream = block->key_file.mmap_read(index.block_offset_key, index.num_bytes_key);
 				TypeInput in(stream.get());
 				try {
-					index_entry = std::dynamic_pointer_cast<IndexEntry>(vnx::read(in));
+					entry.index_entry = std::dynamic_pointer_cast<IndexEntry>(vnx::read(in));
+					num_bytes_read += index.num_bytes_key;
 				} catch(...) {
 					// ignore
 				}
-				num_bytes_read += index.num_bytes_key;
 			}
-			if(index_entry) {
+		}
+		for(const auto& entry : list)
+		{
+			const auto& block = entry.block;
+			const auto& index = entry.index;
+			
+			if(entry.index_entry) {
 				std::shared_ptr<Value> value;
 				if(!key_only) {
 					auto stream = block->value_file.mmap_read(index.block_offset, index.num_bytes);
 					TypeInput in(stream.get());
 					try {
 						value = vnx::read(in);
+						num_bytes_read += index.num_bytes;
 					} catch(...) {
 						// ignore
 					}
-					num_bytes_read += index.num_bytes;
 				}
 				auto pair = KeyValuePair::create();
 				pair->collection = collection;
 				pair->version = entry.version;
 				pair->previous = previous;
-				pair->key = index_entry->key;
+				pair->key = entry.index_entry->key;
 				pair->value = value;
 				publisher.publish(pair, topic, BLOCKING);
 				previous = entry.version;
