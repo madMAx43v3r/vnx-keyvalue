@@ -69,31 +69,7 @@ private:
 		std::atomic<size_t> num_pending {0};
 	};
 	
-	struct read_result_t {
-		std::function<void(const std::shared_ptr<const Value>&)> callback;
-	};
-	
-	struct read_result_many_t {
-		std::atomic<size_t> num_left {0};
-		std::vector<std::shared_ptr<const Value>> values;
-		std::function<void(const std::vector<std::shared_ptr<const Value>>&)> callback;
-	};
-	
-	struct read_item_t {
-		std::shared_ptr<block_t> block;
-		uint32_t result_index = 0;
-		int fd = -1;
-		int64_t offset = 0;
-		size_t num_bytes = 0;
-		std::shared_ptr<read_result_t> result;
-		std::shared_ptr<read_result_many_t> result_many;
-	};
-	
-	void enqueue_read(	std::shared_ptr<block_t> block,
-						const key_index_t& index,
-						std::shared_ptr<read_result_t> result,
-						std::shared_ptr<read_result_many_t> result_many = 0,
-						uint32_t result_index = 0) const;
+	std::shared_ptr<Value> read_value(const key_index_t& index) const;
 	
 	void lock_file_exclusive(const File& file);
 	
@@ -127,8 +103,6 @@ private:
 	
 	void print_stats();
 	
-	void read_loop() const noexcept;
-	
 	void update_loop() const noexcept;
 	
 	void sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t end, bool key_only) const noexcept;
@@ -142,11 +116,6 @@ private:
 	std::map<uint64_t, key_index_t> index_map;
 	std::unordered_multimap<uint64_t, uint64_t> keyhash_map;
 	std::list<std::shared_ptr<block_t>> delete_list;
-	
-	mutable std::mutex read_mutex;
-	mutable std::condition_variable read_condition;
-	mutable std::queue<read_item_t> read_queue;
-	std::vector<std::thread> read_threads;
 	
 	mutable std::mutex update_mutex;
 	mutable std::condition_variable update_condition;

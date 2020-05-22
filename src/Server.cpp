@@ -36,9 +36,6 @@ void Server::main()
 	if(collection.empty()) {
 		throw std::logic_error("invalid collection config");
 	}
-	if(num_read_threads < 1) {
-		throw std::logic_error("invalid num_read_threads config");
-	}
 	
 	for(int i = 0; i < NUM_INDEX; ++i) {
 		const auto path = get_file_path("index", i);
@@ -223,11 +220,6 @@ void Server::main()
 	
 	write_index();
 	
-	read_threads.resize(num_read_threads);
-	for(int i = 0; i < num_read_threads; ++i) {
-		read_threads[i] = std::thread(&Server::read_loop, this);
-	}
-	
 	if(update_topic) {
 		update_thread = std::thread(&Server::update_loop, this);
 	}
@@ -252,78 +244,51 @@ void Server::main()
 	if(update_thread.joinable()) {
 		update_thread.join();
 	}
-	
-	read_condition.notify_all();
-	for(auto& thread : read_threads) {
-		if(thread.joinable()) {
-			thread.join();
-		}
-	}
 }
 
-void Server::enqueue_read(	std::shared_ptr<block_t> block,
-							const key_index_t& index,
-							std::shared_ptr<read_result_t> result,
-							std::shared_ptr<read_result_many_t> result_many,
-							uint32_t result_index) const
+std::shared_ptr<Value> Server::read_value(const key_index_t& index) const
 {
-	read_item_t item;
-	item.block = block;
-	item.result_index = result_index;
-	item.fd = ::fileno(block->value_file.get_handle());
-	item.offset = index.block_offset;
-	item.num_bytes = index.num_bytes;
-	item.result = result;
-	item.result_many = result_many;
-	{
-		std::unique_lock<std::mutex> lock(read_mutex);
-		read_queue.emplace(std::move(item));
-		block->num_pending++;
+	const auto block = get_block(index.block_index);
+	MappedMemoryInputStream stream(	::fileno(block->value_file.get_handle()),
+									index.num_bytes, index.block_offset);
+	TypeInput in(&stream);
+	std::shared_ptr<Value> value;
+	try {
+		value = vnx::read(in);
+	} catch(...) {
+		// ignore
 	}
-	read_condition.notify_one();
-	
 	read_counter++;
-	num_bytes_read += index.num_bytes;
+	num_bytes_read += index.num_bytes_key + index.num_bytes;
+	return value;
 }
 
 void Server::get_value_async(	const Variant& key,
 								const std::function<void(const std::shared_ptr<const Value>&)>& callback,
 								const vnx::request_id_t& request_id) const
 {
+	std::shared_ptr<Value> value;
 	try {
-		auto index = get_key_index(key);
-		auto block = get_block(index.block_index);
-		
-		auto result = std::make_shared<read_result_t>();
-		result->callback = callback;
-		
-		enqueue_read(block, index, result);
+		value = read_value(get_key_index(key));
+	} catch(...) {
+		// ignore
 	}
-	catch(const std::exception& ex) {
-		callback(0);	// return null
-	}
+	callback(value);
 }
 
 void Server::get_values_async(	const std::vector<Variant>& keys,
 								const std::function<void(const std::vector<std::shared_ptr<const Value>>&)>& callback,
 								const vnx::request_id_t& request_id) const
 {
-	auto result = std::make_shared<read_result_many_t>();
-	result->callback = callback;
-	result->num_left = keys.size();
-	result->values.resize(keys.size());
-	
+	std::vector<std::shared_ptr<const Value>> result(keys.size());
 	for(size_t i = 0; i < keys.size(); ++i) {
 		try {
-			auto index = get_key_index(keys[i]);
-			auto block = get_block(index.block_index);
-			
-			enqueue_read(block, index, 0, result, i);
-		}
-		catch(...) {
+			result[i] = read_value(get_key_index(keys[i]));
+		} catch(...) {
 			// ignore
 		}
 	}
+	callback(result);
 }
 
 int64_t Server::sync_range_ex(TopicPtr topic, uint64_t begin, uint64_t end, bool key_only) const
@@ -782,50 +747,6 @@ void Server::print_stats()
 	write_counter = 0;
 	num_bytes_read = 0;
 	num_bytes_written = 0;
-}
-
-void Server::read_loop() const noexcept
-{
-	const int page_size = ::sysconf(_SC_PAGE_SIZE);
-	
-	while(vnx_do_run())
-	{
-		read_item_t request;
-		{
-			std::unique_lock<std::mutex> lock(read_mutex);
-			while(vnx_do_run() && read_queue.empty()) {
-				read_condition.wait(lock);
-			}
-			if(vnx_do_run()) {
-				request = read_queue.front();
-				read_queue.pop();
-			} else {
-				break;
-			}
-		}
-		
-		std::shared_ptr<Value> value;
-		{
-			MappedMemoryInputStream stream(request.fd, request.num_bytes, request.offset);
-			TypeInput in(&stream);
-			try {
-				value = vnx::read(in);
-			} catch(...) {
-				// ignore for now
-			}
-		}
-		request.block->num_pending--;
-		
-		if(request.result) {
-			request.result->callback(value);
-		}
-		if(request.result_many) {
-			request.result_many->values[request.result_index] = value;
-			if(--request.result_many->num_left == 0) {
-				request.result_many->callback(request.result_many->values);
-			}
-		}
-	}
 }
 
 void Server::update_loop() const noexcept

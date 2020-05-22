@@ -26,8 +26,6 @@ module Server {
 	
 	int idle_rewrite_interval = 100;
 	
-	int num_read_threads = 1;
-	
 	int max_queue_ms = 1000;
 	
 	bool do_verify_rewrite = false;
