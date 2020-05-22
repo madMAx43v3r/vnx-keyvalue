@@ -26,6 +26,8 @@ module Server {
 	
 	int idle_rewrite_interval = 100;
 	
+	int sync_chunk_count = 100;					// number of values
+	
 	int max_queue_ms = 1000;
 	
 	bool do_verify_rewrite = false;
@@ -52,4 +54,5 @@ module Server {
 	// below internal use only
 	
 	void _sync_finished(long job_id);
+	
 }
