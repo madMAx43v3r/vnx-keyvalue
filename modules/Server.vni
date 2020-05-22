@@ -14,7 +14,9 @@ module Server {
 	
 	long max_block_size = 268435456;			// [bytes]
 	
-	long rewrite_chunk_size = 4194304;			// [bytes]
+	int rewrite_chunk_size = 1048576;			// [bytes]
+	
+	int rewrite_chunk_count = 100;				// number of values
 	
 	float rewrite_threshold = 0.5;
 	
@@ -28,9 +30,9 @@ module Server {
 	
 	int max_queue_ms = 1000;
 	
-	bool do_verify_rewrite;
+	bool do_verify_rewrite = false;
 	
-	bool ignore_errors;
+	bool ignore_errors = false;
 	
 	
 	Value* get_value(Variant key) const async;

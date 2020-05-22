@@ -21,15 +21,16 @@ public:
 	::std::string collection = "storage";
 	::std::string storage_path;
 	::int64_t max_block_size = 268435456;
-	::int64_t rewrite_chunk_size = 4194304;
+	::int32_t rewrite_chunk_size = 1048576;
+	::int32_t rewrite_chunk_count = 100;
 	::vnx::float32_t rewrite_threshold = 0.5;
 	::vnx::float32_t idle_rewrite_threshold = 0.9;
 	::int32_t rewrite_interval = 10;
 	::int32_t idle_rewrite_interval = 100;
 	::int32_t num_read_threads = 1;
 	::int32_t max_queue_ms = 1000;
-	::vnx::bool_t do_verify_rewrite = 0;
-	::vnx::bool_t ignore_errors = 0;
+	::vnx::bool_t do_verify_rewrite = false;
+	::vnx::bool_t ignore_errors = false;
 	
 	typedef ::vnx::Module Super;
 	

@@ -677,7 +677,7 @@ void Server::rewrite_func()
 	int64_t num_bytes = 0;
 	std::vector<pair_t> list;
 	
-	for(int i = 0; i < 10000; ++i) {
+	for(int i = 0; i < rewrite_chunk_count; ++i) {
 		try {
 			auto entry = vnx::read(*rewrite.key_in);
 			auto index_entry = std::dynamic_pointer_cast<IndexEntry>(entry);
@@ -689,8 +689,8 @@ void Server::rewrite_func()
 					if(block->index == index.block_index && index_entry->block_offset == index.block_offset)
 					{
 						list.emplace_back(pair_t{index_entry, 0});
-						num_bytes += index_entry->num_bytes;
-						if(num_bytes >= rewrite_chunk_size) {
+						num_bytes += index.num_bytes_key + index.num_bytes;
+						if(num_bytes > rewrite_chunk_size) {
 							break;
 						}
 					}
@@ -884,7 +884,7 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 			std::lock_guard<std::mutex> lock(index_mutex);
 			
 			auto iter = index_map.upper_bound(version);
-			for(int i = 0; iter != index_map.end() && i < 1000; ++iter, ++i)
+			for(int i = 0; iter != index_map.end() && i < 100; ++iter, ++i)
 			{
 				version = iter->first;
 				if(end > 0 && version >= end) {
@@ -896,7 +896,7 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 					entry.index = iter->second;
 					entry.block = get_block(entry.index.block_index);
 					entry.block->num_pending++;
-					list.emplace_back(std::move(entry));
+					list.push_back(entry);
 				}
 				catch(...) {
 					// ignore
