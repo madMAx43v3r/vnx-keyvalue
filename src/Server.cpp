@@ -15,6 +15,7 @@
 
 #include <sys/mman.h>
 #include <sys/file.h>
+#include <fcntl.h>
 #include <unistd.h>
 
 
@@ -87,6 +88,8 @@ void Server::main()
 			bool is_error = false;
 			int64_t prev_key_pos = 0;
 			int64_t value_end_pos = -1;
+			
+			block->key_file.fadvise(POSIX_FADV_SEQUENTIAL);
 			
 			while(vnx_do_run())
 			{
@@ -250,7 +253,7 @@ void Server::main()
 std::shared_ptr<Value> Server::read_value(const key_index_t& index) const
 {
 	const auto block = get_block(index.block_index);
-	MappedMemoryInputStream stream(	::fileno(block->value_file.get_handle()),
+	MappedMemoryInputStream stream(	block->value_file.get_fd(),
 									index.num_bytes, index.block_offset);
 	TypeInput in(&stream);
 	std::shared_ptr<Value> value;
@@ -629,6 +632,7 @@ void Server::rewrite_func()
 			log(ERROR).out << "Block " << block->index << " rewrite: mmap() failed!";
 			return;
 		}
+		block->key_file.fadvise(POSIX_FADV_SEQUENTIAL);
 		rewrite.key_stream = stream;
 		rewrite.key_in = std::make_shared<TypeInput>(stream.get());
 	}
