@@ -354,8 +354,8 @@ Server::key_index_t Server::store_value_internal(const Variant& key, const std::
 				entry.block_offset = value_out.get_output_pos();
 				if(value_out.write_type_code(type_code)) {
 					vnx::write(key_out, entry);
-					block->key_file.flush();
-					block->value_file.flush();
+					prev_key_pos = key_out.get_output_pos();
+					prev_value_pos = value_out.get_output_pos();
 				}
 			}
 		}
@@ -367,9 +367,6 @@ Server::key_index_t Server::store_value_internal(const Variant& key, const std::
 		log(WARN).out << "store_value(): " << ex.what();
 		throw;
 	}
-	
-	prev_key_pos = key_out.get_output_pos();
-	prev_value_pos = value_out.get_output_pos();
 	
 	IndexEntry entry;
 	try {
@@ -392,10 +389,10 @@ Server::key_index_t Server::store_value_internal(const Variant& key, const std::
 	}
 	
 	key_index_t ret;
+	auto key_iter = get_key_iter(key);
 	{
 		std::lock_guard<std::mutex> lock(index_mutex);
 		
-		auto key_iter = get_key_iter(key);
 		if(key_iter != keyhash_map.end()) {
 			delete_internal(key_iter);
 		}
