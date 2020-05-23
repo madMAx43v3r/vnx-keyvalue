@@ -81,9 +81,9 @@ private:
 	
 	std::unordered_multimap<uint64_t, uint64_t>::const_iterator get_key_iter(const Variant& key) const;
 	
-	const key_index_t& get_key_index(const Variant& key) const;
+	const key_index_t* get_key_index(const Variant& key) const;
 	
-	const key_index_t& get_key_index(const Variant& key, std::unordered_multimap<uint64_t, uint64_t>::const_iterator& key_iter) const;
+	const key_index_t* get_key_index(const Variant& key, std::unordered_multimap<uint64_t, uint64_t>::const_iterator& key_iter) const;
 	
 	void delete_internal(std::unordered_multimap<uint64_t, uint64_t>::const_iterator key_iter);
 	

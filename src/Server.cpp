@@ -273,7 +273,10 @@ void Server::get_value_async(	const Variant& key,
 {
 	std::shared_ptr<Value> value;
 	try {
-		value = read_value(get_key_index(key));
+		const auto* index = get_key_index(key);
+		if(index) {
+			value = read_value(*index);
+		}
 	} catch(...) {
 		// ignore
 	}
@@ -287,7 +290,10 @@ void Server::get_values_async(	const std::vector<Variant>& keys,
 	std::vector<std::shared_ptr<const Value>> result(keys.size());
 	for(size_t i = 0; i < keys.size(); ++i) {
 		try {
-			result[i] = read_value(get_key_index(keys[i]));
+			const auto* index = get_key_index(keys[i]);
+			if(index) {
+				result[i] = read_value(*index);
+			}
 		} catch(...) {
 			// ignore
 		}
@@ -474,21 +480,17 @@ std::shared_ptr<Server::block_t> Server::get_block(int64_t index) const
 std::unordered_multimap<uint64_t, uint64_t>::const_iterator Server::get_key_iter(const Variant& key) const
 {
 	std::unordered_multimap<uint64_t, uint64_t>::const_iterator iter = keyhash_map.end();
-	try {
-		get_key_index(key, iter);
-	} catch(...) {
-		// ignore
-	}
+	get_key_index(key, iter);
 	return iter;
 }
 
-const Server::key_index_t& Server::get_key_index(const Variant& key) const
+const Server::key_index_t* Server::get_key_index(const Variant& key) const
 {
 	std::unordered_multimap<uint64_t, uint64_t>::const_iterator iter;
 	return get_key_index(key, iter);
 }
 
-const Server::key_index_t& Server::get_key_index(const Variant& key, std::unordered_multimap<uint64_t, uint64_t>::const_iterator& key_iter) const
+const Server::key_index_t* Server::get_key_index(const Variant& key, std::unordered_multimap<uint64_t, uint64_t>::const_iterator& key_iter) const
 {
 	const auto range = keyhash_map.equal_range(key.get_hash());
 	for(auto entry = range.first; entry != range.second; ++entry)
@@ -511,12 +513,12 @@ const Server::key_index_t& Server::get_key_index(const Variant& key, std::unorde
 			}
 			if(index_entry && index_entry->key == key) {
 				key_iter = entry;
-				return index;
+				return &index;
 			}
 		}
 	}
 	key_iter = keyhash_map.end();
-	throw std::runtime_error("unknown key");
+	return 0;
 }
 
 void Server::delete_internal(std::unordered_multimap<uint64_t, uint64_t>::const_iterator key_iter)
