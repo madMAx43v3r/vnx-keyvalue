@@ -35,9 +35,9 @@ module Server {
 	bool ignore_errors = false;
 	
 	
-	Value* get_value(Variant key) const async;
+	Value* get_value(Variant key) const;
 	
-	vector<Value*> get_values(vector<Variant> keys) const async;
+	vector<Value*> get_values(vector<Variant> keys) const;
 	
 	long sync_from(TopicPtr topic, ulong version) const;				// sync all greater than version
 	

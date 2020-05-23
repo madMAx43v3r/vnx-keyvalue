@@ -29,13 +29,9 @@ protected:
 	
 	void main() override;
 	
-	void get_value_async(	const Variant& key,
-							const std::function<void(const std::shared_ptr<const Value>&)>& callback,
-							const vnx::request_id_t& request_id) const override;
+	std::shared_ptr<const Value> get_value(const Variant& key) const override;
 	
-	void get_values_async(	const std::vector<Variant>& keys,
-							const std::function<void(const std::vector<std::shared_ptr<const Value>>&)>& callback,
-							const vnx::request_id_t& request_id) const override;
+	std::vector<std::shared_ptr<const Value>> get_values(const std::vector<Variant>& keys) const override;
 	
 	int64_t sync_from(const TopicPtr& topic, const uint64_t& version) const override;
 	

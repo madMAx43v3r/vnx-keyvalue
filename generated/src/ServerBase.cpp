@@ -661,8 +661,19 @@ std::shared_ptr<vnx::Value> ServerBase::vnx_call_switch(vnx::TypeInput& _in, con
 				}
 			}
 		}
-		get_value_async(key, std::bind(&ServerBase::get_value_async_return, this, _request_id, std::placeholders::_1), _request_id);
-		return 0;
+		::std::shared_ptr<const ::vnx::Value> _ret_0;
+		_ret_0 = get_value(key);
+		std::shared_ptr<vnx::Binary> _return_value;
+		{
+			const vnx::TypeCode* _return_type = vnx::keyvalue::vnx_native_type_code_Server_get_value_return;
+			_return_value = vnx::Binary::create();
+			_return_value->type_code = _return_type;
+			vnx::BinaryOutputStream _stream_out(_return_value.get());
+			vnx::TypeOutput _out(&_stream_out);
+			vnx::write(_out, _ret_0, _return_type, _return_type->fields[0].code.data());
+			_out.flush();
+		}
+		return _return_value;
 	} else if(_call_type->type_hash == vnx::Hash64(0x29edfe1764d9e55ull)) {
 		::std::vector<::vnx::Variant> keys;
 		{
@@ -676,8 +687,19 @@ std::shared_ptr<vnx::Value> ServerBase::vnx_call_switch(vnx::TypeInput& _in, con
 				}
 			}
 		}
-		get_values_async(keys, std::bind(&ServerBase::get_values_async_return, this, _request_id, std::placeholders::_1), _request_id);
-		return 0;
+		::std::vector<::std::shared_ptr<const ::vnx::Value>> _ret_0;
+		_ret_0 = get_values(keys);
+		std::shared_ptr<vnx::Binary> _return_value;
+		{
+			const vnx::TypeCode* _return_type = vnx::keyvalue::vnx_native_type_code_Server_get_values_return;
+			_return_value = vnx::Binary::create();
+			_return_value->type_code = _return_type;
+			vnx::BinaryOutputStream _stream_out(_return_value.get());
+			vnx::TypeOutput _out(&_stream_out);
+			vnx::write(_out, _ret_0, _return_type, _return_type->fields[0].code.data());
+			_out.flush();
+		}
+		return _return_value;
 	} else if(_call_type->type_hash == vnx::Hash64(0xf6bea692aee1018cull)) {
 		::vnx::Variant key;
 		::std::shared_ptr<const ::vnx::Value> value;
@@ -835,30 +857,6 @@ std::shared_ptr<vnx::Value> ServerBase::vnx_call_switch(vnx::TypeInput& _in, con
 	_ex->dst_mac = vnx_request ? vnx_request->dst_mac : 0;
 	_ex->method = _call_type->name;
 	return _ex;
-}
-
-void ServerBase::get_value_async_return(const vnx::request_id_t& _request_id, const ::std::shared_ptr<const ::vnx::Value>& _ret_0) {
-	std::shared_ptr<vnx::Binary> _return_value;
-	const vnx::TypeCode* _return_type = vnx::keyvalue::vnx_native_type_code_Server_get_value_return;
-	_return_value = vnx::Binary::create();
-	_return_value->type_code = _return_type;
-	vnx::BinaryOutputStream _stream_out(_return_value.get());
-	vnx::TypeOutput _out(&_stream_out);
-	vnx::write(_out, _ret_0, _return_type, _return_type->fields[0].code.data());
-	_out.flush();
-	vnx_async_return(_request_id, _return_value);
-}
-
-void ServerBase::get_values_async_return(const vnx::request_id_t& _request_id, const ::std::vector<::std::shared_ptr<const ::vnx::Value>>& _ret_0) {
-	std::shared_ptr<vnx::Binary> _return_value;
-	const vnx::TypeCode* _return_type = vnx::keyvalue::vnx_native_type_code_Server_get_values_return;
-	_return_value = vnx::Binary::create();
-	_return_value->type_code = _return_type;
-	vnx::BinaryOutputStream _stream_out(_return_value.get());
-	vnx::TypeOutput _out(&_stream_out);
-	vnx::write(_out, _ret_0, _return_type, _return_type->fields[0].code.data());
-	_out.flush();
-	vnx_async_return(_request_id, _return_value);
 }
 
 

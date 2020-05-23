@@ -267,9 +267,7 @@ std::shared_ptr<Value> Server::read_value(const key_index_t& index) const
 	return value;
 }
 
-void Server::get_value_async(	const Variant& key,
-								const std::function<void(const std::shared_ptr<const Value>&)>& callback,
-								const vnx::request_id_t& request_id) const
+std::shared_ptr<const Value> Server::get_value(const Variant& key) const
 {
 	std::shared_ptr<Value> value;
 	try {
@@ -280,12 +278,10 @@ void Server::get_value_async(	const Variant& key,
 	} catch(...) {
 		// ignore
 	}
-	callback(value);
+	return value;
 }
 
-void Server::get_values_async(	const std::vector<Variant>& keys,
-								const std::function<void(const std::vector<std::shared_ptr<const Value>>&)>& callback,
-								const vnx::request_id_t& request_id) const
+std::vector<std::shared_ptr<const Value>> Server::get_values(const std::vector<Variant>& keys) const
 {
 	std::vector<std::shared_ptr<const Value>> result(keys.size());
 	for(size_t i = 0; i < keys.size(); ++i) {
@@ -298,7 +294,7 @@ void Server::get_values_async(	const std::vector<Variant>& keys,
 			// ignore
 		}
 	}
-	callback(result);
+	return result;
 }
 
 int64_t Server::sync_range_ex(TopicPtr topic, uint64_t begin, uint64_t end, bool key_only) const
