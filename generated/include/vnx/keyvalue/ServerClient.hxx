@@ -36,6 +36,10 @@ public:
 	
 	void store_value_async(const ::vnx::Variant& key, const ::std::shared_ptr<const ::vnx::Value>& value);
 	
+	void store_values(const ::std::vector<::std::pair<::vnx::Variant, ::std::shared_ptr<const ::vnx::Value>>>& values);
+	
+	void store_values_async(const ::std::vector<::std::pair<::vnx::Variant, ::std::shared_ptr<const ::vnx::Value>>>& values);
+	
 	::int64_t sync_all(const ::vnx::TopicPtr& topic);
 	
 	::int64_t sync_all_keys(const ::vnx::TopicPtr& topic);

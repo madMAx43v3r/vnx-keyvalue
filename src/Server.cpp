@@ -443,6 +443,13 @@ void Server::store_value(const Variant& key, const std::shared_ptr<const Value>&
 	}
 }
 
+void Server::store_values(const std::vector<std::pair<Variant, std::shared_ptr<const Value>>>& values)
+{
+	for(const auto& entry : values) {
+		store_value(entry.first, entry.second);
+	}
+}
+
 void Server::delete_value(const Variant& key)
 {
 	const auto key_iter = get_key_iter(key);

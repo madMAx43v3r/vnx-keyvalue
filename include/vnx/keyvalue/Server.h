@@ -43,6 +43,8 @@ protected:
 	
 	void store_value(const Variant& key, const std::shared_ptr<const Value>& value) override;
 	
+	void store_values(const std::vector<std::pair<Variant, std::shared_ptr<const Value>>>& values) override;
+	
 	void delete_value(const Variant& key) override;
 	
 	void _sync_finished(const int64_t& job_id) override;

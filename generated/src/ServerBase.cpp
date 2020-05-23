@@ -204,7 +204,7 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 	type_code->type_hash = vnx::Hash64(0xbb28aa6f1d808048ull);
 	type_code->code_hash = vnx::Hash64(0x672ebd7b8bcbfa26ull);
 	type_code->is_native = true;
-	type_code->methods.resize(9);
+	type_code->methods.resize(10);
 	{
 		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>();
 		call_type->name = "vnx.keyvalue.Server._sync_finished";
@@ -361,6 +361,33 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 	}
 	{
 		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>();
+		call_type->name = "vnx.keyvalue.Server.store_values";
+		call_type->type_hash = vnx::Hash64(0xfff6bea692aee101ull);
+		call_type->code_hash = vnx::Hash64(0x938f7ae942c6b8a0ull);
+		call_type->is_native = true;
+		call_type->is_method = true;
+		{
+			std::shared_ptr<vnx::TypeCode> return_type = std::make_shared<vnx::TypeCode>();
+			return_type->name = "vnx.keyvalue.Server.store_values.return";
+			return_type->type_hash = vnx::Hash64(0x68bd7b177e8a4f88ull);
+			return_type->code_hash = vnx::Hash64(0x9f7ec2c6b35bb2f6ull);
+			return_type->is_native = true;
+			return_type->is_return = true;
+			return_type->build();
+			call_type->return_type = vnx::register_type_code(return_type);
+		}
+		call_type->fields.resize(1);
+		{
+			vnx::TypeField& field = call_type->fields[0];
+			field.is_extended = true;
+			field.name = "values";
+			field.code = {12, 23, 2, 4, 5, 17, 16};
+		}
+		call_type->build();
+		type_code->methods[5] = vnx::register_type_code(call_type);
+	}
+	{
+		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>();
 		call_type->name = "vnx.keyvalue.Server.sync_all";
 		call_type->type_hash = vnx::Hash64(0x6173affeadaf11ddull);
 		call_type->code_hash = vnx::Hash64(0x3586a46e6beccaf2ull);
@@ -390,7 +417,7 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 			field.code = {12, 5};
 		}
 		call_type->build();
-		type_code->methods[5] = vnx::register_type_code(call_type);
+		type_code->methods[6] = vnx::register_type_code(call_type);
 	}
 	{
 		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>();
@@ -423,7 +450,7 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 			field.code = {12, 5};
 		}
 		call_type->build();
-		type_code->methods[6] = vnx::register_type_code(call_type);
+		type_code->methods[7] = vnx::register_type_code(call_type);
 	}
 	{
 		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>();
@@ -461,7 +488,7 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 			field.code = {4};
 		}
 		call_type->build();
-		type_code->methods[7] = vnx::register_type_code(call_type);
+		type_code->methods[8] = vnx::register_type_code(call_type);
 	}
 	{
 		std::shared_ptr<vnx::TypeCode> call_type = std::make_shared<vnx::TypeCode>();
@@ -504,7 +531,7 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 			field.code = {4};
 		}
 		call_type->build();
-		type_code->methods[8] = vnx::register_type_code(call_type);
+		type_code->methods[9] = vnx::register_type_code(call_type);
 	}
 	type_code->fields.resize(14);
 	{
@@ -719,6 +746,27 @@ std::shared_ptr<vnx::Value> ServerBase::vnx_call_switch(vnx::TypeInput& _in, con
 		std::shared_ptr<vnx::Binary> _return_value;
 		{
 			const vnx::TypeCode* _return_type = vnx::keyvalue::vnx_native_type_code_Server_store_value_return;
+			_return_value = vnx::Binary::create();
+			_return_value->type_code = _return_type;
+		}
+		return _return_value;
+	} else if(_call_type->type_hash == vnx::Hash64(0xfff6bea692aee101ull)) {
+		::std::vector<::std::pair<::vnx::Variant, ::std::shared_ptr<const ::vnx::Value>>> values;
+		{
+			const char* const _buf = _in.read(_call_type->total_field_size);
+			if(_call_type->is_matched) {
+			}
+			for(const vnx::TypeField* _field : _call_type->ext_fields) {
+				switch(_field->native_index) {
+					case 0: vnx::read(_in, values, _call_type, _field->code.data()); break;
+					default: vnx::skip(_in, _call_type, _field->code.data());
+				}
+			}
+		}
+		store_values(values);
+		std::shared_ptr<vnx::Binary> _return_value;
+		{
+			const vnx::TypeCode* _return_type = vnx::keyvalue::vnx_native_type_code_Server_store_values_return;
 			_return_value = vnx::Binary::create();
 			_return_value->type_code = _return_type;
 		}

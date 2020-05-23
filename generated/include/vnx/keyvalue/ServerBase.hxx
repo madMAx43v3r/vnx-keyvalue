@@ -63,6 +63,7 @@ protected:
 	virtual ::std::shared_ptr<const ::vnx::Value> get_value(const ::vnx::Variant& key) const = 0;
 	virtual ::std::vector<::std::shared_ptr<const ::vnx::Value>> get_values(const ::std::vector<::vnx::Variant>& keys) const = 0;
 	virtual void store_value(const ::vnx::Variant& key, const ::std::shared_ptr<const ::vnx::Value>& value) = 0;
+	virtual void store_values(const ::std::vector<::std::pair<::vnx::Variant, ::std::shared_ptr<const ::vnx::Value>>>& values) = 0;
 	virtual ::int64_t sync_all(const ::vnx::TopicPtr& topic) const = 0;
 	virtual ::int64_t sync_all_keys(const ::vnx::TopicPtr& topic) const = 0;
 	virtual ::int64_t sync_from(const ::vnx::TopicPtr& topic, const ::uint64_t& version) const = 0;

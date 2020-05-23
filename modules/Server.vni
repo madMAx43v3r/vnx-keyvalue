@@ -49,6 +49,8 @@ module Server {
 	
 	void store_value(Variant key, Value* value);
 	
+	void store_values(vector<pair<Variant, Value*>> values);
+	
 	void delete_value(Variant key);
 	
 	// below internal use only

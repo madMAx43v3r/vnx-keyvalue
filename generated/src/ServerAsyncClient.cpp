@@ -102,6 +102,22 @@ uint64_t ServerAsyncClient::store_value(const ::vnx::Variant& key, const ::std::
 	return _request_id;
 }
 
+uint64_t ServerAsyncClient::store_values(const ::std::vector<::std::pair<::vnx::Variant, ::std::shared_ptr<const ::vnx::Value>>>& values, const std::function<void()>& _callback) {
+	std::shared_ptr<vnx::Binary> _argument_data = vnx::Binary::create();
+	vnx::BinaryOutputStream _stream_out(_argument_data.get());
+	vnx::TypeOutput _out(&_stream_out);
+	const vnx::TypeCode* _type_code = vnx::keyvalue::vnx_native_type_code_Server_store_values;
+	{
+		vnx::write(_out, values, _type_code, _type_code->fields[0].code.data());
+	}
+	_out.flush();
+	_argument_data->type_code = _type_code;
+	const uint64_t _request_id = vnx_request(_argument_data);
+	vnx_queue_store_values[_request_id] = _callback;
+	vnx_num_pending++;
+	return _request_id;
+}
+
 uint64_t ServerAsyncClient::sync_all(const ::vnx::TopicPtr& topic, const std::function<void(::int64_t)>& _callback) {
 	std::shared_ptr<vnx::Binary> _argument_data = vnx::Binary::create();
 	vnx::BinaryOutputStream _stream_out(_argument_data.get());
@@ -188,6 +204,9 @@ std::vector<uint64_t> ServerAsyncClient::vnx_get_pending_ids() const {
 	for(const auto& entry : vnx_queue_store_value) {
 		_list.push_back(entry.first);
 	}
+	for(const auto& entry : vnx_queue_store_values) {
+		_list.push_back(entry.first);
+	}
 	for(const auto& entry : vnx_queue_sync_all) {
 		_list.push_back(entry.first);
 	}
@@ -209,6 +228,7 @@ void ServerAsyncClient::vnx_purge_request(uint64_t _request_id) {
 	vnx_num_pending -= vnx_queue_get_value.erase(_request_id);
 	vnx_num_pending -= vnx_queue_get_values.erase(_request_id);
 	vnx_num_pending -= vnx_queue_store_value.erase(_request_id);
+	vnx_num_pending -= vnx_queue_store_values.erase(_request_id);
 	vnx_num_pending -= vnx_queue_sync_all.erase(_request_id);
 	vnx_num_pending -= vnx_queue_sync_all_keys.erase(_request_id);
 	vnx_num_pending -= vnx_queue_sync_from.erase(_request_id);
@@ -293,6 +313,17 @@ void ServerAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_pt
 		if(_iter != vnx_queue_store_value.end()) {
 			const auto _callback = std::move(_iter->second);
 			vnx_queue_store_value.erase(_iter);
+			vnx_num_pending--;
+			if(_callback) {
+				_callback();
+			}
+		}
+	}
+	else if(_return_type->type_hash == vnx::Hash64(0x68bd7b177e8a4f88ull)) {
+		auto _iter = vnx_queue_store_values.find(_request_id);
+		if(_iter != vnx_queue_store_values.end()) {
+			const auto _callback = std::move(_iter->second);
+			vnx_queue_store_values.erase(_iter);
 			vnx_num_pending--;
 			if(_callback) {
 				_callback();

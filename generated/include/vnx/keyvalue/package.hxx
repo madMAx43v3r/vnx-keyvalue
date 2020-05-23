@@ -39,6 +39,8 @@ extern const vnx::TypeCode* const vnx_native_type_code_Server_get_values; ///< \
 extern const vnx::TypeCode* const vnx_native_type_code_Server_get_values_return; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_Server_store_value; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_Server_store_value_return; ///< \private
+extern const vnx::TypeCode* const vnx_native_type_code_Server_store_values; ///< \private
+extern const vnx::TypeCode* const vnx_native_type_code_Server_store_values_return; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_Server_sync_all; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_Server_sync_all_return; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_Server_sync_all_keys; ///< \private

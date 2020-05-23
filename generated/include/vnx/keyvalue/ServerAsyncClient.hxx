@@ -35,6 +35,9 @@ public:
 	uint64_t store_value(const ::vnx::Variant& key, const ::std::shared_ptr<const ::vnx::Value>& value, 
 			const std::function<void()>& _callback = std::function<void()>());
 	
+	uint64_t store_values(const ::std::vector<::std::pair<::vnx::Variant, ::std::shared_ptr<const ::vnx::Value>>>& values, 
+			const std::function<void()>& _callback = std::function<void()>());
+	
 	uint64_t sync_all(const ::vnx::TopicPtr& topic, 
 			const std::function<void(::int64_t)>& _callback = std::function<void(::int64_t)>());
 	
@@ -60,6 +63,7 @@ private:
 	std::map<uint64_t, std::function<void(::std::shared_ptr<const ::vnx::Value>)>> vnx_queue_get_value;
 	std::map<uint64_t, std::function<void(::std::vector<::std::shared_ptr<const ::vnx::Value>>)>> vnx_queue_get_values;
 	std::map<uint64_t, std::function<void()>> vnx_queue_store_value;
+	std::map<uint64_t, std::function<void()>> vnx_queue_store_values;
 	std::map<uint64_t, std::function<void(::int64_t)>> vnx_queue_sync_all;
 	std::map<uint64_t, std::function<void(::int64_t)>> vnx_queue_sync_all_keys;
 	std::map<uint64_t, std::function<void(::int64_t)>> vnx_queue_sync_from;
