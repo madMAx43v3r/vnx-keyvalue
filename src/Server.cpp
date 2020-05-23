@@ -97,7 +97,8 @@ void Server::main()
 						auto index_entry = std::dynamic_pointer_cast<IndexEntry>(entry);
 						if(index_entry) {
 							const auto key_iter = get_key_iter(index_entry->key);
-							if(key_iter == keyhash_map.cend() || index_entry->version > key_iter->second) {
+							if(key_iter == keyhash_map.cend() || index_entry->version > key_iter->second)
+							{
 								if(key_iter != keyhash_map.cend()) {
 									delete_internal(key_iter);
 								}
