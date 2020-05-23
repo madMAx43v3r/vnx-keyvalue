@@ -255,11 +255,11 @@ std::shared_ptr<Value> Server::read_value(const key_index_t& index) const
 	std::shared_ptr<Value> value;
 	try {
 		value = vnx::read(in);
+		num_bytes_read += index.num_bytes;
 	} catch(...) {
 		// ignore
 	}
 	read_counter++;
-	num_bytes_read += index.num_bytes_key + index.num_bytes;
 	return value;
 }
 
@@ -412,6 +412,9 @@ Server::key_index_t Server::store_value_internal(const Variant& key, const std::
 	block->num_bytes_used += entry.num_bytes;
 	block->num_bytes_total += entry.num_bytes;
 	
+	write_counter++;
+	num_bytes_written += ret.num_bytes_key + ret.num_bytes;
+	
 	if(block->num_bytes_total >= max_block_size) {
 		add_new_block();
 	}
@@ -435,8 +438,6 @@ void Server::store_value(const Variant& key, const std::shared_ptr<const Value>&
 		}
 		update_condition.notify_one();
 	}
-	write_counter++;
-	num_bytes_written += index.num_bytes;
 }
 
 void Server::delete_value(const Variant& key)
@@ -502,6 +503,7 @@ const Server::key_index_t& Server::get_key_index(const Variant& key, std::unorde
 				TypeInput in(stream.get());
 				try {
 					index_entry = std::dynamic_pointer_cast<IndexEntry>(vnx::read(in));
+					num_bytes_read += index.num_bytes_key;
 				} catch(...) {
 					// ignore
 				}
