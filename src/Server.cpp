@@ -253,6 +253,9 @@ void Server::main()
 std::shared_ptr<Value> Server::read_value(const key_index_t& index) const
 {
 	const auto block = get_block(index.block_index);
+	if(index.num_bytes > 65536) {
+		block->value_file.fadvise(POSIX_FADV_SEQUENTIAL, index.block_offset, index.num_bytes);
+	}
 	MappedMemoryInputStream stream(	block->value_file.get_fd(),
 									index.num_bytes, index.block_offset);
 	TypeInput in(&stream);
