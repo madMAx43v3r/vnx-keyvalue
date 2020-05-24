@@ -18,18 +18,18 @@ namespace keyvalue {
 
 
 const vnx::Hash64 ServerBase::VNX_TYPE_HASH(0xbb28aa6f1d808048ull);
-const vnx::Hash64 ServerBase::VNX_CODE_HASH(0x672ebd7b8bcbfa26ull);
+const vnx::Hash64 ServerBase::VNX_CODE_HASH(0x16ee7575fcbb1c28ull);
 
 ServerBase::ServerBase(const std::string& _vnx_name)
 	:	Module::Module(_vnx_name)
 {
 	vnx::read_config(vnx_name + ".collection", collection);
-	vnx::read_config(vnx_name + ".do_verify_rewrite", do_verify_rewrite);
 	vnx::read_config(vnx_name + ".idle_rewrite_interval", idle_rewrite_interval);
 	vnx::read_config(vnx_name + ".idle_rewrite_threshold", idle_rewrite_threshold);
 	vnx::read_config(vnx_name + ".ignore_errors", ignore_errors);
 	vnx::read_config(vnx_name + ".max_block_size", max_block_size);
 	vnx::read_config(vnx_name + ".max_queue_ms", max_queue_ms);
+	vnx::read_config(vnx_name + ".purge_deleted", purge_deleted);
 	vnx::read_config(vnx_name + ".rewrite_chunk_count", rewrite_chunk_count);
 	vnx::read_config(vnx_name + ".rewrite_chunk_size", rewrite_chunk_size);
 	vnx::read_config(vnx_name + ".rewrite_interval", rewrite_interval);
@@ -65,7 +65,7 @@ void ServerBase::accept(vnx::Visitor& _visitor) const {
 	_visitor.type_field(_type_code->fields[9], 9); vnx::accept(_visitor, idle_rewrite_interval);
 	_visitor.type_field(_type_code->fields[10], 10); vnx::accept(_visitor, sync_chunk_count);
 	_visitor.type_field(_type_code->fields[11], 11); vnx::accept(_visitor, max_queue_ms);
-	_visitor.type_field(_type_code->fields[12], 12); vnx::accept(_visitor, do_verify_rewrite);
+	_visitor.type_field(_type_code->fields[12], 12); vnx::accept(_visitor, purge_deleted);
 	_visitor.type_field(_type_code->fields[13], 13); vnx::accept(_visitor, ignore_errors);
 	_visitor.type_end(*_type_code);
 }
@@ -84,7 +84,7 @@ void ServerBase::write(std::ostream& _out) const {
 	_out << ", \"idle_rewrite_interval\": "; vnx::write(_out, idle_rewrite_interval);
 	_out << ", \"sync_chunk_count\": "; vnx::write(_out, sync_chunk_count);
 	_out << ", \"max_queue_ms\": "; vnx::write(_out, max_queue_ms);
-	_out << ", \"do_verify_rewrite\": "; vnx::write(_out, do_verify_rewrite);
+	_out << ", \"purge_deleted\": "; vnx::write(_out, purge_deleted);
 	_out << ", \"ignore_errors\": "; vnx::write(_out, ignore_errors);
 	_out << "}";
 }
@@ -95,8 +95,6 @@ void ServerBase::read(std::istream& _in) {
 	for(const auto& _entry : _object) {
 		if(_entry.first == "collection") {
 			vnx::from_string(_entry.second, collection);
-		} else if(_entry.first == "do_verify_rewrite") {
-			vnx::from_string(_entry.second, do_verify_rewrite);
 		} else if(_entry.first == "idle_rewrite_interval") {
 			vnx::from_string(_entry.second, idle_rewrite_interval);
 		} else if(_entry.first == "idle_rewrite_threshold") {
@@ -107,6 +105,8 @@ void ServerBase::read(std::istream& _in) {
 			vnx::from_string(_entry.second, max_block_size);
 		} else if(_entry.first == "max_queue_ms") {
 			vnx::from_string(_entry.second, max_queue_ms);
+		} else if(_entry.first == "purge_deleted") {
+			vnx::from_string(_entry.second, purge_deleted);
 		} else if(_entry.first == "rewrite_chunk_count") {
 			vnx::from_string(_entry.second, rewrite_chunk_count);
 		} else if(_entry.first == "rewrite_chunk_size") {
@@ -139,7 +139,7 @@ vnx::Object ServerBase::to_object() const {
 	_object["idle_rewrite_interval"] = idle_rewrite_interval;
 	_object["sync_chunk_count"] = sync_chunk_count;
 	_object["max_queue_ms"] = max_queue_ms;
-	_object["do_verify_rewrite"] = do_verify_rewrite;
+	_object["purge_deleted"] = purge_deleted;
 	_object["ignore_errors"] = ignore_errors;
 	return _object;
 }
@@ -148,8 +148,6 @@ void ServerBase::from_object(const vnx::Object& _object) {
 	for(const auto& _entry : _object.field) {
 		if(_entry.first == "collection") {
 			_entry.second.to(collection);
-		} else if(_entry.first == "do_verify_rewrite") {
-			_entry.second.to(do_verify_rewrite);
 		} else if(_entry.first == "idle_rewrite_interval") {
 			_entry.second.to(idle_rewrite_interval);
 		} else if(_entry.first == "idle_rewrite_threshold") {
@@ -160,6 +158,8 @@ void ServerBase::from_object(const vnx::Object& _object) {
 			_entry.second.to(max_block_size);
 		} else if(_entry.first == "max_queue_ms") {
 			_entry.second.to(max_queue_ms);
+		} else if(_entry.first == "purge_deleted") {
+			_entry.second.to(purge_deleted);
 		} else if(_entry.first == "rewrite_chunk_count") {
 			_entry.second.to(rewrite_chunk_count);
 		} else if(_entry.first == "rewrite_chunk_size") {
@@ -202,7 +202,7 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>();
 	type_code->name = "vnx.keyvalue.Server";
 	type_code->type_hash = vnx::Hash64(0xbb28aa6f1d808048ull);
-	type_code->code_hash = vnx::Hash64(0x672ebd7b8bcbfa26ull);
+	type_code->code_hash = vnx::Hash64(0x16ee7575fcbb1c28ull);
 	type_code->is_native = true;
 	type_code->methods.resize(10);
 	{
@@ -609,8 +609,8 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 	}
 	{
 		vnx::TypeField& field = type_code->fields[12];
-		field.name = "do_verify_rewrite";
-		field.value = vnx::to_string(false);
+		field.name = "purge_deleted";
+		field.value = vnx::to_string(true);
 		field.code = {1};
 	}
 	{
@@ -984,7 +984,7 @@ void read(TypeInput& in, ::vnx::keyvalue::ServerBase& value, const TypeCode* typ
 		{
 			const vnx::TypeField* const _field = type_code->field_map[12];
 			if(_field) {
-				vnx::read_value(_buf + _field->offset, value.do_verify_rewrite, _field->code.data());
+				vnx::read_value(_buf + _field->offset, value.purge_deleted, _field->code.data());
 			}
 		}
 		{
@@ -1023,7 +1023,7 @@ void write(TypeOutput& out, const ::vnx::keyvalue::ServerBase& value, const Type
 	vnx::write_value(_buf + 28, value.idle_rewrite_interval);
 	vnx::write_value(_buf + 32, value.sync_chunk_count);
 	vnx::write_value(_buf + 36, value.max_queue_ms);
-	vnx::write_value(_buf + 40, value.do_verify_rewrite);
+	vnx::write_value(_buf + 40, value.purge_deleted);
 	vnx::write_value(_buf + 41, value.ignore_errors);
 	vnx::write(out, value.update_topic, type_code, type_code->fields[0].code.data());
 	vnx::write(out, value.collection, type_code, type_code->fields[1].code.data());

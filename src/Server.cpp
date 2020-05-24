@@ -681,31 +681,24 @@ void Server::rewrite_func()
 			break;
 		}
 	}
+	
 	for(auto& entry : list) {
 		auto stream = block->value_file.mmap_read(entry.index->block_offset, entry.index->num_bytes);
 		TypeInput value_in(stream.get());
 		entry.value = vnx::read(value_in);
 	}
+	
+	size_t purge_counter = 0;
 	for(const auto& entry : list) {
-		store_value_internal(entry.index->key, entry.value, entry.index->version);
+		if(entry.value || !purge_deleted) {
+			store_value_internal(entry.index->key, entry.value, entry.index->version);
+		} else {
+			purge_counter++;
+		}
 	}
 	
 	if(is_done) {
-		if(do_verify_rewrite) {
-			bool is_fail = false;
-			for(const auto& entry : index_map) {
-				if(entry.second.block_index == block->index) {
-					log(ERROR).out << "Key '" << entry.first << "' still points to block " << block->index;
-					is_fail = true;
-				}
-			}
-			if(is_fail) {
-				log(ERROR).out << "Rewrite of block " << block->index << " failed.";
-				return;
-			}
-		}
-		log(INFO).out << "Rewrite of block " << block->index << " finished.";
-		
+		log(INFO).out << "Rewrite of block " << block->index << " finished, purged " << purge_counter << " keys.";
 		{
 			std::lock_guard<std::mutex> lock(index_mutex);
 			block_map.erase(block->index);
