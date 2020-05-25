@@ -55,7 +55,6 @@ protected:
 						if(counter % 1000 == 0) {
 							vnx::log_info().out << "Got " << counter << " values";
 						}
-						vnx::log_info().out << pair->key;
 					}
 				}
 			} else {
