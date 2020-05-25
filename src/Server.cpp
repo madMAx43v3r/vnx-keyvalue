@@ -696,6 +696,16 @@ void Server::rewrite_func()
 		if(entry.value || !purge_deleted) {
 			store_value_internal(entry.index->key, entry.value, entry.index->version);
 		} else {
+			std::lock_guard<std::mutex> lock(index_mutex);
+			
+			const auto range = keyhash_map.equal_range(entry.index->key.get_hash());
+			for(auto iter = range.first; iter != range.second; ++iter) {
+				if(iter->second == entry.index->version) {
+					keyhash_map.erase(iter);
+					break;
+				}
+			}
+			index_map.erase(entry.index->version);
 			purge_counter++;
 		}
 	}
