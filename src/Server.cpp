@@ -812,19 +812,25 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 		std::shared_ptr<IndexEntry> index_entry;
 	};
 	
+	bool is_done = false;
 	std::vector<entry_t> list;
 	
-	while(vnx_do_run())
+	while(vnx_do_run() && !is_done)
 	{
 		list.clear();
 		{
 			std::lock_guard<std::mutex> lock(index_mutex);
 			
 			auto iter = index_map.upper_bound(version);
-			for(int i = 0; iter != index_map.end() && i < sync_chunk_count; ++iter, ++i)
+			for(int i = 0; i < sync_chunk_count; ++iter, ++i)
 			{
+				if(iter == index_map.end()) {
+					is_done = true;
+					break;
+				}
 				version = iter->first;
 				if(end > 0 && version >= end) {
+					is_done = true;
 					break;
 				}
 				try {
@@ -839,9 +845,6 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 					// ignore
 				}
 			}
-		}
-		if(list.empty()) {
-			break;
 		}
 		for(auto& entry : list)
 		{
