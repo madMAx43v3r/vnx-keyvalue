@@ -693,7 +693,7 @@ void Server::rewrite_func()
 	
 	size_t purge_counter = 0;
 	for(const auto& entry : list) {
-		if(entry.value || !purge_deleted) {
+		if(entry.value || !purge_deleted || true) {
 			store_value_internal(entry.index->key, entry.value, entry.index->version);
 		} else {
 			std::lock_guard<std::mutex> lock(index_mutex);

@@ -18,7 +18,7 @@ namespace keyvalue {
 
 
 const vnx::Hash64 ServerBase::VNX_TYPE_HASH(0xbb28aa6f1d808048ull);
-const vnx::Hash64 ServerBase::VNX_CODE_HASH(0x16ee7575fcbb1c28ull);
+const vnx::Hash64 ServerBase::VNX_CODE_HASH(0x3636da0c73130245ull);
 
 ServerBase::ServerBase(const std::string& _vnx_name)
 	:	Module::Module(_vnx_name)
@@ -202,7 +202,7 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>();
 	type_code->name = "vnx.keyvalue.Server";
 	type_code->type_hash = vnx::Hash64(0xbb28aa6f1d808048ull);
-	type_code->code_hash = vnx::Hash64(0x16ee7575fcbb1c28ull);
+	type_code->code_hash = vnx::Hash64(0x3636da0c73130245ull);
 	type_code->is_native = true;
 	type_code->methods.resize(10);
 	{
@@ -610,7 +610,7 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 	{
 		vnx::TypeField& field = type_code->fields[12];
 		field.name = "purge_deleted";
-		field.value = vnx::to_string(true);
+		field.value = vnx::to_string(false);
 		field.code = {1};
 	}
 	{

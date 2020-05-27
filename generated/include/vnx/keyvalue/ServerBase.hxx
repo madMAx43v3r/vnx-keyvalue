@@ -29,7 +29,7 @@ public:
 	::int32_t idle_rewrite_interval = 100;
 	::int32_t sync_chunk_count = 100;
 	::int32_t max_queue_ms = 1000;
-	::vnx::bool_t purge_deleted = true;
+	::vnx::bool_t purge_deleted = false;
 	::vnx::bool_t ignore_errors = false;
 	
 	typedef ::vnx::Module Super;
