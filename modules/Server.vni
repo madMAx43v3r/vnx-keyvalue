@@ -30,8 +30,6 @@ module Server {
 	
 	int max_queue_ms = 1000;
 	
-	bool purge_deleted = false;					// if to purge deleted entries on rewrite
-	
 	bool ignore_errors = false;
 	
 	

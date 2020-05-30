@@ -77,11 +77,13 @@ private:
 	
 	std::shared_ptr<block_t> get_block(int64_t index) const;
 	
-	std::unordered_multimap<uint64_t, uint64_t>::const_iterator get_key_iter(const Variant& key) const;
+	std::unordered_multimap<uint64_t, uint64_t>::const_iterator get_key_iter(const Variant& key, uint64_t& key_hash) const;
 	
 	const key_index_t* get_key_index(const Variant& key) const;
 	
-	const key_index_t* get_key_index(const Variant& key, std::unordered_multimap<uint64_t, uint64_t>::const_iterator& key_iter) const;
+	const key_index_t* get_key_index(	const Variant& key,
+										std::unordered_multimap<uint64_t, uint64_t>::const_iterator& key_iter,
+										uint64_t& key_hash) const;
 	
 	void delete_internal(std::unordered_multimap<uint64_t, uint64_t>::const_iterator key_iter);
 	
@@ -89,7 +91,7 @@ private:
 	
 	std::shared_ptr<block_t> add_new_block();
 	
-	key_index_t store_value_internal(const Variant& key, const std::shared_ptr<const Value>& value, uint64_t version);
+	void store_value_internal(const Variant& key, const std::shared_ptr<const Value>& value, uint64_t version);
 	
 	int64_t sync_range_ex(TopicPtr topic, uint64_t begin, uint64_t end, bool key_only) const;
 	
@@ -129,8 +131,10 @@ private:
 	struct rewrite_t {
 		std::shared_ptr<block_t> block;
 		std::shared_ptr<Timer> timer;
-		std::shared_ptr<PointerInputStream> key_stream;
-		std::shared_ptr<TypeInput> key_in;
+		FileSectionInputStream key_stream;
+		TypeInput key_in;
+		int64_t value_block_size = -1;
+		rewrite_t() : key_in(&key_stream) {}
 	} rewrite;
 	
 	mutable int64_t next_sync_id = 0;
