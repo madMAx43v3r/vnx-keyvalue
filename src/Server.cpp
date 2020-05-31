@@ -24,10 +24,12 @@ namespace keyvalue {
 Server::Server(const std::string& _vnx_name)
 	:	ServerBase(_vnx_name)
 {
+	private_addr = Hash64::rand();
 }
 
 void Server::init()
 {
+	vnx::open_pipe(private_addr, this, UNLIMITED);
 	vnx::open_pipe(vnx_name, this, max_queue_ms);
 }
 
@@ -906,8 +908,8 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 		info->code = SyncInfo::END;
 		publisher.publish(info, topic, BLOCKING);
 		
-		ServerClient client(vnx_name);
-		client._sync_finished(job_id);
+		ServerClient client(private_addr);
+		client._sync_finished_async(job_id);
 	}
 }
 
