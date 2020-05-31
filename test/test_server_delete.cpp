@@ -44,7 +44,7 @@ int main(int argc, char** argv)
 		const uint64_t key = counter % 65536;
 		client.delete_value(key);
 		counter++;
-		::usleep(10 * 1000);
+//		::usleep(1 * 1000);
 	}
 	
 	vnx::wait();

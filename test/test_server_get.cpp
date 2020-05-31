@@ -49,7 +49,7 @@ int main(int argc, char** argv)
 			}
 			counter++;
 		}
-		::usleep(1 * 1000);
+//		::usleep(1 * 1000);
 	}
 	
 	vnx::wait();

@@ -67,7 +67,7 @@ int main(int argc, char** argv)
 //		const std::string key(tmp);
 		client.store_value(key, value.clone());
 		counter++;
-		::usleep(1 * 1000);
+//		::usleep(1 * 1000);
 	}
 	
 	vnx::wait();
