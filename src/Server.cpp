@@ -909,7 +909,11 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 		publisher.publish(info, topic, BLOCKING);
 		
 		ServerClient client(private_addr);
-		client._sync_finished_async(job_id);
+		try {
+			client._sync_finished(job_id);
+		} catch(...) {
+			// ignore
+		}
 	}
 }
 
