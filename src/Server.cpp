@@ -104,13 +104,13 @@ void Server::main()
 							if(index_entry->block_offset + index_entry->num_bytes <= value_block_size)
 							{
 								uint64_t key_hash = 0;
-								const auto key_iter = get_key_iter(index_entry->key, key_hash);
-								if(key_iter == keyhash_map.cend() || index_entry->version > key_iter->second)
+								auto key_iter = get_key_iter(index_entry->key, key_hash);
+								if(key_iter == keyhash_map.cend() || index_entry->version >= key_iter->second)
 								{
 									if(key_iter != keyhash_map.cend()) {
 										delete_internal(key_iter);
 									}
-									keyhash_map.emplace(key_hash, index_entry->version);
+									key_iter = keyhash_map.emplace(key_hash, index_entry->version);
 									
 									auto& index = index_map[index_entry->version];
 									index.block_index = block_index;
