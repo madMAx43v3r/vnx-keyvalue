@@ -9,6 +9,26 @@
 #include <vnx/keyvalue/IndexEntry.hxx>
 #include <vnx/keyvalue/KeyValuePair.hxx>
 #include <vnx/keyvalue/ServerBase.hxx>
+#include <vnx/keyvalue/Server__sync_finished.hxx>
+#include <vnx/keyvalue/Server__sync_finished_return.hxx>
+#include <vnx/keyvalue/Server_delete_value.hxx>
+#include <vnx/keyvalue/Server_delete_value_return.hxx>
+#include <vnx/keyvalue/Server_get_value.hxx>
+#include <vnx/keyvalue/Server_get_value_return.hxx>
+#include <vnx/keyvalue/Server_get_values.hxx>
+#include <vnx/keyvalue/Server_get_values_return.hxx>
+#include <vnx/keyvalue/Server_store_value.hxx>
+#include <vnx/keyvalue/Server_store_value_return.hxx>
+#include <vnx/keyvalue/Server_store_values.hxx>
+#include <vnx/keyvalue/Server_store_values_return.hxx>
+#include <vnx/keyvalue/Server_sync_all.hxx>
+#include <vnx/keyvalue/Server_sync_all_return.hxx>
+#include <vnx/keyvalue/Server_sync_all_keys.hxx>
+#include <vnx/keyvalue/Server_sync_all_keys_return.hxx>
+#include <vnx/keyvalue/Server_sync_from.hxx>
+#include <vnx/keyvalue/Server_sync_from_return.hxx>
+#include <vnx/keyvalue/Server_sync_range.hxx>
+#include <vnx/keyvalue/Server_sync_range_return.hxx>
 #include <vnx/keyvalue/ServerInfo.hxx>
 #include <vnx/keyvalue/SyncInfo.hxx>
 #include <vnx/keyvalue/TypeEntry.hxx>
@@ -21,16 +41,36 @@ namespace keyvalue {
 
 
 static void register_all_types() {
-	vnx::register_type_code(vnx::keyvalue::CloseEntry::static_create_type_code());
-	vnx::register_type_code(vnx::keyvalue::ClusterBase::static_create_type_code());
-	vnx::register_type_code(vnx::keyvalue::Collection::static_create_type_code());
-	vnx::register_type_code(vnx::keyvalue::IndexEntry::static_create_type_code());
-	vnx::register_type_code(vnx::keyvalue::KeyValuePair::static_create_type_code());
-	vnx::register_type_code(vnx::keyvalue::ServerBase::static_create_type_code());
-	vnx::register_type_code(vnx::keyvalue::ServerInfo::static_create_type_code());
-	vnx::register_type_code(vnx::keyvalue::SyncInfo::static_create_type_code());
-	vnx::register_type_code(vnx::keyvalue::TypeEntry::static_create_type_code());
-	vnx::register_type_code(vnx::keyvalue::shard_t::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::CloseEntry::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::ClusterBase::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Collection::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::IndexEntry::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::KeyValuePair::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::ServerBase::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Server__sync_finished::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Server__sync_finished_return::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Server_delete_value::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Server_delete_value_return::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Server_get_value::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Server_get_value_return::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Server_get_values::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Server_get_values_return::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Server_store_value::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Server_store_value_return::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Server_store_values::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Server_store_values_return::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Server_sync_all::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Server_sync_all_return::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Server_sync_all_keys::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Server_sync_all_keys_return::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Server_sync_from::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Server_sync_from_return::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Server_sync_range::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Server_sync_range_return::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::ServerInfo::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::SyncInfo::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::TypeEntry::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::shard_t::static_create_type_code());
 }
 
 static struct vnx_static_init {
@@ -40,11 +80,11 @@ static struct vnx_static_init {
 } vnx_static_init_;
 
 const vnx::TypeCode* const vnx_native_type_code_CloseEntry = vnx::get_type_code(vnx::Hash64(0xc06cd9d036102eefull));
-const vnx::TypeCode* const vnx_native_type_code_Cluster = vnx::get_type_code(vnx::Hash64(0xd15d8542fc63cb26ull));
+const vnx::TypeCode* const vnx_native_type_code_ClusterBase = vnx::get_type_code(vnx::Hash64(0xd15d8542fc63cb26ull));
 const vnx::TypeCode* const vnx_native_type_code_Collection = vnx::get_type_code(vnx::Hash64(0xf1b6072fecc4ebf8ull));
 const vnx::TypeCode* const vnx_native_type_code_IndexEntry = vnx::get_type_code(vnx::Hash64(0xbcae33addff34e23ull));
 const vnx::TypeCode* const vnx_native_type_code_KeyValuePair = vnx::get_type_code(vnx::Hash64(0xf87436237449d8afull));
-const vnx::TypeCode* const vnx_native_type_code_Server = vnx::get_type_code(vnx::Hash64(0xbb28aa6f1d808048ull));
+const vnx::TypeCode* const vnx_native_type_code_ServerBase = vnx::get_type_code(vnx::Hash64(0xbb28aa6f1d808048ull));
 const vnx::TypeCode* const vnx_native_type_code_Server__sync_finished = vnx::get_type_code(vnx::Hash64(0x2d6328ce038814bbull));
 const vnx::TypeCode* const vnx_native_type_code_Server__sync_finished_return = vnx::get_type_code(vnx::Hash64(0x4039b73e1e85b062ull));
 const vnx::TypeCode* const vnx_native_type_code_Server_delete_value = vnx::get_type_code(vnx::Hash64(0xf5f6c0eca92f8e82ull));

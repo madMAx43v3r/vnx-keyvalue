@@ -14,8 +14,8 @@ namespace keyvalue {
 struct shard_t {
 	
 	
-	::uint16_t index = 0;
-	::uint16_t size = 0;
+	uint16_t index = 0;
+	uint16_t size = 0;
 	
 	static const vnx::Hash64 VNX_TYPE_HASH;
 	static const vnx::Hash64 VNX_CODE_HASH;

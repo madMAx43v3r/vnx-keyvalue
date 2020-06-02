@@ -18,18 +18,18 @@ class ServerBase : public ::vnx::Module {
 public:
 	
 	::vnx::TopicPtr update_topic;
-	::std::string collection = "storage";
-	::std::string storage_path;
-	::int64_t max_block_size = 268435456;
-	::int32_t rewrite_chunk_size = 1048576;
-	::int32_t rewrite_chunk_count = 100;
-	::vnx::float32_t rewrite_threshold = 0.5;
-	::vnx::float32_t idle_rewrite_threshold = 0.9;
-	::int32_t rewrite_interval = 10;
-	::int32_t idle_rewrite_interval = 100;
-	::int32_t sync_chunk_count = 100;
-	::int32_t max_queue_ms = 1000;
-	::vnx::bool_t ignore_errors = false;
+	std::string collection = "storage";
+	std::string storage_path;
+	int64_t max_block_size = 268435456;
+	int32_t rewrite_chunk_size = 1048576;
+	int32_t rewrite_chunk_count = 100;
+	vnx::float32_t rewrite_threshold = 0.5;
+	vnx::float32_t idle_rewrite_threshold = 0.9;
+	int32_t rewrite_interval = 10;
+	int32_t idle_rewrite_interval = 100;
+	int32_t sync_chunk_count = 100;
+	int32_t max_queue_ms = 1000;
+	vnx::bool_t ignore_errors = false;
 	
 	typedef ::vnx::Module Super;
 	
@@ -57,19 +57,19 @@ public:
 	static std::shared_ptr<vnx::TypeCode> static_create_type_code();
 	
 protected:
-	virtual void _sync_finished(const ::int64_t& job_id) = 0;
+	virtual void _sync_finished(const int64_t& job_id) = 0;
 	virtual void delete_value(const ::vnx::Variant& key) = 0;
-	virtual ::std::shared_ptr<const ::vnx::Value> get_value(const ::vnx::Variant& key) const = 0;
-	virtual ::std::vector<::std::shared_ptr<const ::vnx::Value>> get_values(const ::std::vector<::vnx::Variant>& keys) const = 0;
-	virtual void store_value(const ::vnx::Variant& key, const ::std::shared_ptr<const ::vnx::Value>& value) = 0;
-	virtual void store_values(const ::std::vector<::std::pair<::vnx::Variant, ::std::shared_ptr<const ::vnx::Value>>>& values) = 0;
-	virtual ::int64_t sync_all(const ::vnx::TopicPtr& topic) const = 0;
-	virtual ::int64_t sync_all_keys(const ::vnx::TopicPtr& topic) const = 0;
-	virtual ::int64_t sync_from(const ::vnx::TopicPtr& topic, const ::uint64_t& version) const = 0;
-	virtual ::int64_t sync_range(const ::vnx::TopicPtr& topic, const ::uint64_t& begin, const ::uint64_t& end) const = 0;
+	virtual std::shared_ptr<const ::vnx::Value> get_value(const ::vnx::Variant& key) const = 0;
+	virtual std::vector<std::shared_ptr<const ::vnx::Value>> get_values(const std::vector<::vnx::Variant>& keys) const = 0;
+	virtual void store_value(const ::vnx::Variant& key, const std::shared_ptr<const ::vnx::Value>& value) = 0;
+	virtual void store_values(const std::vector<std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>>& values) = 0;
+	virtual int64_t sync_all(const ::vnx::TopicPtr& topic) const = 0;
+	virtual int64_t sync_all_keys(const ::vnx::TopicPtr& topic) const = 0;
+	virtual int64_t sync_from(const ::vnx::TopicPtr& topic, const uint64_t& version) const = 0;
+	virtual int64_t sync_range(const ::vnx::TopicPtr& topic, const uint64_t& begin, const uint64_t& end) const = 0;
 	
-	void vnx_handle_switch(std::shared_ptr<const ::vnx::Sample> _sample) override;
-	std::shared_ptr<vnx::Value> vnx_call_switch(vnx::TypeInput& _in, const vnx::TypeCode* _call_type, const vnx::request_id_t& _request_id) override;
+	void vnx_handle_switch(std::shared_ptr<const vnx::Sample> _sample) override;
+	std::shared_ptr<vnx::Value> vnx_call_switch(std::shared_ptr<const vnx::Value> _value, const vnx::request_id_t& _request_id) override;
 	
 private:
 	

@@ -5,6 +5,8 @@
 #include <vnx/keyvalue/ClusterClient.hxx>
 #include <vnx/Input.h>
 #include <vnx/Output.h>
+#include <vnx/Module.h>
+
 
 
 namespace vnx {

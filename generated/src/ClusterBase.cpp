@@ -11,6 +11,8 @@
 #include <vnx/Config.h>
 #include <vnx/Binary.h>
 #include <vnx/NoSuchMethod.hxx>
+#include <vnx/Module.h>
+
 
 
 namespace vnx {
@@ -33,11 +35,11 @@ const char* ClusterBase::get_type_name() const {
 	return "vnx.keyvalue.Cluster";
 }
 const vnx::TypeCode* ClusterBase::get_type_code() const {
-	return vnx::keyvalue::vnx_native_type_code_Cluster;
+	return vnx::keyvalue::vnx_native_type_code_ClusterBase;
 }
 
 void ClusterBase::accept(vnx::Visitor& _visitor) const {
-	const vnx::TypeCode* _type_code = vnx::keyvalue::vnx_native_type_code_Cluster;
+	const vnx::TypeCode* _type_code = vnx::keyvalue::vnx_native_type_code_ClusterBase;
 	_visitor.type_begin(*_type_code);
 	_visitor.type_end(*_type_code);
 }
@@ -77,7 +79,7 @@ std::istream& operator>>(std::istream& _in, ClusterBase& _value) {
 }
 
 const vnx::TypeCode* ClusterBase::static_get_type_code() {
-	const vnx::TypeCode* type_code = vnx::get_type_code(vnx::Hash64(0xd15d8542fc63cb26ull));
+	const vnx::TypeCode* type_code = vnx::get_type_code(VNX_TYPE_HASH);
 	if(!type_code) {
 		type_code = vnx::register_type_code(static_create_type_code());
 	}
@@ -95,14 +97,13 @@ std::shared_ptr<vnx::TypeCode> ClusterBase::static_create_type_code() {
 	return type_code;
 }
 
-void ClusterBase::vnx_handle_switch(std::shared_ptr<const ::vnx::Sample> _sample) {
-	const uint64_t _type_hash = _sample->value->get_type_hash();
+void ClusterBase::vnx_handle_switch(std::shared_ptr<const vnx::Sample> _sample) {
 }
 
-std::shared_ptr<vnx::Value> ClusterBase::vnx_call_switch(vnx::TypeInput& _in, const vnx::TypeCode* _call_type, const vnx::request_id_t& _request_id) {
+std::shared_ptr<vnx::Value> ClusterBase::vnx_call_switch(std::shared_ptr<const vnx::Value> _value, const vnx::request_id_t& _request_id) {
 	auto _ex = vnx::NoSuchMethod::create();
 	_ex->dst_mac = vnx_request ? vnx_request->dst_mac : 0;
-	_ex->method = _call_type->name;
+	_ex->method = _value->get_type_name();
 	return _ex;
 }
 
@@ -134,7 +135,7 @@ void read(TypeInput& in, ::vnx::keyvalue::ClusterBase& value, const TypeCode* ty
 
 void write(TypeOutput& out, const ::vnx::keyvalue::ClusterBase& value, const TypeCode* type_code, const uint16_t* code) {
 	if(!type_code || (code && code[0] == CODE_ANY)) {
-		type_code = vnx::keyvalue::vnx_native_type_code_Cluster;
+		type_code = vnx::keyvalue::vnx_native_type_code_ClusterBase;
 		out.write_type_code(type_code);
 		vnx::write_class_header<::vnx::keyvalue::ClusterBase>(out);
 	}

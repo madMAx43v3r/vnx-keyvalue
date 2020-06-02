@@ -14,9 +14,9 @@ namespace keyvalue {
 class Collection : public ::vnx::Value {
 public:
 	
-	::std::string name;
-	::std::vector<::int64_t> block_list;
-	::std::vector<::int64_t> delete_list;
+	std::string name;
+	std::vector<int64_t> block_list;
+	std::vector<int64_t> delete_list;
 	
 	typedef ::vnx::Value Super;
 	

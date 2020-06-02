@@ -13,13 +13,13 @@ namespace keyvalue {
 
 class SyncInfo : public ::vnx::Value {
 public:
-	static const ::uint32_t BEGIN = 1;
-	static const ::uint32_t END = 2;
+	static const uint32_t BEGIN = 1;
+	static const uint32_t END = 2;
 	
-	::std::string collection;
-	::uint64_t version = 0;
-	::int64_t job_id = 0;
-	::uint32_t code = 0;
+	std::string collection;
+	uint64_t version = 0;
+	int64_t job_id = 0;
+	uint32_t code = 0;
 	
 	typedef ::vnx::Value Super;
 	

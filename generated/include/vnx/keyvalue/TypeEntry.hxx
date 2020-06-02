@@ -14,7 +14,7 @@ namespace keyvalue {
 class TypeEntry : public ::vnx::Value {
 public:
 	
-	::int64_t block_offset = -1;
+	int64_t block_offset = -1;
 	
 	typedef ::vnx::Value Super;
 	

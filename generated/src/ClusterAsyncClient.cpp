@@ -5,6 +5,8 @@
 #include <vnx/keyvalue/ClusterAsyncClient.hxx>
 #include <vnx/Input.h>
 #include <vnx/Output.h>
+#include <vnx/Module.h>
+
 
 
 namespace vnx {
@@ -28,11 +30,7 @@ std::vector<uint64_t> ClusterAsyncClient::vnx_get_pending_ids() const {
 void ClusterAsyncClient::vnx_purge_request(uint64_t _request_id) {
 }
 
-void ClusterAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_ptr<const vnx::Binary> _data) {
-	vnx::BinaryInputStream _stream_in(_data.get());
-	vnx::TypeInput _in(&_stream_in);
-	const vnx::TypeCode* _return_type = _data->type_code;
-	
+void ClusterAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_ptr<const vnx::Value> _value) {
 	{
 		throw std::runtime_error("unknown return value");
 	}

@@ -10,6 +10,7 @@
 #include <vnx/Struct.h>
 
 
+
 namespace vnx {
 namespace keyvalue {
 
@@ -101,7 +102,7 @@ std::istream& operator>>(std::istream& _in, shard_t& _value) {
 }
 
 const vnx::TypeCode* shard_t::static_get_type_code() {
-	const vnx::TypeCode* type_code = vnx::get_type_code(vnx::Hash64(0x2d052c83abce314dull));
+	const vnx::TypeCode* type_code = vnx::get_type_code(VNX_TYPE_HASH);
 	if(!type_code) {
 		type_code = vnx::register_type_code(static_create_type_code());
 	}
@@ -115,7 +116,6 @@ std::shared_ptr<vnx::TypeCode> shard_t::static_create_type_code() {
 	type_code->code_hash = vnx::Hash64(0xa515192297853714ull);
 	type_code->is_native = true;
 	type_code->create_value = []() -> std::shared_ptr<vnx::Value> { return std::make_shared<vnx::Struct<shard_t>>(); };
-	type_code->methods.resize(0);
 	type_code->fields.resize(2);
 	{
 		vnx::TypeField& field = type_code->fields[0];

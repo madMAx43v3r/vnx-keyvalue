@@ -8,13 +8,15 @@
 #include <vnx/Visitor.h>
 #include <vnx/Object.h>
 #include <vnx/Struct.h>
+#include <vnx/Value.h>
+
 
 
 namespace vnx {
 namespace keyvalue {
 
-const ::uint32_t SyncInfo::BEGIN;
-const ::uint32_t SyncInfo::END;
+const uint32_t SyncInfo::BEGIN;
+const uint32_t SyncInfo::END;
 
 const vnx::Hash64 SyncInfo::VNX_TYPE_HASH(0x4f9820ae95813502ull);
 const vnx::Hash64 SyncInfo::VNX_CODE_HASH(0x14df919a6f68ff58ull);
@@ -117,7 +119,7 @@ std::istream& operator>>(std::istream& _in, SyncInfo& _value) {
 }
 
 const vnx::TypeCode* SyncInfo::static_get_type_code() {
-	const vnx::TypeCode* type_code = vnx::get_type_code(vnx::Hash64(0x4f9820ae95813502ull));
+	const vnx::TypeCode* type_code = vnx::get_type_code(VNX_TYPE_HASH);
 	if(!type_code) {
 		type_code = vnx::register_type_code(static_create_type_code());
 	}
@@ -132,7 +134,6 @@ std::shared_ptr<vnx::TypeCode> SyncInfo::static_create_type_code() {
 	type_code->is_native = true;
 	type_code->is_class = true;
 	type_code->create_value = []() -> std::shared_ptr<vnx::Value> { return std::make_shared<SyncInfo>(); };
-	type_code->methods.resize(0);
 	type_code->fields.resize(4);
 	{
 		vnx::TypeField& field = type_code->fields[0];

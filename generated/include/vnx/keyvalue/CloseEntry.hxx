@@ -14,7 +14,7 @@ namespace keyvalue {
 class CloseEntry : public ::vnx::Value {
 public:
 	
-	::int64_t block_offset = 0;
+	int64_t block_offset = 0;
 	
 	typedef ::vnx::Value Super;
 	
