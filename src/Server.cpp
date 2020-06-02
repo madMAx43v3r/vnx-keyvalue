@@ -700,23 +700,30 @@ void Server::rewrite_func()
 			break;
 		}
 		catch(const std::exception& ex) {
-			is_done = true;
 			log(ERROR).out << "Block " << block->index << " rewrite: " << ex.what();
-			break;
+			return;
 		}
 	}
+	read_counter += list.size();
+	num_bytes_read += num_bytes;
 	
-	for(auto& entry : list) {
-		const auto& index = entry.index;
-		if(index->block_offset + index->num_bytes <= rewrite.value_block_size)
-		{
-			FileSectionInputStream stream(block->value_file.get_handle(), index->block_offset, index->num_bytes);
-			TypeInput value_in(&stream);
-			entry.value = vnx::read(value_in);
+	try {
+		for(auto& entry : list) {
+			const auto& index = entry.index;
+			if(index->block_offset + index->num_bytes <= rewrite.value_block_size)
+			{
+				FileSectionInputStream stream(block->value_file.get_handle(), index->block_offset, index->num_bytes);
+				TypeInput value_in(&stream);
+				entry.value = vnx::read(value_in);
+			}
+		}
+		for(const auto& entry : list) {
+			store_value_internal(entry.index->key, entry.value, entry.index->version);
 		}
 	}
-	for(const auto& entry : list) {
-		store_value_internal(entry.index->key, entry.value, entry.index->version);
+	catch(const std::exception& ex) {
+		log(ERROR).out << "Block " << block->index << " rewrite: " << ex.what();
+		return;
 	}
 	
 	if(is_done) {
