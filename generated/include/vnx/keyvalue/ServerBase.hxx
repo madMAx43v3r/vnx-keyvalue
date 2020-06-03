@@ -22,7 +22,7 @@ public:
 	std::string storage_path;
 	int64_t max_block_size = 268435456;
 	int32_t rewrite_chunk_size = 1048576;
-	int32_t rewrite_chunk_count = 100;
+	int32_t rewrite_chunk_count = 1000;
 	vnx::float32_t rewrite_threshold = 0.5;
 	vnx::float32_t idle_rewrite_threshold = 0.9;
 	int32_t rewrite_interval = 10;

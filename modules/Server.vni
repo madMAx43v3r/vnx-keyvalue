@@ -16,7 +16,7 @@ module Server {
 	
 	int rewrite_chunk_size = 1048576;			// [bytes]
 	
-	int rewrite_chunk_count = 100;				// number of values
+	int rewrite_chunk_count = 1000;				// number of values
 	
 	float rewrite_threshold = 0.5;
 	
