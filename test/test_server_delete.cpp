@@ -7,8 +7,7 @@
 
 #include <vnx/keyvalue/ServerClient.hxx>
 
-#include <vnx/Config.h>
-#include <vnx/Process.h>
+#include <vnx/vnx.h>
 #include <vnx/Terminal.h>
 #include <vnx/Proxy.h>
 
@@ -42,7 +41,7 @@ int main(int argc, char** argv)
 	while(vnx::do_run())
 	{
 		const uint64_t key = counter % 65536;
-		client.delete_value(key);
+		client.delete_value(vnx::Variant(key));
 		counter++;
 //		::usleep(1 * 1000);
 	}

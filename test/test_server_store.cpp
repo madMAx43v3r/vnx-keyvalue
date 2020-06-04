@@ -7,8 +7,7 @@
 
 #include <vnx/keyvalue/ServerClient.hxx>
 
-#include <vnx/Config.h>
-#include <vnx/Process.h>
+#include <vnx/vnx.h>
 #include <vnx/Terminal.h>
 #include <vnx/Proxy.h>
 
@@ -65,7 +64,7 @@ int main(int argc, char** argv)
 //		char tmp[129];
 //		gen_random(tmp, std::max(::rand() % 128, 16));
 //		const std::string key(tmp);
-		client.store_value(key, value.clone());
+		client.store_value(vnx::Variant(key), value.clone());
 		counter++;
 //		::usleep(1 * 1000);
 	}

@@ -9,11 +9,9 @@
 #include <vnx/keyvalue/SyncInfo.hxx>
 #include <vnx/keyvalue/KeyValuePair.hxx>
 
-#include <vnx/Config.h>
-#include <vnx/Process.h>
+#include <vnx/vnx.h>
 #include <vnx/Terminal.h>
 #include <vnx/Proxy.h>
-#include <vnx/Thread.h>
 
 #include <unistd.h>
 

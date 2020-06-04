@@ -7,8 +7,7 @@
 
 #include <vnx/keyvalue/ServerClient.hxx>
 
-#include <vnx/Config.h>
-#include <vnx/Process.h>
+#include <vnx/vnx.h>
 #include <vnx/Terminal.h>
 #include <vnx/Proxy.h>
 
@@ -42,7 +41,7 @@ int main(int argc, char** argv)
 	while(vnx::do_run())
 	{
 		const uint64_t key = rand() % 65536;
-		auto value = client.get_value(key);
+		auto value = client.get_value(vnx::Variant(key));
 		if(value) {
 			if(counter % 1000 == 0) {
 				std::cout << key << ": " << *value << std::endl;
