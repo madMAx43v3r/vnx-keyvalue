@@ -5,7 +5,7 @@
 #define INCLUDE_vnx_keyvalue_Server_sync_range_HXX_
 
 #include <vnx/keyvalue/package.hxx>
-#include <vnx/TopicPtr.h>
+#include <vnx/TopicPtr.hpp>
 #include <vnx/Value.h>
 
 

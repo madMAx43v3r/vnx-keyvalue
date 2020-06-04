@@ -5,7 +5,7 @@
 #define INCLUDE_vnx_keyvalue_ServerInfo_HXX_
 
 #include <vnx/keyvalue/package.hxx>
-#include <vnx/Hash64.h>
+#include <vnx/Hash64.hpp>
 #include <vnx/Value.h>
 #include <vnx/keyvalue/shard_t.hxx>
 

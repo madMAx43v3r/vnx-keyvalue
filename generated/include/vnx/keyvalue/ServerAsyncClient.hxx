@@ -6,9 +6,9 @@
 
 #include <vnx/AsyncClient.h>
 #include <vnx/Module.h>
-#include <vnx/TopicPtr.h>
+#include <vnx/TopicPtr.hpp>
 #include <vnx/Value.h>
-#include <vnx/Variant.h>
+#include <vnx/Variant.hpp>
 
 
 namespace vnx {
