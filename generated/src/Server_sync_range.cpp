@@ -77,6 +77,7 @@ void Server_sync_range::read(std::istream& _in) {
 
 vnx::Object Server_sync_range::to_object() const {
 	vnx::Object _object;
+	_object["__type"] = "vnx.keyvalue.Server.sync_range";
 	_object["topic"] = topic;
 	_object["begin"] = begin;
 	_object["end"] = end;

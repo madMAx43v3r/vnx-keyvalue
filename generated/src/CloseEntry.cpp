@@ -67,6 +67,7 @@ void CloseEntry::read(std::istream& _in) {
 
 vnx::Object CloseEntry::to_object() const {
 	vnx::Object _object;
+	_object["__type"] = "vnx.keyvalue.CloseEntry";
 	_object["block_offset"] = block_offset;
 	return _object;
 }

@@ -62,6 +62,7 @@ void Server__sync_finished_return::read(std::istream& _in) {
 
 vnx::Object Server__sync_finished_return::to_object() const {
 	vnx::Object _object;
+	_object["__type"] = "vnx.keyvalue.Server._sync_finished.return";
 	return _object;
 }
 

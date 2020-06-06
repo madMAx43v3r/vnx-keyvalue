@@ -69,6 +69,7 @@ void Server_sync_all_keys::read(std::istream& _in) {
 
 vnx::Object Server_sync_all_keys::to_object() const {
 	vnx::Object _object;
+	_object["__type"] = "vnx.keyvalue.Server.sync_all_keys";
 	_object["topic"] = topic;
 	return _object;
 }

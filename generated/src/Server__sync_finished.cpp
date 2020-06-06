@@ -68,6 +68,7 @@ void Server__sync_finished::read(std::istream& _in) {
 
 vnx::Object Server__sync_finished::to_object() const {
 	vnx::Object _object;
+	_object["__type"] = "vnx.keyvalue.Server._sync_finished";
 	_object["job_id"] = job_id;
 	return _object;
 }

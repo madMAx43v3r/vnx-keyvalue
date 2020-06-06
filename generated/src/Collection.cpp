@@ -75,6 +75,7 @@ void Collection::read(std::istream& _in) {
 
 vnx::Object Collection::to_object() const {
 	vnx::Object _object;
+	_object["__type"] = "vnx.keyvalue.Collection";
 	_object["name"] = name;
 	_object["block_list"] = block_list;
 	_object["delete_list"] = delete_list;

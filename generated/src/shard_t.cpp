@@ -70,6 +70,7 @@ void shard_t::read(std::istream& _in) {
 
 vnx::Object shard_t::to_object() const {
 	vnx::Object _object;
+	_object["__type"] = "vnx.keyvalue.shard_t";
 	_object["index"] = index;
 	_object["size"] = size;
 	return _object;

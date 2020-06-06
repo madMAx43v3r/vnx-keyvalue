@@ -67,6 +67,7 @@ void Server_sync_all_return::read(std::istream& _in) {
 
 vnx::Object Server_sync_all_return::to_object() const {
 	vnx::Object _object;
+	_object["__type"] = "vnx.keyvalue.Server.sync_all.return";
 	_object["_ret_0"] = _ret_0;
 	return _object;
 }

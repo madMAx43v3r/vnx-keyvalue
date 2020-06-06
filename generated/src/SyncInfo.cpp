@@ -81,6 +81,7 @@ void SyncInfo::read(std::istream& _in) {
 
 vnx::Object SyncInfo::to_object() const {
 	vnx::Object _object;
+	_object["__type"] = "vnx.keyvalue.SyncInfo";
 	_object["collection"] = collection;
 	_object["version"] = version;
 	_object["job_id"] = job_id;

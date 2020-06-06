@@ -52,6 +52,7 @@ void ClusterBase::read(std::istream& _in) {
 
 vnx::Object ClusterBase::to_object() const {
 	vnx::Object _object;
+	_object["__type"] = "vnx.keyvalue.Cluster";
 	return _object;
 }
 

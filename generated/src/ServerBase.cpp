@@ -141,6 +141,7 @@ void ServerBase::read(std::istream& _in) {
 
 vnx::Object ServerBase::to_object() const {
 	vnx::Object _object;
+	_object["__type"] = "vnx.keyvalue.Server";
 	_object["update_topic"] = update_topic;
 	_object["collection"] = collection;
 	_object["storage_path"] = storage_path;

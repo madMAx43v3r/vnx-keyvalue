@@ -67,6 +67,7 @@ void TypeEntry::read(std::istream& _in) {
 
 vnx::Object TypeEntry::to_object() const {
 	vnx::Object _object;
+	_object["__type"] = "vnx.keyvalue.TypeEntry";
 	_object["block_offset"] = block_offset;
 	return _object;
 }

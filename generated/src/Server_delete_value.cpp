@@ -69,6 +69,7 @@ void Server_delete_value::read(std::istream& _in) {
 
 vnx::Object Server_delete_value::to_object() const {
 	vnx::Object _object;
+	_object["__type"] = "vnx.keyvalue.Server.delete_value";
 	_object["key"] = key;
 	return _object;
 }

@@ -69,6 +69,7 @@ void Server_get_values::read(std::istream& _in) {
 
 vnx::Object Server_get_values::to_object() const {
 	vnx::Object _object;
+	_object["__type"] = "vnx.keyvalue.Server.get_values";
 	_object["keys"] = keys;
 	return _object;
 }

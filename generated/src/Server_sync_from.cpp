@@ -73,6 +73,7 @@ void Server_sync_from::read(std::istream& _in) {
 
 vnx::Object Server_sync_from::to_object() const {
 	vnx::Object _object;
+	_object["__type"] = "vnx.keyvalue.Server.sync_from";
 	_object["topic"] = topic;
 	_object["version"] = version;
 	return _object;

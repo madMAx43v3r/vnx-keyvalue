@@ -84,6 +84,7 @@ void KeyValuePair::read(std::istream& _in) {
 
 vnx::Object KeyValuePair::to_object() const {
 	vnx::Object _object;
+	_object["__type"] = "vnx.keyvalue.KeyValuePair";
 	_object["collection"] = collection;
 	_object["version"] = version;
 	_object["previous"] = previous;

@@ -17,8 +17,8 @@ public:
 	
 	::vnx::Variant key;
 	uint64_t version = 0;
-	int64_t block_offset = -1;
-	int64_t num_bytes = 0;
+	uint32_t block_offset = 0;
+	uint32_t num_bytes = 0;
 	
 	typedef ::vnx::Value Super;
 	

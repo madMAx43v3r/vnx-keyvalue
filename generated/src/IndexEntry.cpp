@@ -14,7 +14,7 @@ namespace keyvalue {
 
 
 const vnx::Hash64 IndexEntry::VNX_TYPE_HASH(0xbcae33addff34e23ull);
-const vnx::Hash64 IndexEntry::VNX_CODE_HASH(0x69531dbc2d15dd1eull);
+const vnx::Hash64 IndexEntry::VNX_CODE_HASH(0xa731a77b41dd8e8bull);
 
 vnx::Hash64 IndexEntry::get_type_hash() const {
 	return VNX_TYPE_HASH;
@@ -80,6 +80,7 @@ void IndexEntry::read(std::istream& _in) {
 
 vnx::Object IndexEntry::to_object() const {
 	vnx::Object _object;
+	_object["__type"] = "vnx.keyvalue.IndexEntry";
 	_object["key"] = key;
 	_object["version"] = version;
 	_object["block_offset"] = block_offset;
@@ -125,7 +126,7 @@ std::shared_ptr<vnx::TypeCode> IndexEntry::static_create_type_code() {
 	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>();
 	type_code->name = "vnx.keyvalue.IndexEntry";
 	type_code->type_hash = vnx::Hash64(0xbcae33addff34e23ull);
-	type_code->code_hash = vnx::Hash64(0x69531dbc2d15dd1eull);
+	type_code->code_hash = vnx::Hash64(0xa731a77b41dd8e8bull);
 	type_code->is_native = true;
 	type_code->is_class = true;
 	type_code->create_value = []() -> std::shared_ptr<vnx::Value> { return std::make_shared<IndexEntry>(); };
@@ -144,13 +145,12 @@ std::shared_ptr<vnx::TypeCode> IndexEntry::static_create_type_code() {
 	{
 		vnx::TypeField& field = type_code->fields[2];
 		field.name = "block_offset";
-		field.value = vnx::to_string(-1);
-		field.code = {8};
+		field.code = {3};
 	}
 	{
 		vnx::TypeField& field = type_code->fields[3];
 		field.name = "num_bytes";
-		field.code = {8};
+		field.code = {3};
 	}
 	type_code->build();
 	return type_code;
@@ -212,10 +212,10 @@ void write(TypeOutput& out, const ::vnx::keyvalue::IndexEntry& value, const Type
 	if(code && code[0] == CODE_STRUCT) {
 		type_code = type_code->depends[code[1]];
 	}
-	char* const _buf = out.write(24);
+	char* const _buf = out.write(16);
 	vnx::write_value(_buf + 0, value.version);
 	vnx::write_value(_buf + 8, value.block_offset);
-	vnx::write_value(_buf + 16, value.num_bytes);
+	vnx::write_value(_buf + 12, value.num_bytes);
 	vnx::write(out, value.key, type_code, type_code->fields[0].code.data());
 }
 

@@ -73,6 +73,7 @@ void ServerInfo::read(std::istream& _in) {
 
 vnx::Object ServerInfo::to_object() const {
 	vnx::Object _object;
+	_object["__type"] = "vnx.keyvalue.ServerInfo";
 	_object["shard"] = shard;
 	_object["address"] = address;
 	return _object;

@@ -62,6 +62,7 @@ void Server_store_values_return::read(std::istream& _in) {
 
 vnx::Object Server_store_values_return::to_object() const {
 	vnx::Object _object;
+	_object["__type"] = "vnx.keyvalue.Server.store_values.return";
 	return _object;
 }
 
