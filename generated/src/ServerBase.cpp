@@ -37,7 +37,7 @@ namespace keyvalue {
 
 
 const vnx::Hash64 ServerBase::VNX_TYPE_HASH(0xbb28aa6f1d808048ull);
-const vnx::Hash64 ServerBase::VNX_CODE_HASH(0xe588be8309a4419bull);
+const vnx::Hash64 ServerBase::VNX_CODE_HASH(0xa78fe8d2b0af0ca8ull);
 
 ServerBase::ServerBase(const std::string& _vnx_name)
 	:	Module::Module(_vnx_name)
@@ -214,7 +214,7 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>();
 	type_code->name = "vnx.keyvalue.Server";
 	type_code->type_hash = vnx::Hash64(0xbb28aa6f1d808048ull);
-	type_code->code_hash = vnx::Hash64(0xe588be8309a4419bull);
+	type_code->code_hash = vnx::Hash64(0xa78fe8d2b0af0ca8ull);
 	type_code->is_native = true;
 	type_code->methods.resize(10);
 	type_code->methods[0] = ::vnx::keyvalue::Server__sync_finished::static_get_type_code();
@@ -256,7 +256,7 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 	{
 		vnx::TypeField& field = type_code->fields[4];
 		field.name = "rewrite_chunk_size";
-		field.value = vnx::to_string(1048576);
+		field.value = vnx::to_string(4194304);
 		field.code = {7};
 	}
 	{
