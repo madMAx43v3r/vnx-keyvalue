@@ -52,10 +52,10 @@ protected:
 private:
 	struct key_index_t {
 		int64_t block_index = -1;
-		int64_t block_offset = 0;
-		int64_t block_offset_key = 0;
-		int64_t num_bytes = 0;
-		int64_t num_bytes_key = 0;
+		uint32_t block_offset = 0;
+		uint32_t block_offset_key = 0;
+		uint32_t num_bytes = 0;
+		uint32_t num_bytes_key = 0;
 	};
 	
 	struct block_t {

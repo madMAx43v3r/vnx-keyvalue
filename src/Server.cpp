@@ -17,6 +17,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#define MAX_BLOCK_SIZE int64_t(0xFFFFFFFF)
+#define MAX_KEY_SIZE int64_t(0xFFFFFFFF)
+#define MAX_VALUE_SIZE int64_t(0xFFFFFFFF)
+
 
 namespace vnx {
 namespace keyvalue {
@@ -35,6 +39,9 @@ void Server::init()
 
 void Server::main()
 {
+	if(max_block_size > 0xFFFFFFFF) {
+		throw std::logic_error("max_block_size > 0xFFFFFFFF");
+	}
 	if(collection.empty()) {
 		throw std::logic_error("invalid collection config");
 	}
@@ -182,7 +189,6 @@ void Server::main()
 					}
 				}
 				{
-					// TODO: test this
 					block->key_file.open("rb+");
 					block->key_file.seek_to(prev_key_pos);
 					block->value_file.seek_to(value_end_pos);
@@ -401,6 +407,7 @@ void Server::store_value_internal(const Variant& key, const std::shared_ptr<cons
 	}
 	
 	IndexEntry entry;
+	int64_t num_bytes_key = 0;
 	try {
 		entry.key = key;
 		entry.version = version;
@@ -408,9 +415,18 @@ void Server::store_value_internal(const Variant& key, const std::shared_ptr<cons
 		vnx::write(value_out, value);
 		block->value_file.flush();
 		
-		entry.num_bytes = value_out.get_output_pos() - prev_value_pos;
+		const auto num_bytes = value_out.get_output_pos() - prev_value_pos;
+		if(num_bytes > MAX_VALUE_SIZE) {
+			throw std::runtime_error("num_bytes > MAX_VALUE_SIZE");
+		}
+		entry.num_bytes = num_bytes;
 		vnx::write(key_out, entry);
 		block->key_file.flush();
+		
+		num_bytes_key = key_out.get_output_pos() - prev_key_pos;
+		if(num_bytes_key > MAX_KEY_SIZE) {
+			throw std::runtime_error("num_bytes_key > MAX_KEY_SIZE");
+		}
 	}
 	catch(const std::exception& ex)
 	{
@@ -435,7 +451,7 @@ void Server::store_value_internal(const Variant& key, const std::shared_ptr<cons
 		index.block_offset = entry.block_offset;
 		index.block_offset_key = prev_key_pos;
 		index.num_bytes = entry.num_bytes;
-		index.num_bytes_key = key_out.get_output_pos() - prev_key_pos;
+		index.num_bytes_key = num_bytes_key;
 		num_bytes_written += index.num_bytes_key + index.num_bytes;
 	}
 	block->num_bytes_used += entry.num_bytes;

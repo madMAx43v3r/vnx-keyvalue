@@ -8,8 +8,8 @@ class IndexEntry {
 	
 	ulong version;
 	
-	long block_offset = -1;
+	uint block_offset;
 	
-	long num_bytes;
+	uint num_bytes;
 	
 }
