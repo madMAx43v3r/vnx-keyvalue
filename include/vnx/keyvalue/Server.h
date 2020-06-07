@@ -134,7 +134,7 @@ private:
 		std::shared_ptr<Timer> timer;
 		FileSectionInputStream key_stream;
 		TypeInput key_in;
-		int64_t value_block_size = -1;
+		bool is_run = false;
 		rewrite_t() : key_in(&key_stream) {}
 	} rewrite;
 	

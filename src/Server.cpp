@@ -676,10 +676,12 @@ void Server::rewrite_func()
 	if(!block) {
 		return;
 	}
-	if(rewrite.value_block_size < 0) {
+	if(!rewrite.is_run) {
+		rewrite.is_run = true;
+		rewrite.key_in.reset();
 		rewrite.key_stream.reset(block->key_file.get_handle());
-		rewrite.value_block_size = block->value_file.file_size();
 		block->key_file.fadvise(POSIX_FADV_SEQUENTIAL);
+		block->value_file.fadvise(POSIX_FADV_SEQUENTIAL);
 	}
 	
 	struct pair_t {
@@ -724,14 +726,14 @@ void Server::rewrite_func()
 	num_bytes_read += num_bytes;
 	
 	try {
+		FileSectionInputStream stream;
+		TypeInput in(&stream);
+		const auto fd = block->value_file.get_handle();
+		
 		for(auto& entry : list) {
-			const auto& index = entry.index;
-			if(index->block_offset + index->num_bytes <= rewrite.value_block_size)
-			{
-				FileSectionInputStream stream(block->value_file.get_handle(), index->block_offset, index->num_bytes);
-				TypeInput value_in(&stream);
-				entry.value = vnx::read(value_in);
-			}
+			in.reset();
+			stream.reset(fd, entry.index->block_offset, entry.index->num_bytes);
+			entry.value = vnx::read(in);
 		}
 		for(const auto& entry : list) {
 			store_value_internal(entry.index->key, entry.value, entry.index->version);
@@ -753,7 +755,7 @@ void Server::rewrite_func()
 		write_index();
 		
 		rewrite.block = 0;
-		rewrite.value_block_size = -1;
+		rewrite.is_run = false;
 		check_rewrite(false);
 	} else {
 		rewrite.timer->set_millis(0);
@@ -877,13 +879,16 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 				}
 			}
 		}
+		FileSectionInputStream stream;
+		TypeInput in(&stream);
+		
 		for(auto& entry : list)
 		{
 			const auto& block = entry.block;
 			const auto& index = entry.index;
 			{
-				FileSectionInputStream stream(block->key_file.get_handle(), index.block_offset_key, index.num_bytes_key);
-				TypeInput in(&stream);
+				in.reset();
+				stream.reset(block->key_file.get_handle(), index.block_offset_key, index.num_bytes_key);
 				try {
 					entry.index_entry = std::dynamic_pointer_cast<IndexEntry>(vnx::read(in));
 					num_bytes_read += index.num_bytes_key;
@@ -900,8 +905,8 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 			if(entry.index_entry) {
 				std::shared_ptr<Value> value;
 				if(!key_only) {
-					FileSectionInputStream stream(block->value_file.get_handle(), index.block_offset, index.num_bytes);
-					TypeInput in(&stream);
+					in.reset();
+					stream.reset(block->value_file.get_handle(), index.block_offset, index.num_bytes);
 					try {
 						value = vnx::read(in);
 						num_bytes_read += index.num_bytes;
