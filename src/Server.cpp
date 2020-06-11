@@ -236,6 +236,9 @@ void Server::main()
 	
 	write_index();
 	
+	read_threads = std::make_shared<ThreadPool>(num_read_threads, 1000);
+	sync_threads = std::make_shared<ThreadPool>(-1);
+	
 	if(update_topic) {
 		update_thread = std::thread(&Server::update_loop, this);
 	}
@@ -248,11 +251,8 @@ void Server::main()
 	
 	Super::main();
 	
-	for(auto& entry : sync_jobs) {
-		if(entry.second.joinable()) {
-			entry.second.join();
-		}
-	}
+	read_threads->close();
+	sync_threads->close();
 	
 	update_condition.notify_all();
 	if(update_thread.joinable()) {
@@ -277,9 +277,42 @@ void Server::main()
 	}
 }
 
-std::shared_ptr<Value> Server::read_value(const index_t& index) const
+void Server::get_value_async(const Variant& key, const request_id_t& req_id) const {
+	read_threads->add_task(std::bind(&Server::read_job, this, key, req_id));
+}
+
+void Server::get_values_async(const std::vector<Variant>& keys, const request_id_t& req_id) const
 {
-	const auto block = get_block(index.block_index);
+	auto job = std::make_shared<multi_read_job_t>();
+	job->req_id = req_id;
+	job->num_left = keys.size();
+	job->values.resize(keys.size());
+	
+	for(size_t i = 0; i < keys.size(); ++i) {
+		read_threads->add_task(std::bind(&Server::multi_read_job, this, keys[i], i, job));
+	}
+}
+
+std::shared_ptr<Value> Server::read_value(const Variant& key) const
+{
+	value_index_t index;
+	std::shared_ptr<block_t> block;
+	{
+		std::shared_lock lock(index_mutex);
+		
+		index = get_value_index(key);
+		if(index.block_index >= 0) {
+			try {
+				block = get_block(index.block_index);
+				block->num_pending++;
+			} catch(...) {
+				// ignore
+			}
+		}
+	}
+	if(!block) {
+		return 0;
+	}
 	if(index.num_bytes > 65536) {
 		block->value_file.fadvise(POSIX_FADV_SEQUENTIAL, index.block_offset, index.num_bytes);
 	}
@@ -292,44 +325,40 @@ std::shared_ptr<Value> Server::read_value(const index_t& index) const
 	} catch(...) {
 		// ignore
 	}
+	block->num_pending--;
 	read_counter++;
 	return value;
 }
 
-std::shared_ptr<const Value> Server::get_value(const Variant& key) const
-{
+void Server::read_job(const Variant& key, const request_id_t& req_id) const {
 	std::shared_ptr<Value> value;
 	try {
-		const auto index = get_value_index(key);
-		if(index.block_index >= 0) {
-			value = read_value(index);
-		}
+		value = read_value(key);
 	} catch(...) {
 		// ignore
 	}
-	return value;
+	get_value_async_return(req_id, value);
 }
 
-std::vector<std::shared_ptr<const Value>> Server::get_values(const std::vector<Variant>& keys) const
-{
-	std::vector<std::shared_ptr<const Value>> result(keys.size());
-	for(size_t i = 0; i < keys.size(); ++i) {
-		try {
-			const auto index = get_value_index(keys[i]);
-			if(index.block_index >= 0) {
-				result[i] = read_value(index);
-			}
-		} catch(...) {
-			// ignore
-		}
+void Server::multi_read_job(const Variant& key, size_t index, std::shared_ptr<multi_read_job_t> job) const {
+	try {
+		job->values[index] = read_value(key);
+	} catch(...) {
+		// ignore
 	}
-	return result;
+	if(job->num_left-- == 1) {
+		get_values_async_return(job->req_id, job->values);
+	}
 }
 
 int64_t Server::sync_range_ex(TopicPtr topic, uint64_t begin, uint64_t end, bool key_only) const
 {
 	const auto job_id = next_sync_id++;
-	sync_jobs[job_id] = std::thread(&Server::sync_loop, this, job_id, topic, begin, end, key_only);
+	{
+		std::lock_guard lock(sync_mutex);
+		sync_jobs.insert(job_id);
+	}
+	sync_threads->add_task(std::bind(&Server::sync_loop, this, job_id, topic, begin, end, key_only));
 	
 	log(INFO).out << "Started sync job " << job_id << " ...";
 	return job_id;
@@ -353,19 +382,6 @@ int64_t Server::sync_all(const TopicPtr& topic) const
 int64_t Server::sync_all_keys(const TopicPtr& topic) const
 {
 	return sync_range_ex(topic, 0, 0, true);
-}
-
-void Server::_sync_finished(const int64_t& job_id)
-{
-	auto iter = sync_jobs.find(job_id);
-	if(iter != sync_jobs.end()) {
-		if(iter->second.joinable()) {
-			iter->second.detach();
-		}
-		sync_jobs.erase(iter);
-		
-		log(INFO).out << "Finished sync job " << job_id;
-	}
 }
 
 void Server::store_value_internal(const Variant& key, const std::shared_ptr<const Value>& value, uint64_t version)
@@ -435,7 +451,7 @@ void Server::store_value_internal(const Variant& key, const std::shared_ptr<cons
 	
 	const auto value_index = get_value_index(key);
 	{
-		std::lock_guard<std::mutex> lock(index_mutex);
+		std::unique_lock lock(index_mutex);
 		
 		delete_internal(value_index);
 		keyhash_map.emplace(value_index.key_hash, version);
@@ -467,7 +483,7 @@ void Server::store_value(const Variant& key, const std::shared_ptr<const Value>&
 		pair->key = key;
 		pair->value = value;
 		{
-			std::unique_lock<std::mutex> lock(update_mutex);
+			std::lock_guard lock(update_mutex);
 			update_queue.push(pair);
 		}
 		update_condition.notify_one();
@@ -595,7 +611,7 @@ std::shared_ptr<Server::block_t> Server::add_new_block()
 		lock_file_exclusive(block->key_file);
 		lock_file_exclusive(block->value_file);
 		{
-			std::lock_guard<std::mutex> lock(index_mutex);
+			std::unique_lock lock(index_mutex);
 			block_map[block->index] = block;
 		}
 		write_index();
@@ -629,7 +645,7 @@ void Server::check_rewrite(bool is_idle)
 		}
 	}
 	{
-		std::lock_guard<std::mutex> lock(index_mutex);
+		std::unique_lock lock(index_mutex);
 		
 		auto iter = delete_list.begin();
 		while(iter != delete_list.end()) {
@@ -651,6 +667,7 @@ void Server::rewrite_func()
 	if(!block) {
 		return;
 	}
+	
 	if(!rewrite.is_run) {
 		rewrite.is_run = true;
 		rewrite.key_in.reset();
@@ -721,7 +738,7 @@ void Server::rewrite_func()
 	if(is_done) {
 		log(INFO).out << "Rewrite of block " << block->index << " finished.";
 		{
-			std::lock_guard<std::mutex> lock(index_mutex);
+			std::unique_lock lock(index_mutex);
 			block_map.erase(block->index);
 			delete_list.push_back(block);
 		}
@@ -761,10 +778,16 @@ void Server::lock_file_exclusive(const File& file)
 
 void Server::print_stats()
 {
+	size_t num_sync_jobs = 0;
+	{
+		std::lock_guard lock(sync_mutex);
+		num_sync_jobs = sync_jobs.size();
+	}
 	log(INFO).out << read_counter << " reads/s, " << num_bytes_read/1024 << " KB/s read, "
 			<< write_counter << " writes/s, " << num_bytes_written/1024 << " KB/s write, "
-			<< sync_jobs.size() << " sync jobs" << (rewrite.block ? ", rewriting " : "")
+			<< num_sync_jobs << " sync jobs" << (rewrite.block ? ", rewriting " : "")
 			<< (rewrite.block ? std::to_string(rewrite.block->index) : "");
+	
 	read_counter = 0;
 	write_counter = 0;
 	num_bytes_read = 0;
@@ -773,14 +796,13 @@ void Server::print_stats()
 
 void Server::update_loop() const noexcept
 {
-	Publisher publisher;
 	uint64_t previous = 0;
 	
 	while(vnx_do_run())
 	{
 		std::shared_ptr<KeyValuePair> value;
 		{
-			std::unique_lock<std::mutex> lock(update_mutex);
+			std::unique_lock lock(update_mutex);
 			while(vnx_do_run() && update_queue.empty()) {
 				update_condition.wait(lock);
 			}
@@ -792,7 +814,7 @@ void Server::update_loop() const noexcept
 			}
 		}
 		value->previous = previous;
-		publisher.publish(value, update_topic);
+		publish(value, update_topic);
 		previous = value->version;
 	}
 }
@@ -826,7 +848,7 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 	{
 		list.clear();
 		{
-			std::lock_guard<std::mutex> lock(index_mutex);
+			std::shared_lock lock(index_mutex);
 			
 			auto iter = index_map.upper_bound(version);
 			for(int i = 0; i < sync_chunk_count; ++iter, ++i)
@@ -909,13 +931,12 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 		info->job_id = job_id;
 		info->code = SyncInfo::END;
 		publisher.publish(info, topic, BLOCKING);
+	}
+	{
+		std::lock_guard lock(sync_mutex);
 		
-		ServerClient client(private_addr);
-		try {
-			client._sync_finished(job_id);
-		} catch(...) {
-			// ignore
-		}
+		sync_jobs.erase(job_id);
+		log(INFO).out << "Finished sync job " << job_id;
 	}
 }
 

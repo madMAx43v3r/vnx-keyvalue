@@ -12,8 +12,10 @@
 #include <vnx/keyvalue/Collection.hxx>
 
 #include <vnx/File.h>
+#include <vnx/ThreadPool.h>
 
 #include <atomic>
+#include <shared_mutex>
 #include <unordered_map>
 
 
@@ -29,9 +31,9 @@ protected:
 	
 	void main() override;
 	
-	std::shared_ptr<const Value> get_value(const Variant& key) const override;
+	void get_value_async(const Variant& key, const request_id_t& req_id) const override;
 	
-	std::vector<std::shared_ptr<const Value>> get_values(const std::vector<Variant>& keys) const override;
+	void get_values_async(const std::vector<Variant>& keys, const request_id_t& req_id) const override;
 	
 	int64_t sync_from(const TopicPtr& topic, const uint64_t& version) const override;
 	
@@ -46,8 +48,6 @@ protected:
 	void store_values(const std::vector<std::pair<Variant, std::shared_ptr<const Value>>>& values) override;
 	
 	void delete_value(const Variant& key) override;
-	
-	void _sync_finished(const int64_t& job_id) override;
 	
 private:
 	struct index_t {
@@ -70,7 +70,17 @@ private:
 		std::atomic<size_t> num_pending {0};
 	};
 	
-	std::shared_ptr<Value> read_value(const index_t& index) const;
+	struct multi_read_job_t {
+		request_id_t req_id;
+		std::atomic<size_t> num_left {0};
+		std::vector<std::shared_ptr<const Value>> values;
+	};
+	
+	std::shared_ptr<Value> read_value(const Variant& key) const;
+	
+	void read_job(const Variant& key, const request_id_t& req_id) const;
+	
+	void multi_read_job(const Variant& key, size_t index, std::shared_ptr<multi_read_job_t> job) const;
 	
 	void lock_file_exclusive(const File& file);
 	
@@ -108,8 +118,10 @@ private:
 	Hash64 private_addr;
 	uint64_t curr_version = 0;
 	std::shared_ptr<Collection> coll_index;
+	std::shared_ptr<ThreadPool> read_threads;
+	std::shared_ptr<ThreadPool> sync_threads;
 	
-	mutable std::mutex index_mutex;		// needs to be locked when modifying index, other threads only read
+	mutable std::shared_mutex index_mutex;
 	std::map<int64_t, std::shared_ptr<block_t>> block_map;
 	std::map<uint64_t, index_t> index_map;
 	std::unordered_multimap<uint64_t, uint64_t> keyhash_map;
@@ -119,6 +131,10 @@ private:
 	mutable std::condition_variable update_condition;
 	mutable std::queue<std::shared_ptr<KeyValuePair>> update_queue;
 	std::thread update_thread;
+	
+	mutable std::mutex sync_mutex;
+	mutable std::set<int64_t> sync_jobs;
+	mutable int64_t next_sync_id = 0;
 	
 	mutable std::atomic<uint64_t> read_counter {0};
 	mutable std::atomic<uint64_t> num_bytes_read {0};
@@ -134,9 +150,6 @@ private:
 		bool is_run = false;
 		rewrite_t() : key_in(&key_stream) {}
 	} rewrite;
-	
-	mutable int64_t next_sync_id = 0;
-	mutable std::map<int64_t, std::thread> sync_jobs;
 	
 	static const int NUM_INDEX = 3;
 	

@@ -30,12 +30,14 @@ module Server {
 	
 	int max_queue_ms = 1000;
 	
+	int num_read_threads = 1;
+	
 	bool ignore_errors = false;
 	
 	
-	Value* get_value(Variant key) const;
+	Value* get_value(Variant key) const async;
 	
-	vector<Value*> get_values(vector<Variant> keys) const;
+	vector<Value*> get_values(vector<Variant> keys) const async;
 	
 	long sync_from(TopicPtr topic, ulong version) const;				// sync all greater than version
 	
@@ -50,9 +52,5 @@ module Server {
 	void store_values(vector<pair<Variant, Value*>> values);
 	
 	void delete_value(Variant key);
-	
-	// below internal use only
-	
-	void _sync_finished(long job_id);
 	
 }
