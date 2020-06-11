@@ -20,9 +20,6 @@ public:
 	
 	ServerAsyncClient(vnx::Hash64 service_addr);
 	
-	uint64_t _sync_finished(const int64_t& job_id, 
-			const std::function<void()>& _callback = std::function<void()>());
-	
 	uint64_t delete_value(const ::vnx::Variant& key, 
 			const std::function<void()>& _callback = std::function<void()>());
 	
@@ -58,7 +55,6 @@ protected:
 	void vnx_callback_switch(uint64_t _request_id, std::shared_ptr<const vnx::Value> _value) override;
 	
 private:
-	std::map<uint64_t, std::function<void()>> vnx_queue__sync_finished;
 	std::map<uint64_t, std::function<void()>> vnx_queue_delete_value;
 	std::map<uint64_t, std::function<void(std::shared_ptr<const ::vnx::Value>)>> vnx_queue_get_value;
 	std::map<uint64_t, std::function<void(std::vector<std::shared_ptr<const ::vnx::Value>>)>> vnx_queue_get_values;

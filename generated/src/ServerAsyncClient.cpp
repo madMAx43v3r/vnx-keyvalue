@@ -8,8 +8,6 @@
 #include <vnx/TopicPtr.hpp>
 #include <vnx/Value.h>
 #include <vnx/Variant.hpp>
-#include <vnx/keyvalue/Server__sync_finished.hxx>
-#include <vnx/keyvalue/Server__sync_finished_return.hxx>
 #include <vnx/keyvalue/Server_delete_value.hxx>
 #include <vnx/keyvalue/Server_delete_value_return.hxx>
 #include <vnx/keyvalue/Server_get_value.hxx>
@@ -42,15 +40,6 @@ ServerAsyncClient::ServerAsyncClient(const std::string& service_name)
 ServerAsyncClient::ServerAsyncClient(vnx::Hash64 service_addr)
 	:	AsyncClient::AsyncClient(service_addr)
 {
-}
-
-uint64_t ServerAsyncClient::_sync_finished(const int64_t& job_id, const std::function<void()>& _callback) {
-	auto _method = ::vnx::keyvalue::Server__sync_finished::create();
-	_method->job_id = job_id;
-	const auto _request_id = vnx_request(_method);
-	vnx_queue__sync_finished[_request_id] = _callback;
-	vnx_num_pending++;
-	return _request_id;
 }
 
 uint64_t ServerAsyncClient::delete_value(const ::vnx::Variant& key, const std::function<void()>& _callback) {
@@ -140,9 +129,6 @@ uint64_t ServerAsyncClient::sync_range(const ::vnx::TopicPtr& topic, const uint6
 
 std::vector<uint64_t> ServerAsyncClient::vnx_get_pending_ids() const {
 	std::vector<uint64_t> _list;
-	for(const auto& entry : vnx_queue__sync_finished) {
-		_list.push_back(entry.first);
-	}
 	for(const auto& entry : vnx_queue_delete_value) {
 		_list.push_back(entry.first);
 	}
@@ -174,7 +160,6 @@ std::vector<uint64_t> ServerAsyncClient::vnx_get_pending_ids() const {
 }
 
 void ServerAsyncClient::vnx_purge_request(uint64_t _request_id) {
-	vnx_num_pending -= vnx_queue__sync_finished.erase(_request_id);
 	vnx_num_pending -= vnx_queue_delete_value.erase(_request_id);
 	vnx_num_pending -= vnx_queue_get_value.erase(_request_id);
 	vnx_num_pending -= vnx_queue_get_values.erase(_request_id);
@@ -188,18 +173,7 @@ void ServerAsyncClient::vnx_purge_request(uint64_t _request_id) {
 
 void ServerAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_ptr<const vnx::Value> _value) {
 	const auto _type_hash = _value->get_type_hash();
-	if(_type_hash == vnx::Hash64(0x4039b73e1e85b062ull)) {
-		const auto _iter = vnx_queue__sync_finished.find(_request_id);
-		if(_iter != vnx_queue__sync_finished.end()) {
-			const auto _callback = std::move(_iter->second);
-			vnx_queue__sync_finished.erase(_iter);
-			vnx_num_pending--;
-			if(_callback) {
-				_callback();
-			}
-		}
-	}
-	else if(_type_hash == vnx::Hash64(0x6b26b84842654d71ull)) {
+	if(_type_hash == vnx::Hash64(0x6b26b84842654d71ull)) {
 		const auto _iter = vnx_queue_delete_value.find(_request_id);
 		if(_iter != vnx_queue_delete_value.end()) {
 			const auto _callback = std::move(_iter->second);
@@ -208,12 +182,14 @@ void ServerAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_pt
 			if(_callback) {
 				_callback();
 			}
+		} else {
+			throw std::runtime_error("ServerAsyncClient: invalid return received");
 		}
 	}
 	else if(_type_hash == vnx::Hash64(0x2eda7f8d6761272dull)) {
 		auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_get_value_return>(_value);
 		if(!_result) {
-			throw std::logic_error("AsyncClient: !_result");
+			throw std::logic_error("ServerAsyncClient: !_result");
 		}
 		const auto _iter = vnx_queue_get_value.find(_request_id);
 		if(_iter != vnx_queue_get_value.end()) {
@@ -223,12 +199,14 @@ void ServerAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_pt
 			if(_callback) {
 				_callback(_result->_ret_0);
 			}
+		} else {
+			throw std::runtime_error("ServerAsyncClient: invalid return received");
 		}
 	}
 	else if(_type_hash == vnx::Hash64(0x92bdf340933764bcull)) {
 		auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_get_values_return>(_value);
 		if(!_result) {
-			throw std::logic_error("AsyncClient: !_result");
+			throw std::logic_error("ServerAsyncClient: !_result");
 		}
 		const auto _iter = vnx_queue_get_values.find(_request_id);
 		if(_iter != vnx_queue_get_values.end()) {
@@ -238,6 +216,8 @@ void ServerAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_pt
 			if(_callback) {
 				_callback(_result->_ret_0);
 			}
+		} else {
+			throw std::runtime_error("ServerAsyncClient: invalid return received");
 		}
 	}
 	else if(_type_hash == vnx::Hash64(0x8bc8f7e913889f88ull)) {
@@ -249,6 +229,8 @@ void ServerAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_pt
 			if(_callback) {
 				_callback();
 			}
+		} else {
+			throw std::runtime_error("ServerAsyncClient: invalid return received");
 		}
 	}
 	else if(_type_hash == vnx::Hash64(0x68bd7b177e8a4f88ull)) {
@@ -260,12 +242,14 @@ void ServerAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_pt
 			if(_callback) {
 				_callback();
 			}
+		} else {
+			throw std::runtime_error("ServerAsyncClient: invalid return received");
 		}
 	}
 	else if(_type_hash == vnx::Hash64(0x964de09bdefcfc87ull)) {
 		auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_sync_all_return>(_value);
 		if(!_result) {
-			throw std::logic_error("AsyncClient: !_result");
+			throw std::logic_error("ServerAsyncClient: !_result");
 		}
 		const auto _iter = vnx_queue_sync_all.find(_request_id);
 		if(_iter != vnx_queue_sync_all.end()) {
@@ -275,12 +259,14 @@ void ServerAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_pt
 			if(_callback) {
 				_callback(_result->_ret_0);
 			}
+		} else {
+			throw std::runtime_error("ServerAsyncClient: invalid return received");
 		}
 	}
 	else if(_type_hash == vnx::Hash64(0xd419b32d0bc488e3ull)) {
 		auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_sync_all_keys_return>(_value);
 		if(!_result) {
-			throw std::logic_error("AsyncClient: !_result");
+			throw std::logic_error("ServerAsyncClient: !_result");
 		}
 		const auto _iter = vnx_queue_sync_all_keys.find(_request_id);
 		if(_iter != vnx_queue_sync_all_keys.end()) {
@@ -290,12 +276,14 @@ void ServerAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_pt
 			if(_callback) {
 				_callback(_result->_ret_0);
 			}
+		} else {
+			throw std::runtime_error("ServerAsyncClient: invalid return received");
 		}
 	}
 	else if(_type_hash == vnx::Hash64(0x68661d3bb01d2b6bull)) {
 		auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_sync_from_return>(_value);
 		if(!_result) {
-			throw std::logic_error("AsyncClient: !_result");
+			throw std::logic_error("ServerAsyncClient: !_result");
 		}
 		const auto _iter = vnx_queue_sync_from.find(_request_id);
 		if(_iter != vnx_queue_sync_from.end()) {
@@ -305,12 +293,14 @@ void ServerAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_pt
 			if(_callback) {
 				_callback(_result->_ret_0);
 			}
+		} else {
+			throw std::runtime_error("ServerAsyncClient: invalid return received");
 		}
 	}
 	else if(_type_hash == vnx::Hash64(0xd451dace3153346bull)) {
 		auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_sync_range_return>(_value);
 		if(!_result) {
-			throw std::logic_error("AsyncClient: !_result");
+			throw std::logic_error("ServerAsyncClient: !_result");
 		}
 		const auto _iter = vnx_queue_sync_range.find(_request_id);
 		if(_iter != vnx_queue_sync_range.end()) {
@@ -320,10 +310,12 @@ void ServerAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_pt
 			if(_callback) {
 				_callback(_result->_ret_0);
 			}
+		} else {
+			throw std::runtime_error("ServerAsyncClient: invalid return received");
 		}
 	}
 	else {
-		throw std::runtime_error("unknown return value");
+		throw std::runtime_error("ServerAsyncClient: unknown return type");
 	}
 }
 

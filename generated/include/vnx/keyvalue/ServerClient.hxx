@@ -20,10 +20,6 @@ public:
 	
 	ServerClient(vnx::Hash64 service_addr);
 	
-	void _sync_finished(const int64_t& job_id);
-	
-	void _sync_finished_async(const int64_t& job_id);
-	
 	void delete_value(const ::vnx::Variant& key);
 	
 	void delete_value_async(const ::vnx::Variant& key);

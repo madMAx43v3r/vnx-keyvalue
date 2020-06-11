@@ -31,7 +31,7 @@ void ClusterAsyncClient::vnx_purge_request(uint64_t _request_id) {
 
 void ClusterAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_ptr<const vnx::Value> _value) {
 	{
-		throw std::runtime_error("unknown return value");
+		throw std::runtime_error("ClusterAsyncClient: unknown return type");
 	}
 }
 

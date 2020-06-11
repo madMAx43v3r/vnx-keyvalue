@@ -9,8 +9,6 @@
 #include <vnx/keyvalue/IndexEntry.hxx>
 #include <vnx/keyvalue/KeyValuePair.hxx>
 #include <vnx/keyvalue/ServerBase.hxx>
-#include <vnx/keyvalue/Server__sync_finished.hxx>
-#include <vnx/keyvalue/Server__sync_finished_return.hxx>
 #include <vnx/keyvalue/Server_delete_value.hxx>
 #include <vnx/keyvalue/Server_delete_value_return.hxx>
 #include <vnx/keyvalue/Server_get_value.hxx>
@@ -47,8 +45,6 @@ static void register_all_types() {
 	vnx::register_type_code(::vnx::keyvalue::IndexEntry::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::KeyValuePair::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::ServerBase::static_create_type_code());
-	vnx::register_type_code(::vnx::keyvalue::Server__sync_finished::static_create_type_code());
-	vnx::register_type_code(::vnx::keyvalue::Server__sync_finished_return::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Server_delete_value::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Server_delete_value_return::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Server_get_value::static_create_type_code());
@@ -85,8 +81,6 @@ const vnx::TypeCode* const vnx_native_type_code_Collection = vnx::get_type_code(
 const vnx::TypeCode* const vnx_native_type_code_IndexEntry = vnx::get_type_code(vnx::Hash64(0xbcae33addff34e23ull));
 const vnx::TypeCode* const vnx_native_type_code_KeyValuePair = vnx::get_type_code(vnx::Hash64(0xf87436237449d8afull));
 const vnx::TypeCode* const vnx_native_type_code_ServerBase = vnx::get_type_code(vnx::Hash64(0xbb28aa6f1d808048ull));
-const vnx::TypeCode* const vnx_native_type_code_Server__sync_finished = vnx::get_type_code(vnx::Hash64(0x2d6328ce038814bbull));
-const vnx::TypeCode* const vnx_native_type_code_Server__sync_finished_return = vnx::get_type_code(vnx::Hash64(0x4039b73e1e85b062ull));
 const vnx::TypeCode* const vnx_native_type_code_Server_delete_value = vnx::get_type_code(vnx::Hash64(0xf5f6c0eca92f8e82ull));
 const vnx::TypeCode* const vnx_native_type_code_Server_delete_value_return = vnx::get_type_code(vnx::Hash64(0x6b26b84842654d71ull));
 const vnx::TypeCode* const vnx_native_type_code_Server_get_value = vnx::get_type_code(vnx::Hash64(0xe2ff2d7a976abdb8ull));

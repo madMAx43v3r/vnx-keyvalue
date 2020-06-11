@@ -8,8 +8,6 @@
 #include <vnx/TopicPtr.hpp>
 #include <vnx/Value.h>
 #include <vnx/Variant.hpp>
-#include <vnx/keyvalue/Server__sync_finished.hxx>
-#include <vnx/keyvalue/Server__sync_finished_return.hxx>
 #include <vnx/keyvalue/Server_delete_value.hxx>
 #include <vnx/keyvalue/Server_delete_value_return.hxx>
 #include <vnx/keyvalue/Server_get_value.hxx>
@@ -44,17 +42,6 @@ ServerClient::ServerClient(vnx::Hash64 service_addr)
 {
 }
 
-void ServerClient::_sync_finished(const int64_t& job_id) {
-	auto _method = ::vnx::keyvalue::Server__sync_finished::create();
-	_method->job_id = job_id;
-	auto _return_value = vnx_request(_method);
-}
-
-void ServerClient::_sync_finished_async(const int64_t& job_id) {
-	vnx_is_async = true;
-	_sync_finished(job_id);
-}
-
 void ServerClient::delete_value(const ::vnx::Variant& key) {
 	auto _method = ::vnx::keyvalue::Server_delete_value::create();
 	_method->key = key;
@@ -72,7 +59,7 @@ std::shared_ptr<const ::vnx::Value> ServerClient::get_value(const ::vnx::Variant
 	auto _return_value = vnx_request(_method);
 	auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_get_value_return>(_return_value);
 	if(!_result) {
-		throw std::logic_error("Client: !_result");
+		throw std::logic_error("ServerClient: !_result");
 	}
 	return _result->_ret_0;
 }
@@ -83,7 +70,7 @@ std::vector<std::shared_ptr<const ::vnx::Value>> ServerClient::get_values(const 
 	auto _return_value = vnx_request(_method);
 	auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_get_values_return>(_return_value);
 	if(!_result) {
-		throw std::logic_error("Client: !_result");
+		throw std::logic_error("ServerClient: !_result");
 	}
 	return _result->_ret_0;
 }
@@ -117,7 +104,7 @@ int64_t ServerClient::sync_all(const ::vnx::TopicPtr& topic) {
 	auto _return_value = vnx_request(_method);
 	auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_sync_all_return>(_return_value);
 	if(!_result) {
-		throw std::logic_error("Client: !_result");
+		throw std::logic_error("ServerClient: !_result");
 	}
 	return _result->_ret_0;
 }
@@ -128,7 +115,7 @@ int64_t ServerClient::sync_all_keys(const ::vnx::TopicPtr& topic) {
 	auto _return_value = vnx_request(_method);
 	auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_sync_all_keys_return>(_return_value);
 	if(!_result) {
-		throw std::logic_error("Client: !_result");
+		throw std::logic_error("ServerClient: !_result");
 	}
 	return _result->_ret_0;
 }
@@ -140,7 +127,7 @@ int64_t ServerClient::sync_from(const ::vnx::TopicPtr& topic, const uint64_t& ve
 	auto _return_value = vnx_request(_method);
 	auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_sync_from_return>(_return_value);
 	if(!_result) {
-		throw std::logic_error("Client: !_result");
+		throw std::logic_error("ServerClient: !_result");
 	}
 	return _result->_ret_0;
 }
@@ -153,7 +140,7 @@ int64_t ServerClient::sync_range(const ::vnx::TopicPtr& topic, const uint64_t& b
 	auto _return_value = vnx_request(_method);
 	auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_sync_range_return>(_return_value);
 	if(!_result) {
-		throw std::logic_error("Client: !_result");
+		throw std::logic_error("ServerClient: !_result");
 	}
 	return _result->_ret_0;
 }

@@ -29,6 +29,7 @@ public:
 	int32_t idle_rewrite_interval = 100;
 	int32_t sync_chunk_count = 100;
 	int32_t max_queue_ms = 1000;
+	int32_t num_read_threads = 1;
 	vnx::bool_t ignore_errors = false;
 	
 	typedef ::vnx::Module Super;
@@ -57,10 +58,11 @@ public:
 	static std::shared_ptr<vnx::TypeCode> static_create_type_code();
 	
 protected:
-	virtual void _sync_finished(const int64_t& job_id) = 0;
 	virtual void delete_value(const ::vnx::Variant& key) = 0;
-	virtual std::shared_ptr<const ::vnx::Value> get_value(const ::vnx::Variant& key) const = 0;
-	virtual std::vector<std::shared_ptr<const ::vnx::Value>> get_values(const std::vector<::vnx::Variant>& keys) const = 0;
+	virtual void get_value_async(const ::vnx::Variant& key, const vnx::request_id_t& _request_id) const = 0;
+	void get_value_async_return(const vnx::request_id_t& _request_id, const std::shared_ptr<const ::vnx::Value>& _ret_0) const;
+	virtual void get_values_async(const std::vector<::vnx::Variant>& keys, const vnx::request_id_t& _request_id) const = 0;
+	void get_values_async_return(const vnx::request_id_t& _request_id, const std::vector<std::shared_ptr<const ::vnx::Value>>& _ret_0) const;
 	virtual void store_value(const ::vnx::Variant& key, const std::shared_ptr<const ::vnx::Value>& value) = 0;
 	virtual void store_values(const std::vector<std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>>& values) = 0;
 	virtual int64_t sync_all(const ::vnx::TopicPtr& topic) const = 0;
@@ -69,7 +71,7 @@ protected:
 	virtual int64_t sync_range(const ::vnx::TopicPtr& topic, const uint64_t& begin, const uint64_t& end) const = 0;
 	
 	void vnx_handle_switch(std::shared_ptr<const vnx::Sample> _sample) override;
-	std::shared_ptr<vnx::Value> vnx_call_switch(std::shared_ptr<const vnx::Value> _value, const vnx::request_id_t& _request_id) override;
+	std::shared_ptr<vnx::Value> vnx_call_switch(std::shared_ptr<const vnx::Value> _method, const vnx::request_id_t& _request_id) override;
 	
 };
 

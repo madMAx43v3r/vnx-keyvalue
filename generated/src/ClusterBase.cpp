@@ -95,10 +95,10 @@ std::shared_ptr<vnx::TypeCode> ClusterBase::static_create_type_code() {
 void ClusterBase::vnx_handle_switch(std::shared_ptr<const vnx::Sample> _sample) {
 }
 
-std::shared_ptr<vnx::Value> ClusterBase::vnx_call_switch(std::shared_ptr<const vnx::Value> _value, const vnx::request_id_t& _request_id) {
+std::shared_ptr<vnx::Value> ClusterBase::vnx_call_switch(std::shared_ptr<const vnx::Value> _method, const vnx::request_id_t& _request_id) {
 	auto _ex = vnx::NoSuchMethod::create();
 	_ex->dst_mac = vnx_request ? vnx_request->dst_mac : 0;
-	_ex->method = _value->get_type_name();
+	_ex->method = _method->get_type_name();
 	return _ex;
 }
 
