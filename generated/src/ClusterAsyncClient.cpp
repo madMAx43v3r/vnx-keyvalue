@@ -26,7 +26,7 @@ std::vector<uint64_t> ClusterAsyncClient::vnx_get_pending_ids() const {
 	return _list;
 }
 
-void ClusterAsyncClient::vnx_purge_request(uint64_t _request_id) {
+void ClusterAsyncClient::vnx_purge_request(uint64_t _request_id, const std::exception& _ex) {
 }
 
 void ClusterAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_ptr<const vnx::Value> _value) {
