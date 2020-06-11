@@ -243,7 +243,7 @@ void Server::main()
 		update_thread = std::thread(&Server::update_loop, this);
 	}
 	
-	set_timer_millis(1000, std::bind(&Server::print_stats, this));
+	set_timer_millis(stats_interval_ms, std::bind(&Server::print_stats, this));
 	set_timer_millis(rewrite_interval * 1000, std::bind(&Server::check_rewrite, this, false));
 	set_timer_millis(idle_rewrite_interval * 1000, std::bind(&Server::check_rewrite, this, true));
 	
@@ -783,8 +783,10 @@ void Server::print_stats()
 		std::lock_guard lock(sync_mutex);
 		num_sync_jobs = sync_jobs.size();
 	}
-	log(INFO).out << read_counter << " reads/s, " << num_bytes_read/1024 << " KB/s read, "
-			<< write_counter << " writes/s, " << num_bytes_written/1024 << " KB/s write, "
+	log(INFO).out << (1000 * read_counter) / stats_interval_ms << " reads/s, "
+			<< (1000 * num_bytes_read) / 1024 / stats_interval_ms << " KB/s read, "
+			<< (1000 * write_counter) / stats_interval_ms << " writes/s, "
+			<< (1000 * num_bytes_written) / 1024 / stats_interval_ms << " KB/s write, "
 			<< num_sync_jobs << " sync jobs" << (rewrite.block ? ", rewriting " : "")
 			<< (rewrite.block ? std::to_string(rewrite.block->index) : "");
 	

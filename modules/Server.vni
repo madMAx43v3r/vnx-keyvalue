@@ -32,6 +32,8 @@ module Server {
 	
 	int num_read_threads = 1;
 	
+	int stats_interval_ms = 3000;
+	
 	bool ignore_errors = false;
 	
 	
