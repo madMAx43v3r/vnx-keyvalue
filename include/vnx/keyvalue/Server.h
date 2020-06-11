@@ -50,12 +50,15 @@ protected:
 	void _sync_finished(const int64_t& job_id) override;
 	
 private:
-	struct key_index_t {
+	struct index_t {
 		int64_t block_index = -1;
 		uint32_t block_offset = 0;
-		uint32_t block_offset_key = 0;
 		uint32_t num_bytes = 0;
-		uint32_t num_bytes_key = 0;
+	};
+	
+	struct value_index_t : index_t {
+		uint64_t key_hash = 0;
+		std::unordered_multimap<uint64_t, uint64_t>::const_iterator key_iter;
 	};
 	
 	struct block_t {
@@ -67,7 +70,7 @@ private:
 		std::atomic<size_t> num_pending {0};
 	};
 	
-	std::shared_ptr<Value> read_value(const key_index_t& index) const;
+	std::shared_ptr<Value> read_value(const index_t& index) const;
 	
 	void lock_file_exclusive(const File& file);
 	
@@ -77,15 +80,9 @@ private:
 	
 	std::shared_ptr<block_t> get_block(int64_t index) const;
 	
-	std::unordered_multimap<uint64_t, uint64_t>::const_iterator get_key_iter(const Variant& key, uint64_t& key_hash) const;
+	Server::value_index_t get_value_index(const Variant& key) const;
 	
-	const key_index_t* get_key_index(const Variant& key) const;
-	
-	const key_index_t* get_key_index(	const Variant& key,
-										std::unordered_multimap<uint64_t, uint64_t>::const_iterator& key_iter,
-										uint64_t& key_hash) const;
-	
-	void delete_internal(std::unordered_multimap<uint64_t, uint64_t>::const_iterator key_iter);
+	void delete_internal(const value_index_t& index);
 	
 	void close_block(std::shared_ptr<block_t> block);
 	
@@ -114,7 +111,7 @@ private:
 	
 	mutable std::mutex index_mutex;		// needs to be locked when modifying index, other threads only read
 	std::map<int64_t, std::shared_ptr<block_t>> block_map;
-	std::map<uint64_t, key_index_t> index_map;
+	std::map<uint64_t, index_t> index_map;
 	std::unordered_multimap<uint64_t, uint64_t> keyhash_map;
 	std::list<std::shared_ptr<block_t>> delete_list;
 	

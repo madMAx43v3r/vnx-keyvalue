@@ -110,21 +110,18 @@ void Server::main()
 						if(index_entry) {
 							if(index_entry->block_offset + index_entry->num_bytes <= value_block_size)
 							{
-								uint64_t key_hash = 0;
-								auto key_iter = get_key_iter(index_entry->key, key_hash);
+								const auto value_index = get_value_index(index_entry->key);
+								const auto key_iter = value_index.key_iter;
+								
 								if(key_iter == keyhash_map.cend() || index_entry->version >= key_iter->second)
 								{
-									if(key_iter != keyhash_map.cend()) {
-										delete_internal(key_iter);
-									}
-									key_iter = keyhash_map.emplace(key_hash, index_entry->version);
+									delete_internal(value_index);
+									keyhash_map.emplace(value_index.key_hash, index_entry->version);
 									
 									auto& index = index_map[index_entry->version];
 									index.block_index = block_index;
-									index.block_offset = index_entry->block_offset;
-									index.block_offset_key = prev_key_pos;
-									index.num_bytes = index_entry->num_bytes;
-									index.num_bytes_key = key_in.get_input_pos() - prev_key_pos;
+									index.block_offset = prev_key_pos;
+									index.num_bytes = key_in.get_input_pos() - prev_key_pos;
 									
 									curr_version = std::max(curr_version, index_entry->version);
 									block->num_bytes_used += index_entry->num_bytes;
@@ -280,7 +277,7 @@ void Server::main()
 	}
 }
 
-std::shared_ptr<Value> Server::read_value(const key_index_t& index) const
+std::shared_ptr<Value> Server::read_value(const index_t& index) const
 {
 	const auto block = get_block(index.block_index);
 	if(index.num_bytes > 65536) {
@@ -303,9 +300,9 @@ std::shared_ptr<const Value> Server::get_value(const Variant& key) const
 {
 	std::shared_ptr<Value> value;
 	try {
-		const auto* index = get_key_index(key);
-		if(index) {
-			value = read_value(*index);
+		const auto index = get_value_index(key);
+		if(index.block_index >= 0) {
+			value = read_value(index);
 		}
 	} catch(...) {
 		// ignore
@@ -318,9 +315,9 @@ std::vector<std::shared_ptr<const Value>> Server::get_values(const std::vector<V
 	std::vector<std::shared_ptr<const Value>> result(keys.size());
 	for(size_t i = 0; i < keys.size(); ++i) {
 		try {
-			const auto* index = get_key_index(keys[i]);
-			if(index) {
-				result[i] = read_value(*index);
+			const auto index = get_value_index(keys[i]);
+			if(index.block_index >= 0) {
+				result[i] = read_value(index);
 			}
 		} catch(...) {
 			// ignore
@@ -406,12 +403,12 @@ void Server::store_value_internal(const Variant& key, const std::shared_ptr<cons
 		throw;
 	}
 	
-	IndexEntry entry;
+	IndexEntry index;
 	int64_t num_bytes_key = 0;
 	try {
-		entry.key = key;
-		entry.version = version;
-		entry.block_offset = prev_value_pos;
+		index.key = key;
+		index.version = version;
+		index.block_offset = prev_value_pos;
 		vnx::write(value_out, value);
 		block->value_file.flush();
 		
@@ -419,8 +416,8 @@ void Server::store_value_internal(const Variant& key, const std::shared_ptr<cons
 		if(num_bytes > MAX_VALUE_SIZE) {
 			throw std::runtime_error("num_bytes > MAX_VALUE_SIZE");
 		}
-		entry.num_bytes = num_bytes;
-		vnx::write(key_out, entry);
+		index.num_bytes = num_bytes;
+		vnx::write(key_out, index);
 		block->key_file.flush();
 		
 		num_bytes_key = key_out.get_output_pos() - prev_key_pos;
@@ -436,26 +433,21 @@ void Server::store_value_internal(const Variant& key, const std::shared_ptr<cons
 		throw;
 	}
 	
-	uint64_t key_hash = 0;
-	auto key_iter = get_key_iter(key, key_hash);
+	const auto value_index = get_value_index(key);
 	{
 		std::lock_guard<std::mutex> lock(index_mutex);
 		
-		if(key_iter != keyhash_map.end()) {
-			delete_internal(key_iter);
-		}
-		key_iter = keyhash_map.emplace(key_hash, version);
+		delete_internal(value_index);
+		keyhash_map.emplace(value_index.key_hash, version);
 		
-		key_index_t& index = index_map[version];
-		index.block_index = block->index;
-		index.block_offset = entry.block_offset;
-		index.block_offset_key = prev_key_pos;
-		index.num_bytes = entry.num_bytes;
-		index.num_bytes_key = num_bytes_key;
-		num_bytes_written += index.num_bytes_key + index.num_bytes;
+		index_t& key_index = index_map[version];
+		key_index.block_index = block->index;
+		key_index.block_offset = prev_key_pos;
+		key_index.num_bytes = num_bytes_key;
+		num_bytes_written += index.num_bytes + key_index.num_bytes;
 	}
-	block->num_bytes_used += entry.num_bytes;
-	block->num_bytes_total += entry.num_bytes;
+	block->num_bytes_used += index.num_bytes;
+	block->num_bytes_total += index.num_bytes;
 	write_counter++;
 	
 	if(block->num_bytes_total >= max_block_size) {
@@ -491,9 +483,8 @@ void Server::store_values(const std::vector<std::pair<Variant, std::shared_ptr<c
 
 void Server::delete_value(const Variant& key)
 {
-	uint64_t key_hash = 0;
-	const auto key_iter = get_key_iter(key, key_hash);
-	if(key_iter != keyhash_map.end()) {
+	const auto index = get_value_index(key);
+	if(index.key_iter != keyhash_map.end()) {
 		store_value(key, 0);
 	}
 }
@@ -520,71 +511,55 @@ std::shared_ptr<Server::block_t> Server::get_block(int64_t index) const
 	return iter->second;
 }
 
-std::unordered_multimap<uint64_t, uint64_t>::const_iterator Server::get_key_iter(const Variant& key, uint64_t& key_hash) const
+Server::value_index_t Server::get_value_index(const Variant& key) const
 {
-	std::unordered_multimap<uint64_t, uint64_t>::const_iterator iter = keyhash_map.end();
-	get_key_index(key, iter, key_hash);
-	return iter;
-}
-
-const Server::key_index_t* Server::get_key_index(const Variant& key) const
-{
-	uint64_t key_hash = 0;
-	std::unordered_multimap<uint64_t, uint64_t>::const_iterator key_iter;
-	return get_key_index(key, key_iter, key_hash);
-}
-
-const Server::key_index_t* Server::get_key_index(	const Variant& key,
-													std::unordered_multimap<uint64_t, uint64_t>::const_iterator& key_iter,
-													uint64_t& key_hash) const
-{
-	key_hash = key.get_hash();
-	const auto range = keyhash_map.equal_range(key_hash);
+	value_index_t result;
+	result.key_hash = key.get_hash();
+	const auto range = keyhash_map.equal_range(result.key_hash);
 	for(auto entry = range.first; entry != range.second; ++entry)
 	{
 		auto iter = index_map.find(entry->second);
 		if(iter != index_map.end()) {
-			const auto& index = iter->second;
-			const auto block = get_block(index.block_index);
+			const auto& key_index = iter->second;
+			const auto block = get_block(key_index.block_index);
 			
-			std::shared_ptr<IndexEntry> index_entry;
+			std::shared_ptr<IndexEntry> index;
 			{
-				FileSectionInputStream stream(block->key_file.get_handle(), index.block_offset_key, index.num_bytes_key);
+				FileSectionInputStream stream(block->key_file.get_handle(), key_index.block_offset, key_index.num_bytes);
 				TypeInput in(&stream);
 				try {
-					index_entry = std::dynamic_pointer_cast<IndexEntry>(vnx::read(in));
-					num_bytes_read += index.num_bytes_key;
+					index = std::dynamic_pointer_cast<IndexEntry>(vnx::read(in));
+					num_bytes_read += key_index.num_bytes;
 				} catch(...) {
 					// ignore
 				}
 			}
-			if(index_entry && index_entry->key == key) {
-				key_iter = entry;
-				return &index;
+			if(index && index->key == key) {
+				result.key_iter = entry;
+				result.block_index = key_index.block_index;
+				result.block_offset = index->block_offset;
+				result.num_bytes = index->num_bytes;
+				return result;
 			}
 		}
 	}
-	key_iter = keyhash_map.end();
-	return 0;
+	result.key_iter = keyhash_map.end();
+	return result;
 }
 
-void Server::delete_internal(std::unordered_multimap<uint64_t, uint64_t>::const_iterator key_iter)
+void Server::delete_internal(const value_index_t& index)
 {
 	// index_mutex needs to be locked by caller
-	auto iter = index_map.find(key_iter->second);
-	if(iter != index_map.end()) {
-		const auto& index = iter->second;
-		if(index.block_index >= 0) {
-			try {
-				auto old_block = get_block(index.block_index);
-				old_block->num_bytes_used -= index.num_bytes;
-			} catch(...) {
-				// ignore
-			}
+	if(index.key_iter != keyhash_map.end()) {
+		try {
+			auto block = get_block(index.block_index);
+			block->num_bytes_used -= index.num_bytes;
+		} catch(...) {
+			// ignore
 		}
-		index_map.erase(iter);
+		index_map.erase(index.key_iter->second);
+		keyhash_map.erase(index.key_iter);
 	}
-	keyhash_map.erase(key_iter);
 }
 
 void Server::close_block(std::shared_ptr<block_t> block)
@@ -695,17 +670,16 @@ void Server::rewrite_func()
 	
 	for(int i = 0; i < rewrite_chunk_count; ++i) {
 		try {
-			auto entry = vnx::read(rewrite.key_in);
-			auto index_entry = std::dynamic_pointer_cast<IndexEntry>(entry);
-			if(index_entry) {
-				auto iter = index_map.find(index_entry->version);
+			const auto index = std::dynamic_pointer_cast<IndexEntry>(vnx::read(rewrite.key_in));
+			if(index) {
+				const auto iter = index_map.find(index->version);
 				if(iter != index_map.end())
 				{
-					const auto& index = iter->second;
-					if(block->index == index.block_index && index_entry->block_offset == index.block_offset)
+					const auto& key_index = iter->second;
+					if(key_index.block_index == rewrite.block->index)
 					{
-						list.emplace_back(pair_t{index_entry, 0});
-						num_bytes += index.num_bytes_key + index.num_bytes;
+						list.emplace_back(pair_t{index, 0});
+						num_bytes += index->num_bytes + key_index.num_bytes;
 						if(num_bytes > rewrite_chunk_size) {
 							break;
 						}
@@ -840,9 +814,9 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 	
 	struct entry_t {
 		uint64_t version;
-		key_index_t index;
+		index_t key_index;
 		std::shared_ptr<block_t> block;
-		std::shared_ptr<IndexEntry> index_entry;
+		std::shared_ptr<IndexEntry> index;
 	};
 	
 	bool is_done = false;
@@ -869,8 +843,8 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 				try {
 					entry_t entry;
 					entry.version = version;
-					entry.index = iter->second;
-					entry.block = get_block(entry.index.block_index);
+					entry.key_index = iter->second;
+					entry.block = get_block(entry.key_index.block_index);
 					entry.block->num_pending++;
 					list.push_back(entry);
 				}
@@ -885,13 +859,13 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 		for(auto& entry : list)
 		{
 			const auto& block = entry.block;
-			const auto& index = entry.index;
+			const auto& key_index = entry.key_index;
 			{
 				in.reset();
-				stream.reset(block->key_file.get_handle(), index.block_offset_key, index.num_bytes_key);
+				stream.reset(block->key_file.get_handle(), key_index.block_offset, key_index.num_bytes);
 				try {
-					entry.index_entry = std::dynamic_pointer_cast<IndexEntry>(vnx::read(in));
-					num_bytes_read += index.num_bytes_key;
+					entry.index = std::dynamic_pointer_cast<IndexEntry>(vnx::read(in));
+					num_bytes_read += key_index.num_bytes;
 				} catch(...) {
 					// ignore
 				}
@@ -902,14 +876,14 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 			const auto& block = entry.block;
 			const auto& index = entry.index;
 			
-			if(entry.index_entry) {
+			if(index) {
 				std::shared_ptr<Value> value;
 				if(!key_only) {
 					in.reset();
-					stream.reset(block->value_file.get_handle(), index.block_offset, index.num_bytes);
+					stream.reset(block->value_file.get_handle(), index->block_offset, index->num_bytes);
 					try {
 						value = vnx::read(in);
-						num_bytes_read += index.num_bytes;
+						num_bytes_read += index->num_bytes;
 					} catch(...) {
 						// ignore
 					}
@@ -918,7 +892,7 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 				pair->collection = collection;
 				pair->version = entry.version;
 				pair->previous = previous;
-				pair->key = entry.index_entry->key;
+				pair->key = index->key;
 				pair->value = value;
 				publisher.publish(pair, topic, BLOCKING);
 				previous = entry.version;
