@@ -68,7 +68,7 @@ std::shared_ptr<const ::vnx::Value> ServerClient::get_value(const ::vnx::Variant
 	return _result->_ret_0;
 }
 
-std::shared_ptr<const ::vnx::Value> ServerClient::get_value_locked(const ::vnx::Variant& key, const int32_t& timeout_ms) {
+std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>> ServerClient::get_value_locked(const ::vnx::Variant& key, const int32_t& timeout_ms) {
 	auto _method = ::vnx::keyvalue::Server_get_value_locked::create();
 	_method->key = key;
 	_method->timeout_ms = timeout_ms;

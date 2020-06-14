@@ -26,7 +26,7 @@ public:
 	
 	std::shared_ptr<const ::vnx::Value> get_value(const ::vnx::Variant& key);
 	
-	std::shared_ptr<const ::vnx::Value> get_value_locked(const ::vnx::Variant& key, const int32_t& timeout_ms);
+	std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>> get_value_locked(const ::vnx::Variant& key, const int32_t& timeout_ms);
 	
 	std::vector<std::shared_ptr<const ::vnx::Value>> get_values(const std::vector<::vnx::Variant>& keys);
 	

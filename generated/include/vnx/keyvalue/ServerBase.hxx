@@ -64,7 +64,7 @@ protected:
 	virtual void get_value_async(const ::vnx::Variant& key, const vnx::request_id_t& _request_id) const = 0;
 	void get_value_async_return(const vnx::request_id_t& _request_id, const std::shared_ptr<const ::vnx::Value>& _ret_0) const;
 	virtual void get_value_locked_async(const ::vnx::Variant& key, const int32_t& timeout_ms, const vnx::request_id_t& _request_id) const = 0;
-	void get_value_locked_async_return(const vnx::request_id_t& _request_id, const std::shared_ptr<const ::vnx::Value>& _ret_0) const;
+	void get_value_locked_async_return(const vnx::request_id_t& _request_id, const std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>& _ret_0) const;
 	virtual void get_values_async(const std::vector<::vnx::Variant>& keys, const vnx::request_id_t& _request_id) const = 0;
 	void get_values_async_return(const vnx::request_id_t& _request_id, const std::vector<std::shared_ptr<const ::vnx::Value>>& _ret_0) const;
 	virtual void store_value(const ::vnx::Variant& key, const std::shared_ptr<const ::vnx::Value>& value) = 0;

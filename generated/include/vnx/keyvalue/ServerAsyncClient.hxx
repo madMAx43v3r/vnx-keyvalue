@@ -29,7 +29,7 @@ public:
 			const std::function<void(const std::exception&)>& _error_callback = std::function<void(const std::exception&)>());
 	
 	uint64_t get_value_locked(const ::vnx::Variant& key, const int32_t& timeout_ms, 
-			const std::function<void(std::shared_ptr<const ::vnx::Value>)>& _callback = std::function<void(std::shared_ptr<const ::vnx::Value>)>(),
+			const std::function<void(std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>)>& _callback = std::function<void(std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>)>(),
 			const std::function<void(const std::exception&)>& _error_callback = std::function<void(const std::exception&)>());
 	
 	uint64_t get_values(const std::vector<::vnx::Variant>& keys, 
@@ -74,7 +74,7 @@ protected:
 private:
 	std::map<uint64_t, std::pair<std::function<void()>, std::function<void(const std::exception&)>>> vnx_queue_delete_value;
 	std::map<uint64_t, std::pair<std::function<void(std::shared_ptr<const ::vnx::Value>)>, std::function<void(const std::exception&)>>> vnx_queue_get_value;
-	std::map<uint64_t, std::pair<std::function<void(std::shared_ptr<const ::vnx::Value>)>, std::function<void(const std::exception&)>>> vnx_queue_get_value_locked;
+	std::map<uint64_t, std::pair<std::function<void(std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>)>, std::function<void(const std::exception&)>>> vnx_queue_get_value_locked;
 	std::map<uint64_t, std::pair<std::function<void(std::vector<std::shared_ptr<const ::vnx::Value>>)>, std::function<void(const std::exception&)>>> vnx_queue_get_values;
 	std::map<uint64_t, std::pair<std::function<void()>, std::function<void(const std::exception&)>>> vnx_queue_store_value;
 	std::map<uint64_t, std::pair<std::function<void()>, std::function<void(const std::exception&)>>> vnx_queue_store_values;

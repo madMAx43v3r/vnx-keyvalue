@@ -5,6 +5,7 @@
 #include <vnx/keyvalue/package.hxx>
 #include <vnx/keyvalue/Server_get_value_locked_return.hxx>
 #include <vnx/Value.h>
+#include <vnx/Variant.hpp>
 
 
 
@@ -13,7 +14,7 @@ namespace keyvalue {
 
 
 const vnx::Hash64 Server_get_value_locked_return::VNX_TYPE_HASH(0xb78e8762c3bbfe99ull);
-const vnx::Hash64 Server_get_value_locked_return::VNX_CODE_HASH(0xd8035c2cef43c25cull);
+const vnx::Hash64 Server_get_value_locked_return::VNX_CODE_HASH(0xd04763b11534ac04ull);
 
 vnx::Hash64 Server_get_value_locked_return::get_type_hash() const {
 	return VNX_TYPE_HASH;
@@ -104,7 +105,7 @@ std::shared_ptr<vnx::TypeCode> Server_get_value_locked_return::static_create_typ
 	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>();
 	type_code->name = "vnx.keyvalue.Server.get_value_locked.return";
 	type_code->type_hash = vnx::Hash64(0xb78e8762c3bbfe99ull);
-	type_code->code_hash = vnx::Hash64(0xd8035c2cef43c25cull);
+	type_code->code_hash = vnx::Hash64(0xd04763b11534ac04ull);
 	type_code->is_native = true;
 	type_code->is_class = true;
 	type_code->is_return = true;
@@ -114,7 +115,7 @@ std::shared_ptr<vnx::TypeCode> Server_get_value_locked_return::static_create_typ
 		vnx::TypeField& field = type_code->fields[0];
 		field.is_extended = true;
 		field.name = "_ret_0";
-		field.code = {16};
+		field.code = {23, 2, 4, 5, 17, 16};
 	}
 	type_code->build();
 	return type_code;

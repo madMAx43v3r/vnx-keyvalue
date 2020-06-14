@@ -459,7 +459,7 @@ void ServerBase::get_value_async_return(const vnx::request_id_t& _request_id, co
 	vnx_async_callback(_request_id, _return_value);
 }
 
-void ServerBase::get_value_locked_async_return(const vnx::request_id_t& _request_id, const std::shared_ptr<const ::vnx::Value>& _ret_0) const {
+void ServerBase::get_value_locked_async_return(const vnx::request_id_t& _request_id, const std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>& _ret_0) const {
 	auto _return_value = ::vnx::keyvalue::Server_get_value_locked_return::create();
 	_return_value->_ret_0 = _ret_0;
 	vnx_async_callback(_request_id, _return_value);

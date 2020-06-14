@@ -64,7 +64,7 @@ uint64_t ServerAsyncClient::get_value(const ::vnx::Variant& key, const std::func
 	return _request_id;
 }
 
-uint64_t ServerAsyncClient::get_value_locked(const ::vnx::Variant& key, const int32_t& timeout_ms, const std::function<void(std::shared_ptr<const ::vnx::Value>)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t ServerAsyncClient::get_value_locked(const ::vnx::Variant& key, const int32_t& timeout_ms, const std::function<void(std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Server_get_value_locked::create();
 	_method->key = key;
 	_method->timeout_ms = timeout_ms;

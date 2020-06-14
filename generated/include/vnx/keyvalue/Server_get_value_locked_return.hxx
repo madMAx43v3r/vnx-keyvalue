@@ -6,6 +6,7 @@
 
 #include <vnx/keyvalue/package.hxx>
 #include <vnx/Value.h>
+#include <vnx/Variant.hpp>
 
 
 namespace vnx {
@@ -14,7 +15,7 @@ namespace keyvalue {
 class Server_get_value_locked_return : public ::vnx::Value {
 public:
 	
-	std::shared_ptr<const ::vnx::Value> _ret_0;
+	std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>> _ret_0;
 	
 	typedef ::vnx::Value Super;
 	
