@@ -243,6 +243,7 @@ void Server::main()
 		update_thread = std::thread(&Server::update_loop, this);
 	}
 	
+	set_timer_millis(timeout_interval_ms, std::bind(&Server::check_timeouts, this));
 	set_timer_millis(stats_interval_ms, std::bind(&Server::print_stats, this));
 	set_timer_millis(rewrite_interval * 1000, std::bind(&Server::check_rewrite, this, false));
 	set_timer_millis(idle_rewrite_interval * 1000, std::bind(&Server::check_rewrite, this, true));
@@ -277,8 +278,42 @@ void Server::main()
 	}
 }
 
-void Server::get_value_async(const Variant& key, const request_id_t& req_id) const {
-	read_threads->add_task(std::bind(&Server::read_job, this, key, req_id));
+void Server::get_value_async(const Variant& key, const request_id_t& req_id) const
+{
+	const auto iter = lock_map.find(key);
+	if(iter != lock_map.end()) {
+		auto& entry = iter->second;
+		entry.waiting.push_back(std::bind(&Server::get_value_async, this, key, req_id));
+	} else {
+		read_threads->add_task(std::bind(&Server::read_job, this, key, req_id));
+	}
+}
+
+void Server::get_value_locked_async(const Variant& key, const int32_t& timeout_ms, const request_id_t& req_id) const
+{
+	const auto ret = lock_map.emplace(key, lock_entry_t());
+	const auto& iter = ret.first;
+	if(ret.second) {
+		aquire_lock(iter, timeout_ms);
+		read_threads->add_task(std::bind(&Server::read_job, this, key, req_id));
+	} else {
+		auto& entry = iter->second;
+		entry.waiting.push_back(std::bind(&Server::get_value_locked_async, this, key, timeout_ms, req_id));
+	}
+}
+
+void Server::get_value_multi_async(	const Variant& key,
+									size_t index,
+									std::shared_ptr<multi_read_job_t> job,
+									const request_id_t& req_id) const
+{
+	const auto iter = lock_map.find(key);
+	if(iter != lock_map.end()) {
+		auto& entry = iter->second;
+		entry.waiting.push_back(std::bind(&Server::get_value_multi_async, this, key, index, job, req_id));
+	} else {
+		read_threads->add_task(std::bind(&Server::multi_read_job, this, key, index, job));
+	}
 }
 
 void Server::get_values_async(const std::vector<Variant>& keys, const request_id_t& req_id) const
@@ -288,8 +323,65 @@ void Server::get_values_async(const std::vector<Variant>& keys, const request_id
 	job->num_left = keys.size();
 	job->values.resize(keys.size());
 	
-	for(size_t i = 0; i < keys.size(); ++i) {
-		read_threads->add_task(std::bind(&Server::multi_read_job, this, keys[i], i, job));
+	for(size_t i = 0; i < keys.size(); ++i)
+	{
+		const auto iter = lock_map.find(keys[i]);
+		if(iter != lock_map.end()) {
+			auto& entry = iter->second;
+			entry.waiting.push_back(std::bind(&Server::get_value_multi_async, this, keys[i], i, job, req_id));
+		} else {
+			read_threads->add_task(std::bind(&Server::multi_read_job, this, keys[i], i, job));
+		}
+	}
+}
+
+void Server::aquire_lock(const lock_map_t::iterator& iter, int32_t timeout_ms) const
+{
+	auto& entry = iter->second;
+	if(timeout_ms > 0) {
+		const auto deadline_ms = vnx::get_wall_time_millis() + timeout_ms;
+		entry.queue_iter = lock_queue.emplace(deadline_ms, iter);
+	}
+	else if(timeout_ms < 0) {
+		entry.queue_iter = lock_queue.end();
+	}
+	else {
+		lock_map.erase(iter);
+	}
+}
+
+void Server::release_lock(const lock_map_t::iterator& iter)
+{
+	const auto& entry = iter->second;
+	for(const auto& func : entry.waiting) {
+		add_task(func);
+	}
+	if(entry.queue_iter != lock_queue.end()) {
+		lock_queue.erase(entry.queue_iter);
+	}
+	lock_map.erase(iter);
+}
+
+void Server::release_lock(const Variant& key)
+{
+	const auto iter = lock_map.find(key);
+	if(iter != lock_map.end()) {
+		release_lock(iter);
+	}
+}
+
+void Server::check_timeouts()
+{
+	const auto now_ms = vnx::get_wall_time_millis();
+	while(!lock_queue.empty())
+	{
+		const auto iter = lock_queue.begin();
+		if(iter->first <= now_ms) {
+			release_lock(iter->second);
+			num_lock_timeouts++;
+		} else {
+			break;
+		}
 	}
 }
 
@@ -301,7 +393,8 @@ std::shared_ptr<Value> Server::read_value(const Variant& key) const
 		std::shared_lock lock(index_mutex);
 		
 		index = get_value_index(key);
-		if(index.block_index >= 0) {
+		if(index.block_index >= 0)
+		{
 			try {
 				block = get_block(index.block_index);
 				block->num_pending++;
@@ -473,6 +566,7 @@ void Server::store_value_internal(const Variant& key, const std::shared_ptr<cons
 
 void Server::store_value(const Variant& key, const std::shared_ptr<const Value>& value)
 {
+	release_lock(key);
 	store_value_internal(key, value, curr_version + 1);
 	curr_version++;
 	
@@ -502,6 +596,8 @@ void Server::delete_value(const Variant& key)
 	const auto index = get_value_index(key);
 	if(index.key_iter != keyhash_map.end()) {
 		store_value(key, 0);
+	} else {
+		release_lock(key);
 	}
 }
 
@@ -778,16 +874,12 @@ void Server::lock_file_exclusive(const File& file)
 
 void Server::print_stats()
 {
-	size_t num_sync_jobs = 0;
-	{
-		std::lock_guard lock(sync_mutex);
-		num_sync_jobs = sync_jobs.size();
-	}
 	log(INFO).out << (1000 * read_counter) / stats_interval_ms << " reads/s, "
 			<< (1000 * num_bytes_read) / 1024 / stats_interval_ms << " KB/s read, "
 			<< (1000 * write_counter) / stats_interval_ms << " writes/s, "
 			<< (1000 * num_bytes_written) / 1024 / stats_interval_ms << " KB/s write, "
-			<< num_sync_jobs << " sync jobs" << (rewrite.block ? ", rewriting " : "")
+			<< lock_map.size() << " locks, " << num_lock_timeouts << " timeout, "
+			<< sync_jobs.size() << " sync jobs" << (rewrite.block ? ", rewriting " : "")
 			<< (rewrite.block ? std::to_string(rewrite.block->index) : "");
 	
 	read_counter = 0;

@@ -22,9 +22,9 @@ module Server {
 	
 	float idle_rewrite_threshold = 0.9;
 	
-	int rewrite_interval = 10;
+	int rewrite_interval = 10;					// [sec]
 	
-	int idle_rewrite_interval = 100;
+	int idle_rewrite_interval = 100;			// [sec]
 	
 	int sync_chunk_count = 100;					// number of values
 	
@@ -32,12 +32,16 @@ module Server {
 	
 	int num_read_threads = 1;
 	
+	int timeout_interval_ms = 100;				// for checking lock timeouts [ms]
+	
 	int stats_interval_ms = 3000;
 	
-	bool ignore_errors = false;
+	bool ignore_errors = false;					// if to continue loading even if there is errors
 	
 	
 	Value* get_value(Variant key) const async;
+	
+	Value* get_value_locked(Variant key, int timeout_ms) const async;		// locks value until updated via store_value() or delete_value()
 	
 	vector<Value*> get_values(vector<Variant> keys) const async;
 	

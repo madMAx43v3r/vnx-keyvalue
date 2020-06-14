@@ -33,6 +33,8 @@ protected:
 	
 	void get_value_async(const Variant& key, const request_id_t& req_id) const override;
 	
+	void get_value_locked_async(const Variant& key, const int32_t& timeout_ms, const request_id_t& req_id) const override;
+	
 	void get_values_async(const std::vector<Variant>& keys, const request_id_t& req_id) const override;
 	
 	int64_t sync_from(const TopicPtr& topic, const uint64_t& version) const override;
@@ -75,6 +77,26 @@ private:
 		std::atomic<size_t> num_left {0};
 		std::vector<std::shared_ptr<const Value>> values;
 	};
+	
+	struct lock_entry_t {
+		std::vector<std::function<void()>> waiting;
+		std::multimap<int64_t, std::map<Variant, lock_entry_t>::iterator>::iterator queue_iter;
+	};
+	
+	typedef std::map<Variant, lock_entry_t> lock_map_t;
+	
+	void get_value_multi_async(	const Variant& key,
+								size_t index,
+								std::shared_ptr<multi_read_job_t> job,
+								const request_id_t& req_id) const;
+	
+	void aquire_lock(const lock_map_t::iterator& iter, int32_t timeout_ms) const;
+	
+	void release_lock(const lock_map_t::iterator& iter);
+	
+	void release_lock(const Variant& key);
+	
+	void check_timeouts();
 	
 	std::shared_ptr<Value> read_value(const Variant& key) const;
 	
@@ -122,10 +144,16 @@ private:
 	std::shared_ptr<ThreadPool> sync_threads;
 	
 	mutable std::shared_mutex index_mutex;
+	
+	// protected by index_mutex, only main thread may modify
 	std::map<int64_t, std::shared_ptr<block_t>> block_map;
-	std::map<uint64_t, index_t> index_map;
-	std::unordered_multimap<uint64_t, uint64_t> keyhash_map;
+	std::map<uint64_t, index_t> index_map;							// [version => index_t]
+	std::unordered_multimap<uint64_t, uint64_t> keyhash_map;		// [key hash => version]
 	std::list<std::shared_ptr<block_t>> delete_list;
+	
+	// accessed by main thread only
+	mutable lock_map_t lock_map;											// [key => lock_entry_t]
+	mutable std::multimap<int64_t, lock_map_t::iterator> lock_queue;		// [deadline => lock_map iter]
 	
 	mutable std::mutex update_mutex;
 	mutable std::condition_variable update_condition;
@@ -137,10 +165,10 @@ private:
 	mutable int64_t next_sync_id = 0;
 	
 	mutable std::atomic<uint64_t> read_counter {0};
-	mutable std::atomic<uint64_t> num_bytes_read {0};
-	
 	mutable std::atomic<uint64_t> write_counter {0};
+	mutable std::atomic<uint64_t> num_bytes_read {0};
 	mutable std::atomic<uint64_t> num_bytes_written {0};
+	mutable std::atomic<uint64_t> num_lock_timeouts {0};
 	
 	struct rewrite_t {
 		std::shared_ptr<block_t> block;
