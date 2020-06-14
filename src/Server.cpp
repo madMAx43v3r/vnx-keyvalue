@@ -318,6 +318,10 @@ void Server::get_value_multi_async(	const Variant& key,
 
 void Server::get_values_async(const std::vector<Variant>& keys, const request_id_t& req_id) const
 {
+	if(keys.empty()) {
+		get_values_async_return(req_id, {});
+		return;
+	}
 	auto job = std::make_shared<multi_read_job_t>();
 	job->req_id = req_id;
 	job->num_left = keys.size();
