@@ -28,6 +28,8 @@
 #include <vnx/keyvalue/Server_sync_from_return.hxx>
 #include <vnx/keyvalue/Server_sync_range.hxx>
 #include <vnx/keyvalue/Server_sync_range_return.hxx>
+#include <vnx/keyvalue/Server_unlock.hxx>
+#include <vnx/keyvalue/Server_unlock_return.hxx>
 
 
 
@@ -139,6 +141,15 @@ uint64_t ServerAsyncClient::sync_range(const ::vnx::TopicPtr& topic, const uint6
 	return _request_id;
 }
 
+uint64_t ServerAsyncClient::unlock(const ::vnx::Variant& key, const std::function<void()>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+	auto _method = ::vnx::keyvalue::Server_unlock::create();
+	_method->key = key;
+	const auto _request_id = vnx_request(_method);
+	vnx_queue_unlock[_request_id] = std::make_pair(_callback, _error_callback);
+	vnx_num_pending++;
+	return _request_id;
+}
+
 std::vector<uint64_t> ServerAsyncClient::vnx_get_pending_ids() const {
 	std::vector<uint64_t> _list;
 	for(const auto& entry : vnx_queue_delete_value) {
@@ -169,6 +180,9 @@ std::vector<uint64_t> ServerAsyncClient::vnx_get_pending_ids() const {
 		_list.push_back(entry.first);
 	}
 	for(const auto& entry : vnx_queue_sync_range) {
+		_list.push_back(entry.first);
+	}
+	for(const auto& entry : vnx_queue_unlock) {
 		_list.push_back(entry.first);
 	}
 	return _list;
@@ -272,6 +286,16 @@ void ServerAsyncClient::vnx_purge_request(uint64_t _request_id, const std::excep
 				_iter->second.second(_ex);
 			}
 			vnx_queue_sync_range.erase(_iter);
+			vnx_num_pending--;
+		}
+	}
+	{
+		const auto _iter = vnx_queue_unlock.find(_request_id);
+		if(_iter != vnx_queue_unlock.end()) {
+			if(_iter->second.second) {
+				_iter->second.second(_ex);
+			}
+			vnx_queue_unlock.erase(_iter);
 			vnx_num_pending--;
 		}
 	}
@@ -432,6 +456,19 @@ void ServerAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_pt
 			vnx_num_pending--;
 			if(_callback) {
 				_callback(_result->_ret_0);
+			}
+		} else {
+			throw std::runtime_error("ServerAsyncClient: invalid return received");
+		}
+	}
+	else if(_type_hash == vnx::Hash64(0x81abb06c1b73263dull)) {
+		const auto _iter = vnx_queue_unlock.find(_request_id);
+		if(_iter != vnx_queue_unlock.end()) {
+			const auto _callback = std::move(_iter->second.first);
+			vnx_queue_unlock.erase(_iter);
+			vnx_num_pending--;
+			if(_callback) {
+				_callback();
 			}
 		} else {
 			throw std::runtime_error("ServerAsyncClient: invalid return received");

@@ -60,6 +60,10 @@ public:
 			const std::function<void(int64_t)>& _callback = std::function<void(int64_t)>(),
 			const std::function<void(const std::exception&)>& _error_callback = std::function<void(const std::exception&)>());
 	
+	uint64_t unlock(const ::vnx::Variant& key, 
+			const std::function<void()>& _callback = std::function<void()>(),
+			const std::function<void(const std::exception&)>& _error_callback = std::function<void(const std::exception&)>());
+	
 	std::vector<uint64_t> vnx_get_pending_ids() const override;
 	
 protected:
@@ -78,6 +82,7 @@ private:
 	std::map<uint64_t, std::pair<std::function<void(int64_t)>, std::function<void(const std::exception&)>>> vnx_queue_sync_all_keys;
 	std::map<uint64_t, std::pair<std::function<void(int64_t)>, std::function<void(const std::exception&)>>> vnx_queue_sync_from;
 	std::map<uint64_t, std::pair<std::function<void(int64_t)>, std::function<void(const std::exception&)>>> vnx_queue_sync_range;
+	std::map<uint64_t, std::pair<std::function<void()>, std::function<void(const std::exception&)>>> vnx_queue_unlock;
 	
 };
 

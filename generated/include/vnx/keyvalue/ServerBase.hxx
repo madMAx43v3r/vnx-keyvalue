@@ -73,6 +73,7 @@ protected:
 	virtual int64_t sync_all_keys(const ::vnx::TopicPtr& topic) const = 0;
 	virtual int64_t sync_from(const ::vnx::TopicPtr& topic, const uint64_t& version) const = 0;
 	virtual int64_t sync_range(const ::vnx::TopicPtr& topic, const uint64_t& begin, const uint64_t& end) const = 0;
+	virtual void unlock(const ::vnx::Variant& key) = 0;
 	
 	void vnx_handle_switch(std::shared_ptr<const vnx::Sample> _sample) override;
 	std::shared_ptr<vnx::Value> vnx_call_switch(std::shared_ptr<const vnx::Value> _method, const vnx::request_id_t& _request_id) override;

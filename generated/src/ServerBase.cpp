@@ -29,6 +29,8 @@
 #include <vnx/keyvalue/Server_sync_from_return.hxx>
 #include <vnx/keyvalue/Server_sync_range.hxx>
 #include <vnx/keyvalue/Server_sync_range_return.hxx>
+#include <vnx/keyvalue/Server_unlock.hxx>
+#include <vnx/keyvalue/Server_unlock_return.hxx>
 
 
 
@@ -240,7 +242,7 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 	type_code->type_hash = vnx::Hash64(0xbb28aa6f1d808048ull);
 	type_code->code_hash = vnx::Hash64(0x137696d66598aca4ull);
 	type_code->is_native = true;
-	type_code->methods.resize(10);
+	type_code->methods.resize(11);
 	type_code->methods[0] = ::vnx::keyvalue::Server_delete_value::static_get_type_code();
 	type_code->methods[1] = ::vnx::keyvalue::Server_get_value::static_get_type_code();
 	type_code->methods[2] = ::vnx::keyvalue::Server_get_value_locked::static_get_type_code();
@@ -251,6 +253,7 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 	type_code->methods[7] = ::vnx::keyvalue::Server_sync_all_keys::static_get_type_code();
 	type_code->methods[8] = ::vnx::keyvalue::Server_sync_from::static_get_type_code();
 	type_code->methods[9] = ::vnx::keyvalue::Server_sync_range::static_get_type_code();
+	type_code->methods[10] = ::vnx::keyvalue::Server_unlock::static_get_type_code();
 	type_code->fields.resize(16);
 	{
 		vnx::TypeField& field = type_code->fields[0];
@@ -434,6 +437,14 @@ std::shared_ptr<vnx::Value> ServerBase::vnx_call_switch(std::shared_ptr<const vn
 		}
 		auto _return_value = ::vnx::keyvalue::Server_sync_range_return::create();
 		_return_value->_ret_0 = sync_range(_args->topic, _args->begin, _args->end);
+		return _return_value;
+	} else if(_type_hash == vnx::Hash64(0xfd9d27aa50baa773ull)) {
+		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_unlock>(_method);
+		if(!_args) {
+			throw std::logic_error("vnx_call_switch(): !_args");
+		}
+		auto _return_value = ::vnx::keyvalue::Server_unlock_return::create();
+		unlock(_args->key);
 		return _return_value;
 	}
 	auto _ex = vnx::NoSuchMethod::create();

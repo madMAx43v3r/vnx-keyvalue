@@ -28,6 +28,8 @@
 #include <vnx/keyvalue/Server_sync_from_return.hxx>
 #include <vnx/keyvalue/Server_sync_range.hxx>
 #include <vnx/keyvalue/Server_sync_range_return.hxx>
+#include <vnx/keyvalue/Server_unlock.hxx>
+#include <vnx/keyvalue/Server_unlock_return.hxx>
 
 
 
@@ -157,6 +159,17 @@ int64_t ServerClient::sync_range(const ::vnx::TopicPtr& topic, const uint64_t& b
 		throw std::logic_error("ServerClient: !_result");
 	}
 	return _result->_ret_0;
+}
+
+void ServerClient::unlock(const ::vnx::Variant& key) {
+	auto _method = ::vnx::keyvalue::Server_unlock::create();
+	_method->key = key;
+	auto _return_value = vnx_request(_method);
+}
+
+void ServerClient::unlock_async(const ::vnx::Variant& key) {
+	vnx_is_async = true;
+	unlock(key);
 }
 
 

@@ -46,6 +46,10 @@ public:
 	
 	int64_t sync_range(const ::vnx::TopicPtr& topic, const uint64_t& begin, const uint64_t& end);
 	
+	void unlock(const ::vnx::Variant& key);
+	
+	void unlock_async(const ::vnx::Variant& key);
+	
 };
 
 
