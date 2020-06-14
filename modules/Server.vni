@@ -34,7 +34,7 @@ module Server {
 	
 	int timeout_interval_ms = 100;				// for checking lock timeouts [ms]
 	
-	int stats_interval_ms = 3000;
+	int stats_interval_ms = 3000;				// 0 = disable stats [ms]
 	
 	bool ignore_errors = false;					// if to continue loading even if there is errors
 	

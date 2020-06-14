@@ -244,9 +244,11 @@ void Server::main()
 	}
 	
 	set_timer_millis(timeout_interval_ms, std::bind(&Server::check_timeouts, this));
-	set_timer_millis(stats_interval_ms, std::bind(&Server::print_stats, this));
 	set_timer_millis(rewrite_interval * 1000, std::bind(&Server::check_rewrite, this, false));
 	set_timer_millis(idle_rewrite_interval * 1000, std::bind(&Server::check_rewrite, this, true));
+	if(stats_interval_ms) {
+		set_timer_millis(stats_interval_ms, std::bind(&Server::print_stats, this));
+	}
 	
 	rewrite.timer = add_timer(std::bind(&Server::rewrite_func, this));
 	
