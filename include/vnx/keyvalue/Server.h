@@ -37,6 +37,8 @@ protected:
 	
 	void get_values_async(const std::vector<Variant>& keys, const request_id_t& req_id) const override;
 	
+	void unlock(const Variant& key) override;
+	
 	int64_t sync_from(const TopicPtr& topic, const uint64_t& version) const override;
 	
 	int64_t sync_range(const TopicPtr& topic, const uint64_t& begin, const uint64_t& end) const override;

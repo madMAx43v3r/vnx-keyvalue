@@ -337,6 +337,11 @@ void Server::get_values_async(const std::vector<Variant>& keys, const request_id
 	}
 }
 
+void Server::unlock(const Variant& key)
+{
+	release_lock(key);
+}
+
 void Server::aquire_lock(const lock_map_t::iterator& iter, int32_t timeout_ms) const
 {
 	auto& entry = iter->second;

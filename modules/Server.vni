@@ -45,6 +45,8 @@ module Server {
 	
 	vector<Value*> get_values(vector<Variant> keys) const async;
 	
+	void unlock(Variant key);
+	
 	long sync_from(TopicPtr topic, ulong version) const;				// sync all greater than version
 	
 	long sync_range(TopicPtr topic, ulong begin, ulong end) const;		// sync greater than begin and up to less than end
