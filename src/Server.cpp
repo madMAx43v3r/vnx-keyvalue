@@ -28,12 +28,10 @@ namespace keyvalue {
 Server::Server(const std::string& _vnx_name)
 	:	ServerBase(_vnx_name)
 {
-	private_addr = Hash64::rand();
 }
 
 void Server::init()
 {
-	vnx::open_pipe(private_addr, this, UNLIMITED);
 	vnx::open_pipe(vnx_name, this, max_queue_ms);
 }
 

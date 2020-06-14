@@ -141,7 +141,6 @@ private:
 	void sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t end, bool key_only) const noexcept;
 	
 private:
-	Hash64 private_addr;
 	uint64_t curr_version = 0;
 	std::shared_ptr<Collection> coll_index;
 	std::shared_ptr<ThreadPool> read_threads;
