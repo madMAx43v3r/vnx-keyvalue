@@ -41,7 +41,10 @@ module Server {
 	
 	Value* get_value(Variant key) const async;
 	
-	Value* get_value_locked(Variant key, int timeout_ms) const async;		// locks value until updated via store_value() or delete_value()
+	/* Locks value until it is updated via store_value() or delete_value(), or until unlock() is called.
+	 * While it is locked any read requests are blocked until lock is released.
+	 */
+	pair<Variant, Value*> get_value_locked(Variant key, int timeout_ms) const async;
 	
 	vector<Value*> get_values(vector<Variant> keys) const async;
 	

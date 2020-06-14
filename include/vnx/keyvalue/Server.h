@@ -104,6 +104,8 @@ private:
 	
 	void read_job(const Variant& key, const request_id_t& req_id) const;
 	
+	void read_job_locked(const Variant& key, const request_id_t& req_id) const;
+	
 	void multi_read_job(const Variant& key, size_t index, std::shared_ptr<multi_read_job_t> job) const;
 	
 	void lock_file_exclusive(const File& file);

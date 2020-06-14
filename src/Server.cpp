@@ -297,7 +297,7 @@ void Server::get_value_locked_async(const Variant& key, const int32_t& timeout_m
 	const auto& iter = ret.first;
 	if(ret.second) {
 		aquire_lock(iter, timeout_ms);
-		read_threads->add_task(std::bind(&Server::read_job, this, key, req_id));
+		read_threads->add_task(std::bind(&Server::read_job_locked, this, key, req_id));
 	} else {
 		auto& entry = iter->second;
 		entry.waiting.push_back(std::bind(&Server::get_value_locked_async, this, key, timeout_ms, req_id));
@@ -438,6 +438,16 @@ void Server::read_job(const Variant& key, const request_id_t& req_id) const {
 		// ignore
 	}
 	get_value_async_return(req_id, value);
+}
+
+void Server::read_job_locked(const Variant& key, const request_id_t& req_id) const {
+	std::shared_ptr<Value> value;
+	try {
+		value = read_value(key);
+	} catch(...) {
+		// ignore
+	}
+	get_value_locked_async_return(req_id, std::make_pair(key, value));
 }
 
 void Server::multi_read_job(const Variant& key, size_t index, std::shared_ptr<multi_read_job_t> job) const {
