@@ -11,6 +11,8 @@
 #include <vnx/keyvalue/Server_delete_value.hxx>
 #include <vnx/keyvalue/Server_delete_value_return.hxx>
 #include <vnx/keyvalue/Server_get_value.hxx>
+#include <vnx/keyvalue/Server_get_value_locked.hxx>
+#include <vnx/keyvalue/Server_get_value_locked_return.hxx>
 #include <vnx/keyvalue/Server_get_value_return.hxx>
 #include <vnx/keyvalue/Server_get_values.hxx>
 #include <vnx/keyvalue/Server_get_values_return.hxx>
@@ -58,6 +60,18 @@ std::shared_ptr<const ::vnx::Value> ServerClient::get_value(const ::vnx::Variant
 	_method->key = key;
 	auto _return_value = vnx_request(_method);
 	auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_get_value_return>(_return_value);
+	if(!_result) {
+		throw std::logic_error("ServerClient: !_result");
+	}
+	return _result->_ret_0;
+}
+
+std::shared_ptr<const ::vnx::Value> ServerClient::get_value_locked(const ::vnx::Variant& key, const int32_t& timeout_ms) {
+	auto _method = ::vnx::keyvalue::Server_get_value_locked::create();
+	_method->key = key;
+	_method->timeout_ms = timeout_ms;
+	auto _return_value = vnx_request(_method);
+	auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_get_value_locked_return>(_return_value);
 	if(!_result) {
 		throw std::logic_error("ServerClient: !_result");
 	}

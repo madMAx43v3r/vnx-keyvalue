@@ -11,6 +11,8 @@
 #include <vnx/keyvalue/Server_delete_value.hxx>
 #include <vnx/keyvalue/Server_delete_value_return.hxx>
 #include <vnx/keyvalue/Server_get_value.hxx>
+#include <vnx/keyvalue/Server_get_value_locked.hxx>
+#include <vnx/keyvalue/Server_get_value_locked_return.hxx>
 #include <vnx/keyvalue/Server_get_value_return.hxx>
 #include <vnx/keyvalue/Server_get_values.hxx>
 #include <vnx/keyvalue/Server_get_values_return.hxx>
@@ -56,6 +58,16 @@ uint64_t ServerAsyncClient::get_value(const ::vnx::Variant& key, const std::func
 	_method->key = key;
 	const auto _request_id = vnx_request(_method);
 	vnx_queue_get_value[_request_id] = std::make_pair(_callback, _error_callback);
+	vnx_num_pending++;
+	return _request_id;
+}
+
+uint64_t ServerAsyncClient::get_value_locked(const ::vnx::Variant& key, const int32_t& timeout_ms, const std::function<void(std::shared_ptr<const ::vnx::Value>)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+	auto _method = ::vnx::keyvalue::Server_get_value_locked::create();
+	_method->key = key;
+	_method->timeout_ms = timeout_ms;
+	const auto _request_id = vnx_request(_method);
+	vnx_queue_get_value_locked[_request_id] = std::make_pair(_callback, _error_callback);
 	vnx_num_pending++;
 	return _request_id;
 }
@@ -135,6 +147,9 @@ std::vector<uint64_t> ServerAsyncClient::vnx_get_pending_ids() const {
 	for(const auto& entry : vnx_queue_get_value) {
 		_list.push_back(entry.first);
 	}
+	for(const auto& entry : vnx_queue_get_value_locked) {
+		_list.push_back(entry.first);
+	}
 	for(const auto& entry : vnx_queue_get_values) {
 		_list.push_back(entry.first);
 	}
@@ -177,6 +192,16 @@ void ServerAsyncClient::vnx_purge_request(uint64_t _request_id, const std::excep
 				_iter->second.second(_ex);
 			}
 			vnx_queue_get_value.erase(_iter);
+			vnx_num_pending--;
+		}
+	}
+	{
+		const auto _iter = vnx_queue_get_value_locked.find(_request_id);
+		if(_iter != vnx_queue_get_value_locked.end()) {
+			if(_iter->second.second) {
+				_iter->second.second(_ex);
+			}
+			vnx_queue_get_value_locked.erase(_iter);
 			vnx_num_pending--;
 		}
 	}
@@ -276,6 +301,23 @@ void ServerAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_pt
 		if(_iter != vnx_queue_get_value.end()) {
 			const auto _callback = std::move(_iter->second.first);
 			vnx_queue_get_value.erase(_iter);
+			vnx_num_pending--;
+			if(_callback) {
+				_callback(_result->_ret_0);
+			}
+		} else {
+			throw std::runtime_error("ServerAsyncClient: invalid return received");
+		}
+	}
+	else if(_type_hash == vnx::Hash64(0xb78e8762c3bbfe99ull)) {
+		auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_get_value_locked_return>(_value);
+		if(!_result) {
+			throw std::logic_error("ServerAsyncClient: !_result");
+		}
+		const auto _iter = vnx_queue_get_value_locked.find(_request_id);
+		if(_iter != vnx_queue_get_value_locked.end()) {
+			const auto _callback = std::move(_iter->second.first);
+			vnx_queue_get_value_locked.erase(_iter);
 			vnx_num_pending--;
 			if(_callback) {
 				_callback(_result->_ret_0);

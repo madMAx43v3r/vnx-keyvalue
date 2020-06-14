@@ -13,6 +13,8 @@
 #include <vnx/keyvalue/Server_delete_value_return.hxx>
 #include <vnx/keyvalue/Server_get_value.hxx>
 #include <vnx/keyvalue/Server_get_value_return.hxx>
+#include <vnx/keyvalue/Server_get_value_locked.hxx>
+#include <vnx/keyvalue/Server_get_value_locked_return.hxx>
 #include <vnx/keyvalue/Server_get_values.hxx>
 #include <vnx/keyvalue/Server_get_values_return.hxx>
 #include <vnx/keyvalue/Server_store_value.hxx>
@@ -49,6 +51,8 @@ static void register_all_types() {
 	vnx::register_type_code(::vnx::keyvalue::Server_delete_value_return::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Server_get_value::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Server_get_value_return::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Server_get_value_locked::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Server_get_value_locked_return::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Server_get_values::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Server_get_values_return::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Server_store_value::static_create_type_code());
@@ -85,6 +89,8 @@ const vnx::TypeCode* const vnx_native_type_code_Server_delete_value = vnx::get_t
 const vnx::TypeCode* const vnx_native_type_code_Server_delete_value_return = vnx::get_type_code(vnx::Hash64(0x6b26b84842654d71ull));
 const vnx::TypeCode* const vnx_native_type_code_Server_get_value = vnx::get_type_code(vnx::Hash64(0xe2ff2d7a976abdb8ull));
 const vnx::TypeCode* const vnx_native_type_code_Server_get_value_return = vnx::get_type_code(vnx::Hash64(0x2eda7f8d6761272dull));
+const vnx::TypeCode* const vnx_native_type_code_Server_get_value_locked = vnx::get_type_code(vnx::Hash64(0x99472796c5804f63ull));
+const vnx::TypeCode* const vnx_native_type_code_Server_get_value_locked_return = vnx::get_type_code(vnx::Hash64(0xb78e8762c3bbfe99ull));
 const vnx::TypeCode* const vnx_native_type_code_Server_get_values = vnx::get_type_code(vnx::Hash64(0x29edfe1764d9e55ull));
 const vnx::TypeCode* const vnx_native_type_code_Server_get_values_return = vnx::get_type_code(vnx::Hash64(0x92bdf340933764bcull));
 const vnx::TypeCode* const vnx_native_type_code_Server_store_value = vnx::get_type_code(vnx::Hash64(0xf6bea692aee1018cull));
