@@ -18,6 +18,7 @@ class ServerBase : public ::vnx::Module {
 public:
 	
 	::vnx::TopicPtr update_topic;
+	::vnx::TopicPtr update_topic_keys;
 	std::string collection = "storage";
 	std::string storage_path;
 	int64_t max_block_size = 268435456;
@@ -26,7 +27,7 @@ public:
 	vnx::float32_t rewrite_threshold = 0.5;
 	vnx::float32_t idle_rewrite_threshold = 0.9;
 	int32_t rewrite_interval = 10;
-	int32_t idle_rewrite_interval = 100;
+	int32_t idle_rewrite_interval = 1000;
 	int32_t sync_chunk_count = 100;
 	int32_t max_queue_ms = 1000;
 	int32_t num_read_threads = 1;
