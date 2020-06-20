@@ -7,6 +7,7 @@ import vnx.TopicPtr;
 module Server {
 	
 	TopicPtr update_topic;
+	TopicPtr update_topic_keys;
 	
 	string collection = "storage";
 	

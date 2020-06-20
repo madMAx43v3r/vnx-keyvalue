@@ -237,9 +237,7 @@ void Server::main()
 	read_threads = std::make_shared<ThreadPool>(num_read_threads, 1000);
 	sync_threads = std::make_shared<ThreadPool>(-1);
 	
-	if(update_topic) {
-		update_thread = std::thread(&Server::update_loop, this);
-	}
+	update_thread = std::thread(&Server::update_loop, this);
 	
 	set_timer_millis(timeout_interval_ms, std::bind(&Server::check_timeouts, this));
 	set_timer_millis(rewrite_interval * 1000, std::bind(&Server::check_rewrite, this, false));
@@ -589,18 +587,16 @@ void Server::store_value(const Variant& key, const std::shared_ptr<const Value>&
 	store_value_internal(key, value, curr_version + 1);
 	curr_version++;
 	
-	if(update_topic) {
-		auto pair = KeyValuePair::create();
-		pair->collection = collection;
-		pair->version = curr_version;
-		pair->key = key;
-		pair->value = value;
-		{
-			std::lock_guard lock(update_mutex);
-			update_queue.push(pair);
-		}
-		update_condition.notify_one();
+	auto pair = KeyValuePair::create();
+	pair->collection = collection;
+	pair->version = curr_version;
+	pair->key = key;
+	pair->value = value;
+	{
+		std::lock_guard lock(update_mutex);
+		update_queue.push(pair);
 	}
+	update_condition.notify_one();
 }
 
 void Server::store_values(const std::vector<std::pair<Variant, std::shared_ptr<const Value>>>& values)
@@ -928,6 +924,11 @@ void Server::update_loop() const noexcept
 		}
 		value->previous = previous;
 		publish(value, update_topic);
+		{
+			auto copy = vnx::clone(value);
+			copy->value = 0;
+			publish(copy, update_topic_keys);
+		}
 		previous = value->version;
 	}
 }
