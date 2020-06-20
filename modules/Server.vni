@@ -25,7 +25,7 @@ module Server {
 	
 	int rewrite_interval = 10;					// [sec]
 	
-	int idle_rewrite_interval = 100;			// [sec]
+	int idle_rewrite_interval = 1000;			// [sec]
 	
 	int sync_chunk_count = 100;					// number of values
 	
@@ -58,6 +58,8 @@ module Server {
 	long sync_all(TopicPtr topic) const;
 	
 	long sync_all_keys(TopicPtr topic) const;
+	
+//	void cancel_sync_job(long job_id);
 	
 	void store_value(Variant key, Value* value);
 	
