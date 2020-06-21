@@ -923,11 +923,11 @@ void Server::update_loop() const noexcept
 			}
 		}
 		value->previous = previous;
-		publish(value, update_topic);
+		publish(value, update_topic, BLOCKING);
 		{
 			auto copy = vnx::clone(value);
 			copy->value = 0;
-			publish(copy, update_topic_keys);
+			publish(copy, update_topic_keys, BLOCKING);
 		}
 		previous = value->version;
 	}
