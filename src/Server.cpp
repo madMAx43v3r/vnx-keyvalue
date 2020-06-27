@@ -779,6 +779,8 @@ void Server::rewrite_func()
 		return;
 	}
 	
+	// TODO: rewrite in own thread
+	
 	if(!rewrite.is_run) {
 		rewrite.is_run = true;
 		rewrite.key_in.reset();
@@ -894,6 +896,7 @@ void Server::print_stats()
 			<< (1000 * write_counter) / stats_interval_ms << " writes/s, "
 			<< (1000 * num_bytes_written) / 1024 / stats_interval_ms << " KB/s write, "
 			<< lock_map.size() << " locks, " << num_lock_timeouts << " timeout, "
+			<< index_map.size() << " entries, "
 			<< sync_jobs.size() << " sync jobs" << (rewrite.block ? ", rewriting " : "")
 			<< (rewrite.block ? std::to_string(rewrite.block->index) : "");
 	
