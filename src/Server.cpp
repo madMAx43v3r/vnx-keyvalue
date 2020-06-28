@@ -429,10 +429,10 @@ std::shared_ptr<const Value> Server::read_value(const Variant& key) const
 	}
 	block->num_pending--;
 	read_counter++;
-	if(do_compress) {
-		auto deflated = std::dynamic_pointer_cast<const addons::DeflatedValue>(value);
-		if(deflated) {
-			value = deflated->decompress();
+	{
+		auto compressed = std::dynamic_pointer_cast<const addons::CompressedValue>(value);
+		if(compressed) {
+			value = compressed->decompress();
 		}
 	}
 	return value;
