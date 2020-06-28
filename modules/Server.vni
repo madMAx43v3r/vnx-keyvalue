@@ -9,6 +9,8 @@ module Server {
 	TopicPtr update_topic;
 	TopicPtr update_topic_keys;
 	
+	string domain = "keyvalue/";
+	
 	string collection = "storage";
 	
 	string storage_path;
