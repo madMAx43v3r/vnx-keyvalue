@@ -13,6 +13,8 @@
 #include <vnx/keyvalue/SyncInfo.hxx>
 #include <vnx/keyvalue/ServerClient.hxx>
 
+#include <vnx/addons/DeflatedValue.hxx>
+
 #include <sys/file.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -392,7 +394,7 @@ void Server::check_timeouts()
 	}
 }
 
-std::shared_ptr<Value> Server::read_value(const Variant& key) const
+std::shared_ptr<const Value> Server::read_value(const Variant& key) const
 {
 	value_index_t index;
 	std::shared_ptr<block_t> block;
@@ -418,7 +420,7 @@ std::shared_ptr<Value> Server::read_value(const Variant& key) const
 	}
 	FileSectionInputStream stream(block->value_file.get_handle(), index.block_offset, index.num_bytes);
 	TypeInput in(&stream);
-	std::shared_ptr<Value> value;
+	std::shared_ptr<const Value> value;
 	try {
 		value = vnx::read(in);
 		num_bytes_read += index.num_bytes;
@@ -427,11 +429,17 @@ std::shared_ptr<Value> Server::read_value(const Variant& key) const
 	}
 	block->num_pending--;
 	read_counter++;
+	if(do_compress) {
+		auto deflated = std::dynamic_pointer_cast<const addons::DeflatedValue>(value);
+		if(deflated) {
+			value = deflated->decompress();
+		}
+	}
 	return value;
 }
 
 void Server::read_job(const Variant& key, const request_id_t& req_id) const {
-	std::shared_ptr<Value> value;
+	std::shared_ptr<const Value> value;
 	try {
 		value = read_value(key);
 	} catch(...) {
@@ -441,7 +449,7 @@ void Server::read_job(const Variant& key, const request_id_t& req_id) const {
 }
 
 void Server::read_job_locked(const Variant& key, const request_id_t& req_id) const {
-	std::shared_ptr<Value> value;
+	std::shared_ptr<const Value> value;
 	try {
 		value = read_value(key);
 	} catch(...) {
@@ -584,7 +592,8 @@ void Server::store_value_internal(const Variant& key, const std::shared_ptr<cons
 void Server::store_value(const Variant& key, const std::shared_ptr<const Value>& value)
 {
 	release_lock(key);
-	store_value_internal(key, value, curr_version + 1);
+	
+	store_value_internal(key, do_compress ? addons::DeflatedValue::compress(value) : value, curr_version + 1);
 	curr_version++;
 	
 	auto pair = KeyValuePair::create();
@@ -602,7 +611,11 @@ void Server::store_value(const Variant& key, const std::shared_ptr<const Value>&
 void Server::store_values(const std::vector<std::pair<Variant, std::shared_ptr<const Value>>>& values)
 {
 	for(const auto& entry : values) {
-		store_value(entry.first, entry.second);
+		try {
+			store_value(entry.first, entry.second);
+		} catch(const std::exception& ex) {
+			log(WARN).out << "store_values(): " << ex.what();
+		}
 	}
 }
 

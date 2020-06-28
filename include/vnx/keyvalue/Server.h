@@ -100,7 +100,7 @@ private:
 	
 	void check_timeouts();
 	
-	std::shared_ptr<Value> read_value(const Variant& key) const;
+	std::shared_ptr<const Value> read_value(const Variant& key) const;
 	
 	void read_job(const Variant& key, const request_id_t& req_id) const;
 	

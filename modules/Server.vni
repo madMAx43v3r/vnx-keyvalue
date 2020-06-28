@@ -37,6 +37,8 @@ module Server {
 	
 	int stats_interval_ms = 3000;				// 0 = disable stats [ms]
 	
+	bool do_compress = false;					// if to enable deflate compression
+	
 	bool ignore_errors = false;					// if to continue loading even if there is errors
 	
 	

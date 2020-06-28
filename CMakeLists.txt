@@ -14,7 +14,7 @@ add_library(vnx_keyvalue SHARED
 )
 
 target_include_directories(vnx_keyvalue PUBLIC include generated/include)
-target_link_libraries(vnx_keyvalue vnx_base)
+target_link_libraries(vnx_keyvalue vnx_addons vnx_base)
 
 add_executable(vnx_keyvalue_server src/vnx_keyvalue_server.cpp)
 target_link_libraries(vnx_keyvalue_server vnx_keyvalue)
