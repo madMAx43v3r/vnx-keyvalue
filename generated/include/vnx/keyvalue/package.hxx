@@ -14,7 +14,6 @@ namespace keyvalue {
 
 
 class CloseEntry;
-class ClusterBase;
 class Collection;
 class IndexEntry;
 class KeyValuePair;
@@ -41,13 +40,10 @@ class Server_sync_range;
 class Server_sync_range_return;
 class Server_unlock;
 class Server_unlock_return;
-class ServerInfo;
 class SyncInfo;
 class TypeEntry;
-class shard_t;
 
 extern const vnx::TypeCode* const vnx_native_type_code_CloseEntry; ///< \private
-extern const vnx::TypeCode* const vnx_native_type_code_ClusterBase; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_Collection; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_IndexEntry; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_KeyValuePair; ///< \private
@@ -74,10 +70,8 @@ extern const vnx::TypeCode* const vnx_native_type_code_Server_sync_range; ///< \
 extern const vnx::TypeCode* const vnx_native_type_code_Server_sync_range_return; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_Server_unlock; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_Server_unlock_return; ///< \private
-extern const vnx::TypeCode* const vnx_native_type_code_ServerInfo; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_SyncInfo; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_TypeEntry; ///< \private
-extern const vnx::TypeCode* const vnx_native_type_code_shard_t; ///< \private
 
 } // namespace vnx
 } // namespace keyvalue
@@ -86,7 +80,6 @@ extern const vnx::TypeCode* const vnx_native_type_code_shard_t; ///< \private
 namespace vnx {
 
 void read(TypeInput& in, ::vnx::keyvalue::CloseEntry& value, const TypeCode* type_code, const uint16_t* code); ///< \private
-void read(TypeInput& in, ::vnx::keyvalue::ClusterBase& value, const TypeCode* type_code, const uint16_t* code); ///< \private
 void read(TypeInput& in, ::vnx::keyvalue::Collection& value, const TypeCode* type_code, const uint16_t* code); ///< \private
 void read(TypeInput& in, ::vnx::keyvalue::IndexEntry& value, const TypeCode* type_code, const uint16_t* code); ///< \private
 void read(TypeInput& in, ::vnx::keyvalue::KeyValuePair& value, const TypeCode* type_code, const uint16_t* code); ///< \private
@@ -113,13 +106,10 @@ void read(TypeInput& in, ::vnx::keyvalue::Server_sync_range& value, const TypeCo
 void read(TypeInput& in, ::vnx::keyvalue::Server_sync_range_return& value, const TypeCode* type_code, const uint16_t* code); ///< \private
 void read(TypeInput& in, ::vnx::keyvalue::Server_unlock& value, const TypeCode* type_code, const uint16_t* code); ///< \private
 void read(TypeInput& in, ::vnx::keyvalue::Server_unlock_return& value, const TypeCode* type_code, const uint16_t* code); ///< \private
-void read(TypeInput& in, ::vnx::keyvalue::ServerInfo& value, const TypeCode* type_code, const uint16_t* code); ///< \private
 void read(TypeInput& in, ::vnx::keyvalue::SyncInfo& value, const TypeCode* type_code, const uint16_t* code); ///< \private
 void read(TypeInput& in, ::vnx::keyvalue::TypeEntry& value, const TypeCode* type_code, const uint16_t* code); ///< \private
-void read(TypeInput& in, ::vnx::keyvalue::shard_t& value, const TypeCode* type_code, const uint16_t* code); ///< \private
 
 void write(TypeOutput& out, const ::vnx::keyvalue::CloseEntry& value, const TypeCode* type_code, const uint16_t* code); ///< \private
-void write(TypeOutput& out, const ::vnx::keyvalue::ClusterBase& value, const TypeCode* type_code, const uint16_t* code); ///< \private
 void write(TypeOutput& out, const ::vnx::keyvalue::Collection& value, const TypeCode* type_code, const uint16_t* code); ///< \private
 void write(TypeOutput& out, const ::vnx::keyvalue::IndexEntry& value, const TypeCode* type_code, const uint16_t* code); ///< \private
 void write(TypeOutput& out, const ::vnx::keyvalue::KeyValuePair& value, const TypeCode* type_code, const uint16_t* code); ///< \private
@@ -146,13 +136,10 @@ void write(TypeOutput& out, const ::vnx::keyvalue::Server_sync_range& value, con
 void write(TypeOutput& out, const ::vnx::keyvalue::Server_sync_range_return& value, const TypeCode* type_code, const uint16_t* code); ///< \private
 void write(TypeOutput& out, const ::vnx::keyvalue::Server_unlock& value, const TypeCode* type_code, const uint16_t* code); ///< \private
 void write(TypeOutput& out, const ::vnx::keyvalue::Server_unlock_return& value, const TypeCode* type_code, const uint16_t* code); ///< \private
-void write(TypeOutput& out, const ::vnx::keyvalue::ServerInfo& value, const TypeCode* type_code, const uint16_t* code); ///< \private
 void write(TypeOutput& out, const ::vnx::keyvalue::SyncInfo& value, const TypeCode* type_code, const uint16_t* code); ///< \private
 void write(TypeOutput& out, const ::vnx::keyvalue::TypeEntry& value, const TypeCode* type_code, const uint16_t* code); ///< \private
-void write(TypeOutput& out, const ::vnx::keyvalue::shard_t& value, const TypeCode* type_code, const uint16_t* code); ///< \private
 
 void read(std::istream& in, ::vnx::keyvalue::CloseEntry& value); ///< \private
-void read(std::istream& in, ::vnx::keyvalue::ClusterBase& value); ///< \private
 void read(std::istream& in, ::vnx::keyvalue::Collection& value); ///< \private
 void read(std::istream& in, ::vnx::keyvalue::IndexEntry& value); ///< \private
 void read(std::istream& in, ::vnx::keyvalue::KeyValuePair& value); ///< \private
@@ -179,13 +166,10 @@ void read(std::istream& in, ::vnx::keyvalue::Server_sync_range& value); ///< \pr
 void read(std::istream& in, ::vnx::keyvalue::Server_sync_range_return& value); ///< \private
 void read(std::istream& in, ::vnx::keyvalue::Server_unlock& value); ///< \private
 void read(std::istream& in, ::vnx::keyvalue::Server_unlock_return& value); ///< \private
-void read(std::istream& in, ::vnx::keyvalue::ServerInfo& value); ///< \private
 void read(std::istream& in, ::vnx::keyvalue::SyncInfo& value); ///< \private
 void read(std::istream& in, ::vnx::keyvalue::TypeEntry& value); ///< \private
-void read(std::istream& in, ::vnx::keyvalue::shard_t& value); ///< \private
 
 void write(std::ostream& out, const ::vnx::keyvalue::CloseEntry& value); ///< \private
-void write(std::ostream& out, const ::vnx::keyvalue::ClusterBase& value); ///< \private
 void write(std::ostream& out, const ::vnx::keyvalue::Collection& value); ///< \private
 void write(std::ostream& out, const ::vnx::keyvalue::IndexEntry& value); ///< \private
 void write(std::ostream& out, const ::vnx::keyvalue::KeyValuePair& value); ///< \private
@@ -212,13 +196,10 @@ void write(std::ostream& out, const ::vnx::keyvalue::Server_sync_range& value); 
 void write(std::ostream& out, const ::vnx::keyvalue::Server_sync_range_return& value); ///< \private
 void write(std::ostream& out, const ::vnx::keyvalue::Server_unlock& value); ///< \private
 void write(std::ostream& out, const ::vnx::keyvalue::Server_unlock_return& value); ///< \private
-void write(std::ostream& out, const ::vnx::keyvalue::ServerInfo& value); ///< \private
 void write(std::ostream& out, const ::vnx::keyvalue::SyncInfo& value); ///< \private
 void write(std::ostream& out, const ::vnx::keyvalue::TypeEntry& value); ///< \private
-void write(std::ostream& out, const ::vnx::keyvalue::shard_t& value); ///< \private
 
 void accept(Visitor& visitor, const ::vnx::keyvalue::CloseEntry& value); ///< \private
-void accept(Visitor& visitor, const ::vnx::keyvalue::ClusterBase& value); ///< \private
 void accept(Visitor& visitor, const ::vnx::keyvalue::Collection& value); ///< \private
 void accept(Visitor& visitor, const ::vnx::keyvalue::IndexEntry& value); ///< \private
 void accept(Visitor& visitor, const ::vnx::keyvalue::KeyValuePair& value); ///< \private
@@ -245,10 +226,8 @@ void accept(Visitor& visitor, const ::vnx::keyvalue::Server_sync_range& value); 
 void accept(Visitor& visitor, const ::vnx::keyvalue::Server_sync_range_return& value); ///< \private
 void accept(Visitor& visitor, const ::vnx::keyvalue::Server_unlock& value); ///< \private
 void accept(Visitor& visitor, const ::vnx::keyvalue::Server_unlock_return& value); ///< \private
-void accept(Visitor& visitor, const ::vnx::keyvalue::ServerInfo& value); ///< \private
 void accept(Visitor& visitor, const ::vnx::keyvalue::SyncInfo& value); ///< \private
 void accept(Visitor& visitor, const ::vnx::keyvalue::TypeEntry& value); ///< \private
-void accept(Visitor& visitor, const ::vnx::keyvalue::shard_t& value); ///< \private
 
 /// \private
 template<>
@@ -266,29 +245,6 @@ struct type<::vnx::keyvalue::CloseEntry> {
 		vnx::write(out, value);
 	}
 	void accept(Visitor& visitor, const ::vnx::keyvalue::CloseEntry& value) {
-		vnx::accept(visitor, value);
-	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
-		code.push_back(CODE_ANY);
-	}
-};
-
-/// \private
-template<>
-struct type<::vnx::keyvalue::ClusterBase> {
-	void read(TypeInput& in, ::vnx::keyvalue::ClusterBase& value, const TypeCode* type_code, const uint16_t* code) {
-		vnx::read(in, value, type_code, code);
-	}
-	void write(TypeOutput& out, const ::vnx::keyvalue::ClusterBase& value, const TypeCode* type_code, const uint16_t* code) {
-		vnx::write(out, value, type_code, code);
-	}
-	void read(std::istream& in, ::vnx::keyvalue::ClusterBase& value) {
-		vnx::read(in, value);
-	}
-	void write(std::ostream& out, const ::vnx::keyvalue::ClusterBase& value) {
-		vnx::write(out, value);
-	}
-	void accept(Visitor& visitor, const ::vnx::keyvalue::ClusterBase& value) {
 		vnx::accept(visitor, value);
 	}
 	void create_dynamic_code(std::vector<uint16_t>& code) {
@@ -896,29 +852,6 @@ struct type<::vnx::keyvalue::Server_unlock_return> {
 
 /// \private
 template<>
-struct type<::vnx::keyvalue::ServerInfo> {
-	void read(TypeInput& in, ::vnx::keyvalue::ServerInfo& value, const TypeCode* type_code, const uint16_t* code) {
-		vnx::read(in, value, type_code, code);
-	}
-	void write(TypeOutput& out, const ::vnx::keyvalue::ServerInfo& value, const TypeCode* type_code, const uint16_t* code) {
-		vnx::write(out, value, type_code, code);
-	}
-	void read(std::istream& in, ::vnx::keyvalue::ServerInfo& value) {
-		vnx::read(in, value);
-	}
-	void write(std::ostream& out, const ::vnx::keyvalue::ServerInfo& value) {
-		vnx::write(out, value);
-	}
-	void accept(Visitor& visitor, const ::vnx::keyvalue::ServerInfo& value) {
-		vnx::accept(visitor, value);
-	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
-		code.push_back(CODE_ANY);
-	}
-};
-
-/// \private
-template<>
 struct type<::vnx::keyvalue::SyncInfo> {
 	void read(TypeInput& in, ::vnx::keyvalue::SyncInfo& value, const TypeCode* type_code, const uint16_t* code) {
 		vnx::read(in, value, type_code, code);
@@ -956,29 +889,6 @@ struct type<::vnx::keyvalue::TypeEntry> {
 		vnx::write(out, value);
 	}
 	void accept(Visitor& visitor, const ::vnx::keyvalue::TypeEntry& value) {
-		vnx::accept(visitor, value);
-	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
-		code.push_back(CODE_ANY);
-	}
-};
-
-/// \private
-template<>
-struct type<::vnx::keyvalue::shard_t> {
-	void read(TypeInput& in, ::vnx::keyvalue::shard_t& value, const TypeCode* type_code, const uint16_t* code) {
-		vnx::read(in, value, type_code, code);
-	}
-	void write(TypeOutput& out, const ::vnx::keyvalue::shard_t& value, const TypeCode* type_code, const uint16_t* code) {
-		vnx::write(out, value, type_code, code);
-	}
-	void read(std::istream& in, ::vnx::keyvalue::shard_t& value) {
-		vnx::read(in, value);
-	}
-	void write(std::ostream& out, const ::vnx::keyvalue::shard_t& value) {
-		vnx::write(out, value);
-	}
-	void accept(Visitor& visitor, const ::vnx::keyvalue::shard_t& value) {
 		vnx::accept(visitor, value);
 	}
 	void create_dynamic_code(std::vector<uint16_t>& code) {

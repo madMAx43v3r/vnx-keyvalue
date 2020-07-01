@@ -19,6 +19,7 @@ public:
 	
 	::vnx::TopicPtr update_topic;
 	::vnx::TopicPtr update_topic_keys;
+	std::string domain = "keyvalue/";
 	std::string collection = "storage";
 	std::string storage_path;
 	int64_t max_block_size = 268435456;
