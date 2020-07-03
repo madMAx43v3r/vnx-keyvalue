@@ -29,6 +29,7 @@
 #include <vnx/keyvalue/Server_unlock.hxx>
 #include <vnx/keyvalue/Server_unlock_return.hxx>
 #include <vnx/keyvalue/SyncInfo.hxx>
+#include <vnx/keyvalue/SyncModuleBase.hxx>
 #include <vnx/keyvalue/TypeEntry.hxx>
 
 #include <vnx/vnx.h>
@@ -68,6 +69,7 @@ static void register_all_types() {
 	vnx::register_type_code(::vnx::keyvalue::Server_unlock::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Server_unlock_return::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::SyncInfo::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::SyncModuleBase::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::TypeEntry::static_create_type_code());
 }
 
@@ -105,6 +107,7 @@ const vnx::TypeCode* const vnx_native_type_code_Server_sync_range_return = vnx::
 const vnx::TypeCode* const vnx_native_type_code_Server_unlock = vnx::get_type_code(vnx::Hash64(0xfd9d27aa50baa773ull));
 const vnx::TypeCode* const vnx_native_type_code_Server_unlock_return = vnx::get_type_code(vnx::Hash64(0x81abb06c1b73263dull));
 const vnx::TypeCode* const vnx_native_type_code_SyncInfo = vnx::get_type_code(vnx::Hash64(0x4f9820ae95813502ull));
+const vnx::TypeCode* const vnx_native_type_code_SyncModuleBase = vnx::get_type_code(vnx::Hash64(0x508da303057fe58cull));
 const vnx::TypeCode* const vnx_native_type_code_TypeEntry = vnx::get_type_code(vnx::Hash64(0x5d3011caa7dadfd3ull));
 
 } // namespace vnx
