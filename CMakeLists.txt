@@ -11,6 +11,7 @@ file(GLOB GENERATED_SOURCE_FILES generated/src/*.cpp)
 add_library(vnx_keyvalue SHARED
 	${GENERATED_SOURCE_FILES}
 	src/Server.cpp
+	src/SyncModule.cpp
 )
 
 target_include_directories(vnx_keyvalue PUBLIC include generated/include)
@@ -21,6 +22,9 @@ target_link_libraries(vnx_keyvalue_server vnx_keyvalue)
 
 add_executable(vnx_keyvalue_get src/vnx_keyvalue_get.cpp)
 target_link_libraries(vnx_keyvalue_get vnx_keyvalue)
+
+add_executable(vnx_keyvalue_sync src/vnx_keyvalue_sync.cpp)
+target_link_libraries(vnx_keyvalue_sync vnx_keyvalue)
 
 add_executable(test_server_get test/test_server_get.cpp)
 target_link_libraries(test_server_get vnx_keyvalue)

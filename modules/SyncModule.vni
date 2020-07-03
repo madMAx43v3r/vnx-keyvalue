@@ -1,0 +1,19 @@
+package vnx.keyvalue;
+
+module SyncModule {
+	
+	vnx.TopicPtr input_sync;
+	
+	vnx.Hash64 src_addr;
+	vnx.Hash64 dst_addr;
+	
+	int buffer_size = 100;
+	
+	int stats_interval_ms = 3000;				// 0 = disable stats [ms]
+	
+	
+	void handle(KeyValuePair sample);
+	
+	void handle(SyncInfo sample);
+	
+}
