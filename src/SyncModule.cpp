@@ -16,7 +16,7 @@ SyncModule::SyncModule(const std::string& _vnx_name)
 {
 	src_addr = vnx::Hash64::rand();
 	dst_addr = vnx::Hash64::rand();
-	input_sync = vnx_name + ".input_" + std::to_string(::rand());
+	input_sync = vnx_name + ".input_" + std::to_string(vnx::rand64());
 }
 
 void SyncModule::main()
