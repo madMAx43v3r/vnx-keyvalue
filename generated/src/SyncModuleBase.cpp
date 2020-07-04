@@ -18,11 +18,12 @@ namespace keyvalue {
 
 
 const vnx::Hash64 SyncModuleBase::VNX_TYPE_HASH(0x508da303057fe58cull);
-const vnx::Hash64 SyncModuleBase::VNX_CODE_HASH(0x325072a656553b37ull);
+const vnx::Hash64 SyncModuleBase::VNX_CODE_HASH(0x16148dd4b4c87a0dull);
 
 SyncModuleBase::SyncModuleBase(const std::string& _vnx_name)
 	:	Module::Module(_vnx_name)
 {
+	vnx::read_config(vnx_name + ".add_only", add_only);
 	vnx::read_config(vnx_name + ".buffer_size", buffer_size);
 	vnx::read_config(vnx_name + ".dst_addr", dst_addr);
 	vnx::read_config(vnx_name + ".input_sync", input_sync);
@@ -49,6 +50,7 @@ void SyncModuleBase::accept(vnx::Visitor& _visitor) const {
 	_visitor.type_field(_type_code->fields[2], 2); vnx::accept(_visitor, dst_addr);
 	_visitor.type_field(_type_code->fields[3], 3); vnx::accept(_visitor, buffer_size);
 	_visitor.type_field(_type_code->fields[4], 4); vnx::accept(_visitor, stats_interval_ms);
+	_visitor.type_field(_type_code->fields[5], 5); vnx::accept(_visitor, add_only);
 	_visitor.type_end(*_type_code);
 }
 
@@ -59,6 +61,7 @@ void SyncModuleBase::write(std::ostream& _out) const {
 	_out << ", \"dst_addr\": "; vnx::write(_out, dst_addr);
 	_out << ", \"buffer_size\": "; vnx::write(_out, buffer_size);
 	_out << ", \"stats_interval_ms\": "; vnx::write(_out, stats_interval_ms);
+	_out << ", \"add_only\": "; vnx::write(_out, add_only);
 	_out << "}";
 }
 
@@ -66,7 +69,9 @@ void SyncModuleBase::read(std::istream& _in) {
 	std::map<std::string, std::string> _object;
 	vnx::read_object(_in, _object);
 	for(const auto& _entry : _object) {
-		if(_entry.first == "buffer_size") {
+		if(_entry.first == "add_only") {
+			vnx::from_string(_entry.second, add_only);
+		} else if(_entry.first == "buffer_size") {
 			vnx::from_string(_entry.second, buffer_size);
 		} else if(_entry.first == "dst_addr") {
 			vnx::from_string(_entry.second, dst_addr);
@@ -88,12 +93,15 @@ vnx::Object SyncModuleBase::to_object() const {
 	_object["dst_addr"] = dst_addr;
 	_object["buffer_size"] = buffer_size;
 	_object["stats_interval_ms"] = stats_interval_ms;
+	_object["add_only"] = add_only;
 	return _object;
 }
 
 void SyncModuleBase::from_object(const vnx::Object& _object) {
 	for(const auto& _entry : _object.field) {
-		if(_entry.first == "buffer_size") {
+		if(_entry.first == "add_only") {
+			_entry.second.to(add_only);
+		} else if(_entry.first == "buffer_size") {
 			_entry.second.to(buffer_size);
 		} else if(_entry.first == "dst_addr") {
 			_entry.second.to(dst_addr);
@@ -131,10 +139,10 @@ std::shared_ptr<vnx::TypeCode> SyncModuleBase::static_create_type_code() {
 	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>();
 	type_code->name = "vnx.keyvalue.SyncModule";
 	type_code->type_hash = vnx::Hash64(0x508da303057fe58cull);
-	type_code->code_hash = vnx::Hash64(0x325072a656553b37ull);
+	type_code->code_hash = vnx::Hash64(0x16148dd4b4c87a0dull);
 	type_code->is_native = true;
 	type_code->methods.resize(0);
-	type_code->fields.resize(5);
+	type_code->fields.resize(6);
 	{
 		vnx::TypeField& field = type_code->fields[0];
 		field.is_extended = true;
@@ -164,6 +172,12 @@ std::shared_ptr<vnx::TypeCode> SyncModuleBase::static_create_type_code() {
 		field.name = "stats_interval_ms";
 		field.value = vnx::to_string(3000);
 		field.code = {7};
+	}
+	{
+		vnx::TypeField& field = type_code->fields[5];
+		field.name = "add_only";
+		field.value = vnx::to_string(false);
+		field.code = {1};
 	}
 	type_code->build();
 	return type_code;
@@ -238,6 +252,12 @@ void read(TypeInput& in, ::vnx::keyvalue::SyncModuleBase& value, const TypeCode*
 				vnx::read_value(_buf + _field->offset, value.stats_interval_ms, _field->code.data());
 			}
 		}
+		{
+			const vnx::TypeField* const _field = type_code->field_map[5];
+			if(_field) {
+				vnx::read_value(_buf + _field->offset, value.add_only, _field->code.data());
+			}
+		}
 	}
 	for(const vnx::TypeField* _field : type_code->ext_fields) {
 		switch(_field->native_index) {
@@ -258,9 +278,10 @@ void write(TypeOutput& out, const ::vnx::keyvalue::SyncModuleBase& value, const 
 	if(code && code[0] == CODE_STRUCT) {
 		type_code = type_code->depends[code[1]];
 	}
-	char* const _buf = out.write(8);
+	char* const _buf = out.write(9);
 	vnx::write_value(_buf + 0, value.buffer_size);
 	vnx::write_value(_buf + 4, value.stats_interval_ms);
+	vnx::write_value(_buf + 8, value.add_only);
 	vnx::write(out, value.input_sync, type_code, type_code->fields[0].code.data());
 	vnx::write(out, value.src_addr, type_code, type_code->fields[1].code.data());
 	vnx::write(out, value.dst_addr, type_code, type_code->fields[2].code.data());

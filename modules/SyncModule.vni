@@ -11,6 +11,8 @@ module SyncModule {
 	
 	int stats_interval_ms = 3000;				// 0 = disable stats [ms]
 	
+	bool add_only = false;						// if to ignore null values
+	
 	
 	void handle(KeyValuePair sample);
 	

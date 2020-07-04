@@ -23,6 +23,7 @@ public:
 	::vnx::Hash64 dst_addr;
 	int32_t buffer_size = 100;
 	int32_t stats_interval_ms = 3000;
+	vnx::bool_t add_only = false;
 	
 	typedef ::vnx::Module Super;
 	

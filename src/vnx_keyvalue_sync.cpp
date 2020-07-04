@@ -19,10 +19,12 @@ int main(int argc, char** argv)
 	options["t"] = "to";
 	options["n"] = "src";
 	options["m"] = "dst";
+	options["a"] = "add";
 	options["from"] = "src server url";
 	options["to"] = "dst server url";
 	options["src"] = "src module name";
 	options["dst"] = "dst module name";
+	options["add"] = "add only (ignore null values)";
 	
 	vnx::init("vnx_keyvalue_sync", argc, argv, options);
 	
@@ -36,6 +38,7 @@ int main(int argc, char** argv)
 	vnx::read_config("dst", dst);
 	
 	vnx::Handle<vnx::keyvalue::SyncModule> module = new vnx::keyvalue::SyncModule("SyncModule");
+	vnx::read_config("add", module->add_only);
 	
 	{
 		vnx::Handle<vnx::Proxy> proxy = new vnx::Proxy("SrcProxy", vnx::Endpoint::from_url(from));

@@ -37,8 +37,9 @@ void SyncModule::main()
 
 void SyncModule::handle(std::shared_ptr<const KeyValuePair> value)
 {
-	buffer.emplace_back(value->key, value->value);
-	
+	if(!add_only || value->value) {
+		buffer.emplace_back(value->key, value->value);
+	}
 	if(buffer.size() >= buffer_size) {
 		flush();
 	}
