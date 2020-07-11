@@ -1,0 +1,7 @@
+package vnx.keyvalue;
+
+module Cache implements Storage {
+	
+	// TODO
+	
+}

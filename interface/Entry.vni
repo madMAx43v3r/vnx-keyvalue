@@ -1,0 +1,11 @@
+package vnx.keyvalue;
+
+class Entry {
+	
+	ulong version;
+	
+	vnx.Variant key;
+	
+	vnx.Value* value;
+	
+}

@@ -1,0 +1,9 @@
+package vnx.keyvalue;
+
+class SyncUpdate extends Entry {
+	
+	string collection;
+	
+	ulong previous;				// previous version published
+	
+}

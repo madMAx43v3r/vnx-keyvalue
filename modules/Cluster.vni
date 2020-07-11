@@ -1,0 +1,7 @@
+package vnx.keyvalue;
+
+module Cluster implements Storage {
+	
+	// TODO
+	
+}

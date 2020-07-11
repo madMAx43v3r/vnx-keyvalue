@@ -9,8 +9,8 @@
 #include <vnx/keyvalue/IndexEntry.hxx>
 #include <vnx/keyvalue/TypeEntry.hxx>
 #include <vnx/keyvalue/CloseEntry.hxx>
-#include <vnx/keyvalue/KeyValuePair.hxx>
 #include <vnx/keyvalue/SyncInfo.hxx>
+#include <vnx/keyvalue/SyncUpdate.hxx>
 #include <vnx/keyvalue/ServerClient.hxx>
 
 #include <vnx/addons/DeflatedValue.hxx>
@@ -19,9 +19,9 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#define MAX_BLOCK_SIZE int64_t(0xFFFFFFFF)
-#define MAX_KEY_SIZE int64_t(0xFFFFFFFF)
-#define MAX_VALUE_SIZE int64_t(0xFFFFFFFF)
+#define MAX_BLOCK_SIZE int64_t(UINT32_MAX)
+#define MAX_KEY_SIZE int64_t(UINT32_MAX)
+#define MAX_VALUE_SIZE int64_t(UINT32_MAX)
 
 
 namespace vnx {
@@ -326,7 +326,7 @@ void Server::get_values_async(const std::vector<Variant>& keys, const request_id
 	auto job = std::make_shared<multi_read_job_t>();
 	job->req_id = req_id;
 	job->num_left = keys.size();
-	job->values.resize(keys.size());
+	job->entries.resize(keys.size());
 	
 	for(size_t i = 0; i < keys.size(); ++i)
 	{
@@ -337,6 +337,27 @@ void Server::get_values_async(const std::vector<Variant>& keys, const request_id
 		} else {
 			read_threads->add_task(std::bind(&Server::multi_read_job, this, keys[i], i, job));
 		}
+	}
+}
+
+void Server::get_version_key_async(const uint64_t& version, const vnx::request_id_t& req_id) const
+{
+	read_threads->add_task(std::bind(&Server::read_version_key_job, this, version, req_id));
+}
+
+void Server::get_version_keys_async(const std::vector<uint64_t>& versions, const vnx::request_id_t& req_id) const
+{
+	if(versions.empty()) {
+		get_version_keys_async_return(req_id, {});
+		return;
+	}
+	auto job = std::make_shared<multi_read_version_key_job_t>();
+	job->req_id = req_id;
+	job->num_left = versions.size();
+	job->result.resize(versions.size());
+	
+	for(size_t i = 0; i < versions.size(); ++i) {
+		read_threads->add_task(std::bind(&Server::multi_read_version_key_job, this, versions[i], i, job));
 	}
 }
 
@@ -395,7 +416,7 @@ void Server::check_timeouts()
 	}
 }
 
-std::shared_ptr<const Value> Server::read_value(const Variant& key) const
+std::shared_ptr<const Entry> Server::read_value(const Variant& key) const
 {
 	value_index_t index;
 	std::shared_ptr<block_t> block;
@@ -421,9 +442,12 @@ std::shared_ptr<const Value> Server::read_value(const Variant& key) const
 	}
 	FileSectionInputStream stream(block->value_file.get_handle(), index.block_offset, index.num_bytes);
 	TypeInput in(&stream);
-	std::shared_ptr<const Value> value;
+	
+	auto entry = Entry::create();
+	entry->key = key;
+	entry->version = index.key_iter->second;
 	try {
-		value = vnx::read(in);
+		entry->value = vnx::read(in);
 		num_bytes_read += index.num_bytes;
 	} catch(...) {
 		// ignore
@@ -431,56 +455,87 @@ std::shared_ptr<const Value> Server::read_value(const Variant& key) const
 	block->num_pending--;
 	read_counter++;
 	{
-		auto compressed = std::dynamic_pointer_cast<const addons::CompressedValue>(value);
+		auto compressed = std::dynamic_pointer_cast<const addons::CompressedValue>(entry->value);
 		if(compressed) {
-			value = compressed->decompress();
+			entry->value = compressed->decompress();
 		}
 	}
-	return value;
+	return entry;
 }
 
-void Server::read_job(const Variant& key, const request_id_t& req_id) const {
-	std::shared_ptr<const Value> value;
+void Server::read_job(const Variant& key, const request_id_t& req_id) const
+{
+	std::shared_ptr<const Entry> entry;
 	try {
-		value = read_value(key);
+		entry = read_value(key);
 	} catch(...) {
 		// ignore
 	}
-	get_value_async_return(req_id, value);
+	get_value_async_return(req_id, entry);
 }
 
-void Server::read_job_locked(const Variant& key, const request_id_t& req_id) const {
-	std::shared_ptr<const Value> value;
+void Server::read_job_locked(const Variant& key, const request_id_t& req_id) const
+{
+	std::shared_ptr<const Entry> entry;
 	try {
-		value = read_value(key);
+		entry = read_value(key);
 	} catch(...) {
 		// ignore
 	}
-	get_value_locked_async_return(req_id, std::make_pair(key, value));
+	get_value_locked_async_return(req_id, entry);
 }
 
-void Server::multi_read_job(const Variant& key, size_t index, std::shared_ptr<multi_read_job_t> job) const {
+void Server::multi_read_job(const Variant& key, size_t index, std::shared_ptr<multi_read_job_t> job) const
+{
 	try {
-		job->values[index] = read_value(key);
+		job->entries[index] = read_value(key);
 	} catch(...) {
 		// ignore
 	}
 	if(job->num_left-- == 1) {
-		get_values_async_return(job->req_id, job->values);
+		get_values_async_return(job->req_id, job->entries);
+	}
+}
+
+void Server::read_version_key_job(uint64_t version, const request_id_t& req_id) const
+{
+	std::shared_lock lock(index_mutex);
+	
+	const auto version_index = get_version_index(version);
+	get_version_key_async_return(req_id, version_index.key);
+}
+
+void Server::multi_read_version_key_job(uint64_t version, size_t index, std::shared_ptr<multi_read_version_key_job_t> job) const
+{
+	std::shared_lock lock(index_mutex);
+	
+	try {
+		const auto version_index = get_version_index(version);
+		job->result[index] = std::make_pair(version, version_index.key);
+	} catch(...) {
+		// ignore
+	}
+	if(job->num_left-- == 1) {
+		get_version_keys_async_return(job->req_id, job->result);
 	}
 }
 
 int64_t Server::sync_range_ex(TopicPtr topic, uint64_t begin, uint64_t end, bool key_only) const
 {
-	const auto job_id = next_sync_id++;
+	auto job = std::make_shared<sync_job_t>();
+	job->id = next_sync_id++;
+	job->topic = topic;
+	job->begin = begin;
+	job->end = end;
+	job->key_only = key_only;
 	{
 		std::lock_guard lock(sync_mutex);
-		sync_jobs.insert(job_id);
+		sync_jobs[job->id] = job;
 	}
-	sync_threads->add_task(std::bind(&Server::sync_loop, this, job_id, topic, begin, end, key_only));
+	sync_threads->add_task(std::bind(&Server::sync_loop, this, job));
 	
-	log(INFO).out << "Started sync job " << job_id << " ...";
-	return job_id;
+	log(INFO).out << "Started sync job " << job->id << " ...";
+	return job->id;
 }
 
 int64_t Server::sync_from(const TopicPtr& topic, const uint64_t& version) const
@@ -501,6 +556,16 @@ int64_t Server::sync_all(const TopicPtr& topic) const
 int64_t Server::sync_all_keys(const TopicPtr& topic) const
 {
 	return sync_range_ex(topic, 0, 0, true);
+}
+
+void Server::cancel_sync_job(const int64_t& job_id)
+{
+	std::lock_guard lock(sync_mutex);
+	
+	const auto iter = sync_jobs.find(job_id);
+	if(iter != sync_jobs.end()) {
+		iter->second->do_run = false;
+	}
 }
 
 void Server::store_value_internal(const Variant& key, const std::shared_ptr<const Value>& value, uint64_t version)
@@ -594,10 +659,13 @@ void Server::store_value(const Variant& key, const std::shared_ptr<const Value>&
 {
 	release_lock(key);
 	
+	if(key.is_null()) {
+		return;
+	}
 	store_value_internal(key, do_compress ? addons::DeflatedValue::compress(value) : value, curr_version + 1);
 	curr_version++;
 	
-	auto pair = KeyValuePair::create();
+	auto pair = SyncUpdate::create();
 	pair->collection = collection;
 	pair->version = curr_version;
 	pair->key = key;
@@ -652,6 +720,36 @@ std::shared_ptr<Server::block_t> Server::get_block(int64_t index) const
 	return iter->second;
 }
 
+
+Server::version_index_t Server::get_version_index(const uint64_t& version) const
+{
+	version_index_t result;
+	auto iter = index_map.find(version);
+	if(iter != index_map.end()) {
+		const auto& key_index = iter->second;
+		const auto block = get_block(key_index.block_index);
+		
+		std::shared_ptr<IndexEntry> entry;
+		{
+			FileSectionInputStream stream(block->key_file.get_handle(), key_index.block_offset, key_index.num_bytes);
+			TypeInput in(&stream);
+			try {
+				entry = std::dynamic_pointer_cast<IndexEntry>(vnx::read(in));
+				num_bytes_read += key_index.num_bytes;
+			} catch(...) {
+				// ignore
+			}
+		}
+		if(entry) {
+			result.key = std::move(entry->key);
+			result.block_index = key_index.block_index;
+			result.block_offset = entry->block_offset;
+			result.num_bytes = entry->num_bytes;
+		}
+	}
+	return result;
+}
+
 Server::value_index_t Server::get_value_index(const Variant& key) const
 {
 	value_index_t result;
@@ -659,29 +757,11 @@ Server::value_index_t Server::get_value_index(const Variant& key) const
 	const auto range = keyhash_map.equal_range(result.key_hash);
 	for(auto entry = range.first; entry != range.second; ++entry)
 	{
-		auto iter = index_map.find(entry->second);
-		if(iter != index_map.end()) {
-			const auto& key_index = iter->second;
-			const auto block = get_block(key_index.block_index);
-			
-			std::shared_ptr<IndexEntry> index;
-			{
-				FileSectionInputStream stream(block->key_file.get_handle(), key_index.block_offset, key_index.num_bytes);
-				TypeInput in(&stream);
-				try {
-					index = std::dynamic_pointer_cast<IndexEntry>(vnx::read(in));
-					num_bytes_read += key_index.num_bytes;
-				} catch(...) {
-					// ignore
-				}
-			}
-			if(index && index->key == key) {
-				result.key_iter = entry;
-				result.block_index = key_index.block_index;
-				result.block_offset = index->block_offset;
-				result.num_bytes = index->num_bytes;
-				return result;
-			}
+		const auto version_index = get_version_index(entry->second);
+		if(version_index.key == key) {
+			result.index_t::operator=(version_index);
+			result.key_iter = entry;
+			return result;
 		}
 	}
 	result.key_iter = keyhash_map.end();
@@ -926,7 +1006,7 @@ void Server::update_loop() const noexcept
 	
 	while(vnx_do_run())
 	{
-		std::shared_ptr<KeyValuePair> value;
+		std::shared_ptr<SyncUpdate> value;
 		{
 			std::unique_lock lock(update_mutex);
 			while(vnx_do_run() && update_queue.empty()) {
@@ -950,19 +1030,18 @@ void Server::update_loop() const noexcept
 	}
 }
 
-void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t end, bool key_only) const noexcept
+void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 {
 	Publisher publisher;
-	uint64_t version = begin;
-	uint64_t previous = begin;
-	
+	uint64_t version = job->begin;
+	uint64_t previous = job->begin;
 	{
 		auto info = SyncInfo::create();
 		info->collection = collection;
-		info->version = begin;
-		info->job_id = job_id;
+		info->version = job->begin;
+		info->job_id = job->id;
 		info->code = SyncInfo::BEGIN;
-		publisher.publish(info, topic, BLOCKING);
+		publisher.publish(info, job->topic, BLOCKING);
 	}
 	
 	struct entry_t {
@@ -975,7 +1054,7 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 	bool is_done = false;
 	std::vector<entry_t> list;
 	
-	while(vnx_do_run() && !is_done)
+	while(vnx_do_run() && job->do_run && !is_done)
 	{
 		list.clear();
 		{
@@ -989,7 +1068,7 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 					break;
 				}
 				version = iter->first;
-				if(end > 0 && version >= end) {
+				if(job->end > 0 && version >= job->end) {
 					is_done = true;
 					break;
 				}
@@ -1031,7 +1110,7 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 			
 			if(index) {
 				std::shared_ptr<Value> value;
-				if(!key_only) {
+				if(!job->key_only) {
 					in.reset();
 					stream.reset(block->value_file.get_handle(), index->block_offset, index->num_bytes);
 					try {
@@ -1041,33 +1120,32 @@ void Server::sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t 
 						// ignore
 					}
 				}
-				auto pair = KeyValuePair::create();
+				auto pair = SyncUpdate::create();
 				pair->collection = collection;
 				pair->version = entry.version;
 				pair->previous = previous;
 				pair->key = index->key;
 				pair->value = value;
-				publisher.publish(pair, topic, BLOCKING);
+				publisher.publish(pair, job->topic, BLOCKING);
 				previous = entry.version;
 			}
 			block->num_pending--;
 			read_counter++;
 		}
 	}
-	if(vnx_do_run())
+	if(vnx_do_run() && job->do_run)
 	{
 		auto info = SyncInfo::create();
 		info->collection = collection;
 		info->version = version;
-		info->job_id = job_id;
+		info->job_id = job->id;
 		info->code = SyncInfo::END;
-		publisher.publish(info, topic, BLOCKING);
+		publisher.publish(info, job->topic, BLOCKING);
 	}
 	{
 		std::lock_guard lock(sync_mutex);
-		
-		sync_jobs.erase(job_id);
-		log(INFO).out << "Finished sync job " << job_id;
+		sync_jobs.erase(job->id);
+		log(INFO).out << "Finished sync job " << job->id;
 	}
 }
 
