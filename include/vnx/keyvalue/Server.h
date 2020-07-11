@@ -37,9 +37,9 @@ protected:
 	
 	void get_values_async(const std::vector<Variant>& keys, const request_id_t& req_id) const override;
 	
-	void get_version_key_async(const uint64_t& version, const vnx::request_id_t& req_id) const override;
+	void get_key_async(const uint64_t& version, const vnx::request_id_t& req_id) const override;
 	
-	void get_version_keys_async(const std::vector<uint64_t>& versions, const vnx::request_id_t& req_id) const override;
+	void get_keys_async(const std::vector<uint64_t>& versions, const vnx::request_id_t& req_id) const override;
 	
 	void unlock(const Variant& key) override;
 	
@@ -90,7 +90,7 @@ private:
 		std::vector<std::shared_ptr<const Entry>> entries;
 	};
 	
-	struct multi_read_version_key_job_t {
+	struct multi_read_key_job_t {
 		request_id_t req_id;
 		std::atomic<size_t> num_left {0};
 		std::vector<std::pair<uint64_t, Variant>> result;
@@ -133,9 +133,9 @@ private:
 	
 	void multi_read_job(const Variant& key, size_t index, std::shared_ptr<multi_read_job_t> job) const;
 	
-	void read_version_key_job(uint64_t version, const request_id_t& req_id) const;
+	void read_key_job(uint64_t version, const request_id_t& req_id) const;
 	
-	void multi_read_version_key_job(uint64_t version, size_t index, std::shared_ptr<multi_read_version_key_job_t> job) const;
+	void multi_read_key_job(uint64_t version, size_t index, std::shared_ptr<multi_read_key_job_t> job) const;
 	
 	void lock_file_exclusive(const File& file);
 	

@@ -15,9 +15,9 @@ interface Storage {
 	
 	vector<Entry*> get_values(vector<Variant> keys) const async;
 	
-	Variant get_version_key(ulong version) const async;
+	Variant get_key(ulong version) const async;
 
-	vector<pair<ulong, Variant>> get_version_keys(vector<ulong> versions) const async;
+	vector<pair<ulong, Variant>> get_keys(vector<ulong> versions) const async;
 	
 	void unlock(Variant key);
 	

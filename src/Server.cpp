@@ -340,24 +340,24 @@ void Server::get_values_async(const std::vector<Variant>& keys, const request_id
 	}
 }
 
-void Server::get_version_key_async(const uint64_t& version, const vnx::request_id_t& req_id) const
+void Server::get_key_async(const uint64_t& version, const vnx::request_id_t& req_id) const
 {
-	read_threads->add_task(std::bind(&Server::read_version_key_job, this, version, req_id));
+	read_threads->add_task(std::bind(&Server::read_key_job, this, version, req_id));
 }
 
-void Server::get_version_keys_async(const std::vector<uint64_t>& versions, const vnx::request_id_t& req_id) const
+void Server::get_keys_async(const std::vector<uint64_t>& versions, const vnx::request_id_t& req_id) const
 {
 	if(versions.empty()) {
-		get_version_keys_async_return(req_id, {});
+		get_keys_async_return(req_id, {});
 		return;
 	}
-	auto job = std::make_shared<multi_read_version_key_job_t>();
+	auto job = std::make_shared<multi_read_key_job_t>();
 	job->req_id = req_id;
 	job->num_left = versions.size();
 	job->result.resize(versions.size());
 	
 	for(size_t i = 0; i < versions.size(); ++i) {
-		read_threads->add_task(std::bind(&Server::multi_read_version_key_job, this, versions[i], i, job));
+		read_threads->add_task(std::bind(&Server::multi_read_key_job, this, versions[i], i, job));
 	}
 }
 
@@ -497,15 +497,15 @@ void Server::multi_read_job(const Variant& key, size_t index, std::shared_ptr<mu
 	}
 }
 
-void Server::read_version_key_job(uint64_t version, const request_id_t& req_id) const
+void Server::read_key_job(uint64_t version, const request_id_t& req_id) const
 {
 	std::shared_lock lock(index_mutex);
 	
 	const auto version_index = get_version_index(version);
-	get_version_key_async_return(req_id, version_index.key);
+	get_key_async_return(req_id, version_index.key);
 }
 
-void Server::multi_read_version_key_job(uint64_t version, size_t index, std::shared_ptr<multi_read_version_key_job_t> job) const
+void Server::multi_read_key_job(uint64_t version, size_t index, std::shared_ptr<multi_read_key_job_t> job) const
 {
 	std::shared_lock lock(index_mutex);
 	
@@ -516,7 +516,7 @@ void Server::multi_read_version_key_job(uint64_t version, size_t index, std::sha
 		// ignore
 	}
 	if(job->num_left-- == 1) {
-		get_version_keys_async_return(job->req_id, job->result);
+		get_keys_async_return(job->req_id, job->result);
 	}
 }
 
