@@ -15,16 +15,16 @@
 #include <vnx/keyvalue/Storage_cancel_sync_job_return.hxx>
 #include <vnx/keyvalue/Storage_delete_value.hxx>
 #include <vnx/keyvalue/Storage_delete_value_return.hxx>
+#include <vnx/keyvalue/Storage_get_key.hxx>
+#include <vnx/keyvalue/Storage_get_key_return.hxx>
+#include <vnx/keyvalue/Storage_get_keys.hxx>
+#include <vnx/keyvalue/Storage_get_keys_return.hxx>
 #include <vnx/keyvalue/Storage_get_value.hxx>
 #include <vnx/keyvalue/Storage_get_value_locked.hxx>
 #include <vnx/keyvalue/Storage_get_value_locked_return.hxx>
 #include <vnx/keyvalue/Storage_get_value_return.hxx>
 #include <vnx/keyvalue/Storage_get_values.hxx>
 #include <vnx/keyvalue/Storage_get_values_return.hxx>
-#include <vnx/keyvalue/Storage_get_version_key.hxx>
-#include <vnx/keyvalue/Storage_get_version_key_return.hxx>
-#include <vnx/keyvalue/Storage_get_version_keys.hxx>
-#include <vnx/keyvalue/Storage_get_version_keys_return.hxx>
 #include <vnx/keyvalue/Storage_store_value.hxx>
 #include <vnx/keyvalue/Storage_store_value_return.hxx>
 #include <vnx/keyvalue/Storage_store_values.hxx>
@@ -280,8 +280,8 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 	type_code->methods[1] = ::vnx::keyvalue::Storage_get_value::static_get_type_code();
 	type_code->methods[2] = ::vnx::keyvalue::Storage_get_value_locked::static_get_type_code();
 	type_code->methods[3] = ::vnx::keyvalue::Storage_get_values::static_get_type_code();
-	type_code->methods[4] = ::vnx::keyvalue::Storage_get_version_key::static_get_type_code();
-	type_code->methods[5] = ::vnx::keyvalue::Storage_get_version_keys::static_get_type_code();
+	type_code->methods[4] = ::vnx::keyvalue::Storage_get_key::static_get_type_code();
+	type_code->methods[5] = ::vnx::keyvalue::Storage_get_keys::static_get_type_code();
 	type_code->methods[6] = ::vnx::keyvalue::Storage_unlock::static_get_type_code();
 	type_code->methods[7] = ::vnx::keyvalue::Storage_sync_from::static_get_type_code();
 	type_code->methods[8] = ::vnx::keyvalue::Storage_sync_range::static_get_type_code();
@@ -446,19 +446,19 @@ std::shared_ptr<vnx::Value> ServerBase::vnx_call_switch(std::shared_ptr<const vn
 		}
 		get_values_async(_args->keys, _request_id);
 		return 0;
-	} else if(_type_hash == vnx::Hash64(0xb99ad29183ddd3feull)) {
-		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_version_key>(_method);
+	} else if(_type_hash == vnx::Hash64(0xc7c81afb9921d76ull)) {
+		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_key>(_method);
 		if(!_args) {
 			throw std::logic_error("vnx_call_switch(): !_args");
 		}
-		get_version_key_async(_args->version, _request_id);
+		get_key_async(_args->version, _request_id);
 		return 0;
-	} else if(_type_hash == vnx::Hash64(0xe9276407215550f2ull)) {
-		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_version_keys>(_method);
+	} else if(_type_hash == vnx::Hash64(0xd75f52c837f6ac18ull)) {
+		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_keys>(_method);
 		if(!_args) {
 			throw std::logic_error("vnx_call_switch(): !_args");
 		}
-		get_version_keys_async(_args->versions, _request_id);
+		get_keys_async(_args->versions, _request_id);
 		return 0;
 	} else if(_type_hash == vnx::Hash64(0x25041c8bd6ea1977ull)) {
 		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_unlock>(_method);
@@ -542,31 +542,31 @@ std::shared_ptr<vnx::Value> ServerBase::vnx_call_switch(std::shared_ptr<const vn
 void ServerBase::get_value_async_return(const vnx::request_id_t& _request_id, const std::shared_ptr<const ::vnx::keyvalue::Entry>& _ret_0) const {
 	auto _return_value = ::vnx::keyvalue::Storage_get_value_return::create();
 	_return_value->_ret_0 = _ret_0;
-	vnx_async_callback(_request_id, _return_value);
+	vnx_async_return(_request_id, _return_value);
 }
 
 void ServerBase::get_value_locked_async_return(const vnx::request_id_t& _request_id, const std::shared_ptr<const ::vnx::keyvalue::Entry>& _ret_0) const {
 	auto _return_value = ::vnx::keyvalue::Storage_get_value_locked_return::create();
 	_return_value->_ret_0 = _ret_0;
-	vnx_async_callback(_request_id, _return_value);
+	vnx_async_return(_request_id, _return_value);
 }
 
 void ServerBase::get_values_async_return(const vnx::request_id_t& _request_id, const std::vector<std::shared_ptr<const ::vnx::keyvalue::Entry>>& _ret_0) const {
 	auto _return_value = ::vnx::keyvalue::Storage_get_values_return::create();
 	_return_value->_ret_0 = _ret_0;
-	vnx_async_callback(_request_id, _return_value);
+	vnx_async_return(_request_id, _return_value);
 }
 
-void ServerBase::get_version_key_async_return(const vnx::request_id_t& _request_id, const ::vnx::Variant& _ret_0) const {
-	auto _return_value = ::vnx::keyvalue::Storage_get_version_key_return::create();
+void ServerBase::get_key_async_return(const vnx::request_id_t& _request_id, const ::vnx::Variant& _ret_0) const {
+	auto _return_value = ::vnx::keyvalue::Storage_get_key_return::create();
 	_return_value->_ret_0 = _ret_0;
-	vnx_async_callback(_request_id, _return_value);
+	vnx_async_return(_request_id, _return_value);
 }
 
-void ServerBase::get_version_keys_async_return(const vnx::request_id_t& _request_id, const std::vector<std::pair<uint64_t, ::vnx::Variant>>& _ret_0) const {
-	auto _return_value = ::vnx::keyvalue::Storage_get_version_keys_return::create();
+void ServerBase::get_keys_async_return(const vnx::request_id_t& _request_id, const std::vector<std::pair<uint64_t, ::vnx::Variant>>& _ret_0) const {
+	auto _return_value = ::vnx::keyvalue::Storage_get_keys_return::create();
 	_return_value->_ret_0 = _ret_0;
-	vnx_async_callback(_request_id, _return_value);
+	vnx_async_return(_request_id, _return_value);
 }
 
 

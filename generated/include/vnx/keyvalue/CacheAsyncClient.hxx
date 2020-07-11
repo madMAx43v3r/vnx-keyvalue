@@ -37,11 +37,11 @@ public:
 			const std::function<void(std::vector<std::shared_ptr<const ::vnx::keyvalue::Entry>>)>& _callback = std::function<void(std::vector<std::shared_ptr<const ::vnx::keyvalue::Entry>>)>(),
 			const std::function<void(const std::exception&)>& _error_callback = std::function<void(const std::exception&)>());
 	
-	uint64_t get_version_key(const uint64_t& version, 
+	uint64_t get_key(const uint64_t& version, 
 			const std::function<void(::vnx::Variant)>& _callback = std::function<void(::vnx::Variant)>(),
 			const std::function<void(const std::exception&)>& _error_callback = std::function<void(const std::exception&)>());
 	
-	uint64_t get_version_keys(const std::vector<uint64_t>& versions, 
+	uint64_t get_keys(const std::vector<uint64_t>& versions, 
 			const std::function<void(std::vector<std::pair<uint64_t, ::vnx::Variant>>)>& _callback = std::function<void(std::vector<std::pair<uint64_t, ::vnx::Variant>>)>(),
 			const std::function<void(const std::exception&)>& _error_callback = std::function<void(const std::exception&)>());
 	
@@ -93,8 +93,8 @@ private:
 	std::map<uint64_t, std::pair<std::function<void(std::shared_ptr<const ::vnx::keyvalue::Entry>)>, std::function<void(const std::exception&)>>> vnx_queue_get_value;
 	std::map<uint64_t, std::pair<std::function<void(std::shared_ptr<const ::vnx::keyvalue::Entry>)>, std::function<void(const std::exception&)>>> vnx_queue_get_value_locked;
 	std::map<uint64_t, std::pair<std::function<void(std::vector<std::shared_ptr<const ::vnx::keyvalue::Entry>>)>, std::function<void(const std::exception&)>>> vnx_queue_get_values;
-	std::map<uint64_t, std::pair<std::function<void(::vnx::Variant)>, std::function<void(const std::exception&)>>> vnx_queue_get_version_key;
-	std::map<uint64_t, std::pair<std::function<void(std::vector<std::pair<uint64_t, ::vnx::Variant>>)>, std::function<void(const std::exception&)>>> vnx_queue_get_version_keys;
+	std::map<uint64_t, std::pair<std::function<void(::vnx::Variant)>, std::function<void(const std::exception&)>>> vnx_queue_get_key;
+	std::map<uint64_t, std::pair<std::function<void(std::vector<std::pair<uint64_t, ::vnx::Variant>>)>, std::function<void(const std::exception&)>>> vnx_queue_get_keys;
 	std::map<uint64_t, std::pair<std::function<void()>, std::function<void(const std::exception&)>>> vnx_queue_unlock;
 	std::map<uint64_t, std::pair<std::function<void(int64_t)>, std::function<void(const std::exception&)>>> vnx_queue_sync_from;
 	std::map<uint64_t, std::pair<std::function<void(int64_t)>, std::function<void(const std::exception&)>>> vnx_queue_sync_range;

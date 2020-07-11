@@ -14,16 +14,16 @@
 #include <vnx/keyvalue/Storage_cancel_sync_job_return.hxx>
 #include <vnx/keyvalue/Storage_delete_value.hxx>
 #include <vnx/keyvalue/Storage_delete_value_return.hxx>
+#include <vnx/keyvalue/Storage_get_key.hxx>
+#include <vnx/keyvalue/Storage_get_key_return.hxx>
+#include <vnx/keyvalue/Storage_get_keys.hxx>
+#include <vnx/keyvalue/Storage_get_keys_return.hxx>
 #include <vnx/keyvalue/Storage_get_value.hxx>
 #include <vnx/keyvalue/Storage_get_value_locked.hxx>
 #include <vnx/keyvalue/Storage_get_value_locked_return.hxx>
 #include <vnx/keyvalue/Storage_get_value_return.hxx>
 #include <vnx/keyvalue/Storage_get_values.hxx>
 #include <vnx/keyvalue/Storage_get_values_return.hxx>
-#include <vnx/keyvalue/Storage_get_version_key.hxx>
-#include <vnx/keyvalue/Storage_get_version_key_return.hxx>
-#include <vnx/keyvalue/Storage_get_version_keys.hxx>
-#include <vnx/keyvalue/Storage_get_version_keys_return.hxx>
 #include <vnx/keyvalue/Storage_store_value.hxx>
 #include <vnx/keyvalue/Storage_store_value_return.hxx>
 #include <vnx/keyvalue/Storage_store_values.hxx>
@@ -99,22 +99,22 @@ std::vector<std::shared_ptr<const ::vnx::keyvalue::Entry>> ClusterClient::get_va
 	return _result->_ret_0;
 }
 
-::vnx::Variant ClusterClient::get_version_key(const uint64_t& version) {
-	auto _method = ::vnx::keyvalue::Storage_get_version_key::create();
+::vnx::Variant ClusterClient::get_key(const uint64_t& version) {
+	auto _method = ::vnx::keyvalue::Storage_get_key::create();
 	_method->version = version;
 	auto _return_value = vnx_request(_method);
-	auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_version_key_return>(_return_value);
+	auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_key_return>(_return_value);
 	if(!_result) {
 		throw std::logic_error("ClusterClient: !_result");
 	}
 	return _result->_ret_0;
 }
 
-std::vector<std::pair<uint64_t, ::vnx::Variant>> ClusterClient::get_version_keys(const std::vector<uint64_t>& versions) {
-	auto _method = ::vnx::keyvalue::Storage_get_version_keys::create();
+std::vector<std::pair<uint64_t, ::vnx::Variant>> ClusterClient::get_keys(const std::vector<uint64_t>& versions) {
+	auto _method = ::vnx::keyvalue::Storage_get_keys::create();
 	_method->versions = versions;
 	auto _return_value = vnx_request(_method);
-	auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_version_keys_return>(_return_value);
+	auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_keys_return>(_return_value);
 	if(!_result) {
 		throw std::logic_error("ClusterClient: !_result");
 	}

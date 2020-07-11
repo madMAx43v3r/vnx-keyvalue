@@ -14,16 +14,16 @@
 #include <vnx/keyvalue/Storage_cancel_sync_job_return.hxx>
 #include <vnx/keyvalue/Storage_delete_value.hxx>
 #include <vnx/keyvalue/Storage_delete_value_return.hxx>
+#include <vnx/keyvalue/Storage_get_key.hxx>
+#include <vnx/keyvalue/Storage_get_key_return.hxx>
+#include <vnx/keyvalue/Storage_get_keys.hxx>
+#include <vnx/keyvalue/Storage_get_keys_return.hxx>
 #include <vnx/keyvalue/Storage_get_value.hxx>
 #include <vnx/keyvalue/Storage_get_value_locked.hxx>
 #include <vnx/keyvalue/Storage_get_value_locked_return.hxx>
 #include <vnx/keyvalue/Storage_get_value_return.hxx>
 #include <vnx/keyvalue/Storage_get_values.hxx>
 #include <vnx/keyvalue/Storage_get_values_return.hxx>
-#include <vnx/keyvalue/Storage_get_version_key.hxx>
-#include <vnx/keyvalue/Storage_get_version_key_return.hxx>
-#include <vnx/keyvalue/Storage_get_version_keys.hxx>
-#include <vnx/keyvalue/Storage_get_version_keys_return.hxx>
 #include <vnx/keyvalue/Storage_store_value.hxx>
 #include <vnx/keyvalue/Storage_store_value_return.hxx>
 #include <vnx/keyvalue/Storage_store_values.hxx>
@@ -91,20 +91,20 @@ uint64_t CacheAsyncClient::get_values(const std::vector<::vnx::Variant>& keys, c
 	return _request_id;
 }
 
-uint64_t CacheAsyncClient::get_version_key(const uint64_t& version, const std::function<void(::vnx::Variant)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
-	auto _method = ::vnx::keyvalue::Storage_get_version_key::create();
+uint64_t CacheAsyncClient::get_key(const uint64_t& version, const std::function<void(::vnx::Variant)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+	auto _method = ::vnx::keyvalue::Storage_get_key::create();
 	_method->version = version;
 	const auto _request_id = vnx_request(_method);
-	vnx_queue_get_version_key[_request_id] = std::make_pair(_callback, _error_callback);
+	vnx_queue_get_key[_request_id] = std::make_pair(_callback, _error_callback);
 	vnx_num_pending++;
 	return _request_id;
 }
 
-uint64_t CacheAsyncClient::get_version_keys(const std::vector<uint64_t>& versions, const std::function<void(std::vector<std::pair<uint64_t, ::vnx::Variant>>)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
-	auto _method = ::vnx::keyvalue::Storage_get_version_keys::create();
+uint64_t CacheAsyncClient::get_keys(const std::vector<uint64_t>& versions, const std::function<void(std::vector<std::pair<uint64_t, ::vnx::Variant>>)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+	auto _method = ::vnx::keyvalue::Storage_get_keys::create();
 	_method->versions = versions;
 	const auto _request_id = vnx_request(_method);
-	vnx_queue_get_version_keys[_request_id] = std::make_pair(_callback, _error_callback);
+	vnx_queue_get_keys[_request_id] = std::make_pair(_callback, _error_callback);
 	vnx_num_pending++;
 	return _request_id;
 }
@@ -208,10 +208,10 @@ std::vector<uint64_t> CacheAsyncClient::vnx_get_pending_ids() const {
 	for(const auto& entry : vnx_queue_get_values) {
 		_list.push_back(entry.first);
 	}
-	for(const auto& entry : vnx_queue_get_version_key) {
+	for(const auto& entry : vnx_queue_get_key) {
 		_list.push_back(entry.first);
 	}
-	for(const auto& entry : vnx_queue_get_version_keys) {
+	for(const auto& entry : vnx_queue_get_keys) {
 		_list.push_back(entry.first);
 	}
 	for(const auto& entry : vnx_queue_unlock) {
@@ -286,22 +286,22 @@ void CacheAsyncClient::vnx_purge_request(uint64_t _request_id, const std::except
 		}
 	}
 	{
-		const auto _iter = vnx_queue_get_version_key.find(_request_id);
-		if(_iter != vnx_queue_get_version_key.end()) {
+		const auto _iter = vnx_queue_get_key.find(_request_id);
+		if(_iter != vnx_queue_get_key.end()) {
 			if(_iter->second.second) {
 				_iter->second.second(_ex);
 			}
-			vnx_queue_get_version_key.erase(_iter);
+			vnx_queue_get_key.erase(_iter);
 			vnx_num_pending--;
 		}
 	}
 	{
-		const auto _iter = vnx_queue_get_version_keys.find(_request_id);
-		if(_iter != vnx_queue_get_version_keys.end()) {
+		const auto _iter = vnx_queue_get_keys.find(_request_id);
+		if(_iter != vnx_queue_get_keys.end()) {
 			if(_iter->second.second) {
 				_iter->second.second(_ex);
 			}
-			vnx_queue_get_version_keys.erase(_iter);
+			vnx_queue_get_keys.erase(_iter);
 			vnx_num_pending--;
 		}
 	}
@@ -467,15 +467,15 @@ void CacheAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_ptr
 			throw std::runtime_error("CacheAsyncClient: invalid return received");
 		}
 	}
-	else if(_type_hash == vnx::Hash64(0x699ef9733b65a79eull)) {
-		auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_version_key_return>(_value);
+	else if(_type_hash == vnx::Hash64(0x5e35e7e9fb0c828ull)) {
+		auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_key_return>(_value);
 		if(!_result) {
 			throw std::logic_error("CacheAsyncClient: !_result");
 		}
-		const auto _iter = vnx_queue_get_version_key.find(_request_id);
-		if(_iter != vnx_queue_get_version_key.end()) {
+		const auto _iter = vnx_queue_get_key.find(_request_id);
+		if(_iter != vnx_queue_get_key.end()) {
 			const auto _callback = std::move(_iter->second.first);
-			vnx_queue_get_version_key.erase(_iter);
+			vnx_queue_get_key.erase(_iter);
 			vnx_num_pending--;
 			if(_callback) {
 				_callback(_result->_ret_0);
@@ -484,15 +484,15 @@ void CacheAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_ptr
 			throw std::runtime_error("CacheAsyncClient: invalid return received");
 		}
 	}
-	else if(_type_hash == vnx::Hash64(0x9a9079f2e25e3a91ull)) {
-		auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_version_keys_return>(_value);
+	else if(_type_hash == vnx::Hash64(0x5a68455b9ce7b40full)) {
+		auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_keys_return>(_value);
 		if(!_result) {
 			throw std::logic_error("CacheAsyncClient: !_result");
 		}
-		const auto _iter = vnx_queue_get_version_keys.find(_request_id);
-		if(_iter != vnx_queue_get_version_keys.end()) {
+		const auto _iter = vnx_queue_get_keys.find(_request_id);
+		if(_iter != vnx_queue_get_keys.end()) {
 			const auto _callback = std::move(_iter->second.first);
-			vnx_queue_get_version_keys.erase(_iter);
+			vnx_queue_get_keys.erase(_iter);
 			vnx_num_pending--;
 			if(_callback) {
 				_callback(_result->_ret_0);

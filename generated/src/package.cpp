@@ -13,16 +13,16 @@
 #include <vnx/keyvalue/Storage_cancel_sync_job_return.hxx>
 #include <vnx/keyvalue/Storage_delete_value.hxx>
 #include <vnx/keyvalue/Storage_delete_value_return.hxx>
+#include <vnx/keyvalue/Storage_get_key.hxx>
+#include <vnx/keyvalue/Storage_get_key_return.hxx>
+#include <vnx/keyvalue/Storage_get_keys.hxx>
+#include <vnx/keyvalue/Storage_get_keys_return.hxx>
 #include <vnx/keyvalue/Storage_get_value.hxx>
 #include <vnx/keyvalue/Storage_get_value_return.hxx>
 #include <vnx/keyvalue/Storage_get_value_locked.hxx>
 #include <vnx/keyvalue/Storage_get_value_locked_return.hxx>
 #include <vnx/keyvalue/Storage_get_values.hxx>
 #include <vnx/keyvalue/Storage_get_values_return.hxx>
-#include <vnx/keyvalue/Storage_get_version_key.hxx>
-#include <vnx/keyvalue/Storage_get_version_key_return.hxx>
-#include <vnx/keyvalue/Storage_get_version_keys.hxx>
-#include <vnx/keyvalue/Storage_get_version_keys_return.hxx>
 #include <vnx/keyvalue/Storage_store_value.hxx>
 #include <vnx/keyvalue/Storage_store_value_return.hxx>
 #include <vnx/keyvalue/Storage_store_values.hxx>
@@ -64,16 +64,16 @@ static void register_all_types() {
 	vnx::register_type_code(::vnx::keyvalue::Storage_cancel_sync_job_return::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Storage_delete_value::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Storage_delete_value_return::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Storage_get_key::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Storage_get_key_return::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Storage_get_keys::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Storage_get_keys_return::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Storage_get_value::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Storage_get_value_return::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Storage_get_value_locked::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Storage_get_value_locked_return::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Storage_get_values::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Storage_get_values_return::static_create_type_code());
-	vnx::register_type_code(::vnx::keyvalue::Storage_get_version_key::static_create_type_code());
-	vnx::register_type_code(::vnx::keyvalue::Storage_get_version_key_return::static_create_type_code());
-	vnx::register_type_code(::vnx::keyvalue::Storage_get_version_keys::static_create_type_code());
-	vnx::register_type_code(::vnx::keyvalue::Storage_get_version_keys_return::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Storage_store_value::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Storage_store_value_return::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Storage_store_values::static_create_type_code());
@@ -113,16 +113,16 @@ const vnx::TypeCode* const vnx_native_type_code_Storage_cancel_sync_job = vnx::g
 const vnx::TypeCode* const vnx_native_type_code_Storage_cancel_sync_job_return = vnx::get_type_code(vnx::Hash64(0x8e03e14a8636511dull));
 const vnx::TypeCode* const vnx_native_type_code_Storage_delete_value = vnx::get_type_code(vnx::Hash64(0x28e40902541d1c63ull));
 const vnx::TypeCode* const vnx_native_type_code_Storage_delete_value_return = vnx::get_type_code(vnx::Hash64(0xd20199c7d67361d7ull));
+const vnx::TypeCode* const vnx_native_type_code_Storage_get_key = vnx::get_type_code(vnx::Hash64(0xc7c81afb9921d76ull));
+const vnx::TypeCode* const vnx_native_type_code_Storage_get_key_return = vnx::get_type_code(vnx::Hash64(0x5e35e7e9fb0c828ull));
+const vnx::TypeCode* const vnx_native_type_code_Storage_get_keys = vnx::get_type_code(vnx::Hash64(0xd75f52c837f6ac18ull));
+const vnx::TypeCode* const vnx_native_type_code_Storage_get_keys_return = vnx::get_type_code(vnx::Hash64(0x5a68455b9ce7b40full));
 const vnx::TypeCode* const vnx_native_type_code_Storage_get_value = vnx::get_type_code(vnx::Hash64(0x8f47587c24580111ull));
 const vnx::TypeCode* const vnx_native_type_code_Storage_get_value_return = vnx::get_type_code(vnx::Hash64(0x4a92482e1381ab01ull));
 const vnx::TypeCode* const vnx_native_type_code_Storage_get_value_locked = vnx::get_type_code(vnx::Hash64(0xfd0f1035b160c34full));
 const vnx::TypeCode* const vnx_native_type_code_Storage_get_value_locked_return = vnx::get_type_code(vnx::Hash64(0x9cc2e6345ebe66aeull));
 const vnx::TypeCode* const vnx_native_type_code_Storage_get_values = vnx::get_type_code(vnx::Hash64(0x7427b9c6f9a68c30ull));
 const vnx::TypeCode* const vnx_native_type_code_Storage_get_values_return = vnx::get_type_code(vnx::Hash64(0xe59fbd8a92b4aaf7ull));
-const vnx::TypeCode* const vnx_native_type_code_Storage_get_version_key = vnx::get_type_code(vnx::Hash64(0xb99ad29183ddd3feull));
-const vnx::TypeCode* const vnx_native_type_code_Storage_get_version_key_return = vnx::get_type_code(vnx::Hash64(0x699ef9733b65a79eull));
-const vnx::TypeCode* const vnx_native_type_code_Storage_get_version_keys = vnx::get_type_code(vnx::Hash64(0xe9276407215550f2ull));
-const vnx::TypeCode* const vnx_native_type_code_Storage_get_version_keys_return = vnx::get_type_code(vnx::Hash64(0x9a9079f2e25e3a91ull));
 const vnx::TypeCode* const vnx_native_type_code_Storage_store_value = vnx::get_type_code(vnx::Hash64(0xa1b7f9743ce3a0f1ull));
 const vnx::TypeCode* const vnx_native_type_code_Storage_store_value_return = vnx::get_type_code(vnx::Hash64(0x5f02038d66b3d8b5ull));
 const vnx::TypeCode* const vnx_native_type_code_Storage_store_values = vnx::get_type_code(vnx::Hash64(0x22e477486f9c73e0ull));

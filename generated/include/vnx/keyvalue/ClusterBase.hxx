@@ -51,10 +51,10 @@ protected:
 	void get_value_locked_async_return(const vnx::request_id_t& _request_id, const std::shared_ptr<const ::vnx::keyvalue::Entry>& _ret_0) const;
 	virtual void get_values_async(const std::vector<::vnx::Variant>& keys, const vnx::request_id_t& _request_id) const = 0;
 	void get_values_async_return(const vnx::request_id_t& _request_id, const std::vector<std::shared_ptr<const ::vnx::keyvalue::Entry>>& _ret_0) const;
-	virtual void get_version_key_async(const uint64_t& version, const vnx::request_id_t& _request_id) const = 0;
-	void get_version_key_async_return(const vnx::request_id_t& _request_id, const ::vnx::Variant& _ret_0) const;
-	virtual void get_version_keys_async(const std::vector<uint64_t>& versions, const vnx::request_id_t& _request_id) const = 0;
-	void get_version_keys_async_return(const vnx::request_id_t& _request_id, const std::vector<std::pair<uint64_t, ::vnx::Variant>>& _ret_0) const;
+	virtual void get_key_async(const uint64_t& version, const vnx::request_id_t& _request_id) const = 0;
+	void get_key_async_return(const vnx::request_id_t& _request_id, const ::vnx::Variant& _ret_0) const;
+	virtual void get_keys_async(const std::vector<uint64_t>& versions, const vnx::request_id_t& _request_id) const = 0;
+	void get_keys_async_return(const vnx::request_id_t& _request_id, const std::vector<std::pair<uint64_t, ::vnx::Variant>>& _ret_0) const;
 	virtual void unlock(const ::vnx::Variant& key) = 0;
 	virtual int64_t sync_from(const ::vnx::TopicPtr& topic, const uint64_t& version) const = 0;
 	virtual int64_t sync_range(const ::vnx::TopicPtr& topic, const uint64_t& begin, const uint64_t& end) const = 0;

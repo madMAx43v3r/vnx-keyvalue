@@ -26,9 +26,9 @@ public:
 	
 	std::vector<std::shared_ptr<const ::vnx::keyvalue::Entry>> get_values(const std::vector<::vnx::Variant>& keys);
 	
-	::vnx::Variant get_version_key(const uint64_t& version);
+	::vnx::Variant get_key(const uint64_t& version);
 	
-	std::vector<std::pair<uint64_t, ::vnx::Variant>> get_version_keys(const std::vector<uint64_t>& versions);
+	std::vector<std::pair<uint64_t, ::vnx::Variant>> get_keys(const std::vector<uint64_t>& versions);
 	
 	void unlock(const ::vnx::Variant& key);
 	
