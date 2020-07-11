@@ -178,7 +178,6 @@ void read(TypeInput& in, ::vnx::keyvalue::Collection& value, const TypeCode* typ
 			default: vnx::skip(in, type_code, code); return;
 		}
 	}
-	const char* const _buf = in.read(type_code->total_field_size);
 	if(type_code->is_matched) {
 	}
 	for(const vnx::TypeField* _field : type_code->ext_fields) {

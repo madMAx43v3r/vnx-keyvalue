@@ -14,7 +14,7 @@ module SyncModule {
 	bool add_only = false;						// if to ignore null values
 	
 	
-	void handle(KeyValuePair sample);
+	void handle(SyncUpdate sample);
 	
 	void handle(SyncInfo sample);
 	

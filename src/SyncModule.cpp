@@ -35,7 +35,7 @@ void SyncModule::main()
 	Super::main();
 }
 
-void SyncModule::handle(std::shared_ptr<const KeyValuePair> value)
+void SyncModule::handle(std::shared_ptr<const SyncUpdate> value)
 {
 	if(!add_only || value->value) {
 		buffer.emplace_back(value->key, value->value);

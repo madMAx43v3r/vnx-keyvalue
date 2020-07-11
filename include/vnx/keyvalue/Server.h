@@ -37,6 +37,10 @@ protected:
 	
 	void get_values_async(const std::vector<Variant>& keys, const request_id_t& req_id) const override;
 	
+	void get_version_key_async(const uint64_t& version, const vnx::request_id_t& req_id) const override;
+	
+	void get_version_keys_async(const std::vector<uint64_t>& versions, const vnx::request_id_t& req_id) const override;
+	
 	void unlock(const Variant& key) override;
 	
 	int64_t sync_from(const TopicPtr& topic, const uint64_t& version) const override;
@@ -46,6 +50,8 @@ protected:
 	int64_t sync_all(const TopicPtr& topic) const override;
 	
 	int64_t sync_all_keys(const TopicPtr& topic) const override;
+	
+	void cancel_sync_job(const int64_t& job_id) override;
 	
 	void store_value(const Variant& key, const std::shared_ptr<const Value>& value) override;
 	
@@ -65,6 +71,10 @@ private:
 		std::unordered_multimap<uint64_t, uint64_t>::const_iterator key_iter;
 	};
 	
+	struct version_index_t : index_t {
+		Variant key;
+	};
+	
 	struct block_t {
 		File key_file;
 		File value_file;
@@ -77,7 +87,22 @@ private:
 	struct multi_read_job_t {
 		request_id_t req_id;
 		std::atomic<size_t> num_left {0};
-		std::vector<std::shared_ptr<const Value>> values;
+		std::vector<std::shared_ptr<const Entry>> entries;
+	};
+	
+	struct multi_read_version_key_job_t {
+		request_id_t req_id;
+		std::atomic<size_t> num_left {0};
+		std::vector<std::pair<uint64_t, Variant>> result;
+	};
+	
+	struct sync_job_t {
+		int64_t id = -1;
+		TopicPtr topic;
+		uint64_t begin = 0;
+		uint64_t end = 0;
+		bool key_only = false;
+		std::atomic_bool do_run {true};
 	};
 	
 	struct lock_entry_t {
@@ -100,13 +125,17 @@ private:
 	
 	void check_timeouts();
 	
-	std::shared_ptr<const Value> read_value(const Variant& key) const;
+	std::shared_ptr<const Entry> read_value(const Variant& key) const;
 	
 	void read_job(const Variant& key, const request_id_t& req_id) const;
 	
 	void read_job_locked(const Variant& key, const request_id_t& req_id) const;
 	
 	void multi_read_job(const Variant& key, size_t index, std::shared_ptr<multi_read_job_t> job) const;
+	
+	void read_version_key_job(uint64_t version, const request_id_t& req_id) const;
+	
+	void multi_read_version_key_job(uint64_t version, size_t index, std::shared_ptr<multi_read_version_key_job_t> job) const;
 	
 	void lock_file_exclusive(const File& file);
 	
@@ -116,7 +145,9 @@ private:
 	
 	std::shared_ptr<block_t> get_block(int64_t index) const;
 	
-	Server::value_index_t get_value_index(const Variant& key) const;
+	version_index_t get_version_index(const uint64_t& version) const;
+	
+	value_index_t get_value_index(const Variant& key) const;
 	
 	void delete_internal(const value_index_t& index);
 	
@@ -138,7 +169,7 @@ private:
 	
 	void update_loop() const noexcept;
 	
-	void sync_loop(int64_t job_id, TopicPtr topic, uint64_t begin, uint64_t end, bool key_only) const noexcept;
+	void sync_loop(std::shared_ptr<sync_job_t> job) const noexcept;
 	
 private:
 	uint64_t curr_version = 0;
@@ -160,11 +191,11 @@ private:
 	
 	mutable std::mutex update_mutex;
 	mutable std::condition_variable update_condition;
-	mutable std::queue<std::shared_ptr<KeyValuePair>> update_queue;
+	mutable std::queue<std::shared_ptr<SyncUpdate>> update_queue;
 	std::thread update_thread;
 	
 	mutable std::mutex sync_mutex;
-	mutable std::set<int64_t> sync_jobs;
+	mutable std::map<int64_t, std::shared_ptr<sync_job_t>> sync_jobs;
 	mutable int64_t next_sync_id = 0;
 	
 	mutable std::atomic<uint64_t> read_counter {0};

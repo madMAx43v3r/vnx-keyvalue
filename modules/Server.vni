@@ -1,10 +1,8 @@
 package vnx.keyvalue;
 
-import vnx.Variant;
-import vnx.Value;
 import vnx.TopicPtr;
 
-module Server {
+module Server implements Storage {
 	
 	TopicPtr update_topic;
 	TopicPtr update_topic_keys;
@@ -31,7 +29,7 @@ module Server {
 	
 	int sync_chunk_count = 100;					// number of values
 	
-	int max_queue_ms = 1000;
+	int max_queue_ms = 100;
 	
 	int num_read_threads = 1;
 	
@@ -42,33 +40,5 @@ module Server {
 	bool do_compress = false;					// if to enable deflate compression
 	
 	bool ignore_errors = false;					// if to continue loading even if there is errors
-	
-	
-	Value* get_value(Variant key) const async;
-	
-	/* Locks value until it is updated via store_value() or delete_value(), or until unlock() is called.
-	 * While it is locked any read requests are blocked until lock is released.
-	 */
-	pair<Variant, Value*> get_value_locked(Variant key, int timeout_ms) const async;
-	
-	vector<Value*> get_values(vector<Variant> keys) const async;
-	
-	void unlock(Variant key);
-	
-	long sync_from(TopicPtr topic, ulong version) const;				// sync all greater than version
-	
-	long sync_range(TopicPtr topic, ulong begin, ulong end) const;		// sync greater than begin and up to less than end
-	
-	long sync_all(TopicPtr topic) const;
-	
-	long sync_all_keys(TopicPtr topic) const;
-	
-//	void cancel_sync_job(long job_id);
-	
-	void store_value(Variant key, Value* value);
-	
-	void store_values(vector<pair<Variant, Value*>> values);
-	
-	void delete_value(Variant key);
 	
 }

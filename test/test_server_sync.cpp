@@ -7,7 +7,7 @@
 
 #include <vnx/keyvalue/ServerClient.hxx>
 #include <vnx/keyvalue/SyncInfo.hxx>
-#include <vnx/keyvalue/KeyValuePair.hxx>
+#include <vnx/keyvalue/SyncUpdate.hxx>
 
 #include <vnx/vnx.h>
 #include <vnx/Terminal.h>
@@ -47,7 +47,7 @@ protected:
 							break;
 						}
 					}
-					auto pair = std::dynamic_pointer_cast<const vnx::keyvalue::KeyValuePair>(sample->value);
+					auto pair = std::dynamic_pointer_cast<const vnx::keyvalue::SyncUpdate>(sample->value);
 					if(pair) {
 						counter++;
 						if(counter % 1000 == 0) {

@@ -9,6 +9,7 @@
 #include <vnx/TopicPtr.hpp>
 #include <vnx/Value.h>
 #include <vnx/Variant.hpp>
+#include <vnx/keyvalue/Entry.hxx>
 
 
 namespace vnx {
@@ -30,7 +31,7 @@ public:
 	int32_t rewrite_interval = 10;
 	int32_t idle_rewrite_interval = 1000;
 	int32_t sync_chunk_count = 100;
-	int32_t max_queue_ms = 1000;
+	int32_t max_queue_ms = 100;
 	int32_t num_read_threads = 1;
 	int32_t timeout_interval_ms = 100;
 	int32_t stats_interval_ms = 3000;
@@ -63,20 +64,25 @@ public:
 	static std::shared_ptr<vnx::TypeCode> static_create_type_code();
 	
 protected:
-	virtual void delete_value(const ::vnx::Variant& key) = 0;
 	virtual void get_value_async(const ::vnx::Variant& key, const vnx::request_id_t& _request_id) const = 0;
-	void get_value_async_return(const vnx::request_id_t& _request_id, const std::shared_ptr<const ::vnx::Value>& _ret_0) const;
+	void get_value_async_return(const vnx::request_id_t& _request_id, const std::shared_ptr<const ::vnx::keyvalue::Entry>& _ret_0) const;
 	virtual void get_value_locked_async(const ::vnx::Variant& key, const int32_t& timeout_ms, const vnx::request_id_t& _request_id) const = 0;
-	void get_value_locked_async_return(const vnx::request_id_t& _request_id, const std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>& _ret_0) const;
+	void get_value_locked_async_return(const vnx::request_id_t& _request_id, const std::shared_ptr<const ::vnx::keyvalue::Entry>& _ret_0) const;
 	virtual void get_values_async(const std::vector<::vnx::Variant>& keys, const vnx::request_id_t& _request_id) const = 0;
-	void get_values_async_return(const vnx::request_id_t& _request_id, const std::vector<std::shared_ptr<const ::vnx::Value>>& _ret_0) const;
-	virtual void store_value(const ::vnx::Variant& key, const std::shared_ptr<const ::vnx::Value>& value) = 0;
-	virtual void store_values(const std::vector<std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>>& values) = 0;
-	virtual int64_t sync_all(const ::vnx::TopicPtr& topic) const = 0;
-	virtual int64_t sync_all_keys(const ::vnx::TopicPtr& topic) const = 0;
+	void get_values_async_return(const vnx::request_id_t& _request_id, const std::vector<std::shared_ptr<const ::vnx::keyvalue::Entry>>& _ret_0) const;
+	virtual void get_version_key_async(const uint64_t& version, const vnx::request_id_t& _request_id) const = 0;
+	void get_version_key_async_return(const vnx::request_id_t& _request_id, const ::vnx::Variant& _ret_0) const;
+	virtual void get_version_keys_async(const std::vector<uint64_t>& versions, const vnx::request_id_t& _request_id) const = 0;
+	void get_version_keys_async_return(const vnx::request_id_t& _request_id, const std::vector<std::pair<uint64_t, ::vnx::Variant>>& _ret_0) const;
+	virtual void unlock(const ::vnx::Variant& key) = 0;
 	virtual int64_t sync_from(const ::vnx::TopicPtr& topic, const uint64_t& version) const = 0;
 	virtual int64_t sync_range(const ::vnx::TopicPtr& topic, const uint64_t& begin, const uint64_t& end) const = 0;
-	virtual void unlock(const ::vnx::Variant& key) = 0;
+	virtual int64_t sync_all(const ::vnx::TopicPtr& topic) const = 0;
+	virtual int64_t sync_all_keys(const ::vnx::TopicPtr& topic) const = 0;
+	virtual void cancel_sync_job(const int64_t& job_id) = 0;
+	virtual void store_value(const ::vnx::Variant& key, const std::shared_ptr<const ::vnx::Value>& value) = 0;
+	virtual void store_values(const std::vector<std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>>& values) = 0;
+	virtual void delete_value(const ::vnx::Variant& key) = 0;
 	
 	void vnx_handle_switch(std::shared_ptr<const vnx::Sample> _sample) override;
 	std::shared_ptr<vnx::Value> vnx_call_switch(std::shared_ptr<const vnx::Value> _method, const vnx::request_id_t& _request_id) override;

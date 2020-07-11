@@ -5,31 +5,40 @@
 #include <vnx/keyvalue/ServerBase.hxx>
 #include <vnx/NoSuchMethod.hxx>
 #include <vnx/Module.h>
+#include <vnx/ModuleInterface_vnx_get_type_code.hxx>
+#include <vnx/ModuleInterface_vnx_get_type_code_return.hxx>
 #include <vnx/TopicPtr.hpp>
 #include <vnx/Value.h>
 #include <vnx/Variant.hpp>
-#include <vnx/keyvalue/Server_delete_value.hxx>
-#include <vnx/keyvalue/Server_delete_value_return.hxx>
-#include <vnx/keyvalue/Server_get_value.hxx>
-#include <vnx/keyvalue/Server_get_value_locked.hxx>
-#include <vnx/keyvalue/Server_get_value_locked_return.hxx>
-#include <vnx/keyvalue/Server_get_value_return.hxx>
-#include <vnx/keyvalue/Server_get_values.hxx>
-#include <vnx/keyvalue/Server_get_values_return.hxx>
-#include <vnx/keyvalue/Server_store_value.hxx>
-#include <vnx/keyvalue/Server_store_value_return.hxx>
-#include <vnx/keyvalue/Server_store_values.hxx>
-#include <vnx/keyvalue/Server_store_values_return.hxx>
-#include <vnx/keyvalue/Server_sync_all.hxx>
-#include <vnx/keyvalue/Server_sync_all_keys.hxx>
-#include <vnx/keyvalue/Server_sync_all_keys_return.hxx>
-#include <vnx/keyvalue/Server_sync_all_return.hxx>
-#include <vnx/keyvalue/Server_sync_from.hxx>
-#include <vnx/keyvalue/Server_sync_from_return.hxx>
-#include <vnx/keyvalue/Server_sync_range.hxx>
-#include <vnx/keyvalue/Server_sync_range_return.hxx>
-#include <vnx/keyvalue/Server_unlock.hxx>
-#include <vnx/keyvalue/Server_unlock_return.hxx>
+#include <vnx/keyvalue/Entry.hxx>
+#include <vnx/keyvalue/Storage_cancel_sync_job.hxx>
+#include <vnx/keyvalue/Storage_cancel_sync_job_return.hxx>
+#include <vnx/keyvalue/Storage_delete_value.hxx>
+#include <vnx/keyvalue/Storage_delete_value_return.hxx>
+#include <vnx/keyvalue/Storage_get_value.hxx>
+#include <vnx/keyvalue/Storage_get_value_locked.hxx>
+#include <vnx/keyvalue/Storage_get_value_locked_return.hxx>
+#include <vnx/keyvalue/Storage_get_value_return.hxx>
+#include <vnx/keyvalue/Storage_get_values.hxx>
+#include <vnx/keyvalue/Storage_get_values_return.hxx>
+#include <vnx/keyvalue/Storage_get_version_key.hxx>
+#include <vnx/keyvalue/Storage_get_version_key_return.hxx>
+#include <vnx/keyvalue/Storage_get_version_keys.hxx>
+#include <vnx/keyvalue/Storage_get_version_keys_return.hxx>
+#include <vnx/keyvalue/Storage_store_value.hxx>
+#include <vnx/keyvalue/Storage_store_value_return.hxx>
+#include <vnx/keyvalue/Storage_store_values.hxx>
+#include <vnx/keyvalue/Storage_store_values_return.hxx>
+#include <vnx/keyvalue/Storage_sync_all.hxx>
+#include <vnx/keyvalue/Storage_sync_all_keys.hxx>
+#include <vnx/keyvalue/Storage_sync_all_keys_return.hxx>
+#include <vnx/keyvalue/Storage_sync_all_return.hxx>
+#include <vnx/keyvalue/Storage_sync_from.hxx>
+#include <vnx/keyvalue/Storage_sync_from_return.hxx>
+#include <vnx/keyvalue/Storage_sync_range.hxx>
+#include <vnx/keyvalue/Storage_sync_range_return.hxx>
+#include <vnx/keyvalue/Storage_unlock.hxx>
+#include <vnx/keyvalue/Storage_unlock_return.hxx>
 
 #include <vnx/vnx.h>
 
@@ -39,7 +48,7 @@ namespace keyvalue {
 
 
 const vnx::Hash64 ServerBase::VNX_TYPE_HASH(0xbb28aa6f1d808048ull);
-const vnx::Hash64 ServerBase::VNX_CODE_HASH(0x338a5b6a55c25419ull);
+const vnx::Hash64 ServerBase::VNX_CODE_HASH(0x33bb8e235618c684ull);
 
 ServerBase::ServerBase(const std::string& _vnx_name)
 	:	Module::Module(_vnx_name)
@@ -264,20 +273,24 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>();
 	type_code->name = "vnx.keyvalue.Server";
 	type_code->type_hash = vnx::Hash64(0xbb28aa6f1d808048ull);
-	type_code->code_hash = vnx::Hash64(0x338a5b6a55c25419ull);
+	type_code->code_hash = vnx::Hash64(0x33bb8e235618c684ull);
 	type_code->is_native = true;
-	type_code->methods.resize(11);
-	type_code->methods[0] = ::vnx::keyvalue::Server_delete_value::static_get_type_code();
-	type_code->methods[1] = ::vnx::keyvalue::Server_get_value::static_get_type_code();
-	type_code->methods[2] = ::vnx::keyvalue::Server_get_value_locked::static_get_type_code();
-	type_code->methods[3] = ::vnx::keyvalue::Server_get_values::static_get_type_code();
-	type_code->methods[4] = ::vnx::keyvalue::Server_store_value::static_get_type_code();
-	type_code->methods[5] = ::vnx::keyvalue::Server_store_values::static_get_type_code();
-	type_code->methods[6] = ::vnx::keyvalue::Server_sync_all::static_get_type_code();
-	type_code->methods[7] = ::vnx::keyvalue::Server_sync_all_keys::static_get_type_code();
-	type_code->methods[8] = ::vnx::keyvalue::Server_sync_from::static_get_type_code();
-	type_code->methods[9] = ::vnx::keyvalue::Server_sync_range::static_get_type_code();
-	type_code->methods[10] = ::vnx::keyvalue::Server_unlock::static_get_type_code();
+	type_code->methods.resize(15);
+	type_code->methods[0] = ::vnx::ModuleInterface_vnx_get_type_code::static_get_type_code();
+	type_code->methods[1] = ::vnx::keyvalue::Storage_get_value::static_get_type_code();
+	type_code->methods[2] = ::vnx::keyvalue::Storage_get_value_locked::static_get_type_code();
+	type_code->methods[3] = ::vnx::keyvalue::Storage_get_values::static_get_type_code();
+	type_code->methods[4] = ::vnx::keyvalue::Storage_get_version_key::static_get_type_code();
+	type_code->methods[5] = ::vnx::keyvalue::Storage_get_version_keys::static_get_type_code();
+	type_code->methods[6] = ::vnx::keyvalue::Storage_unlock::static_get_type_code();
+	type_code->methods[7] = ::vnx::keyvalue::Storage_sync_from::static_get_type_code();
+	type_code->methods[8] = ::vnx::keyvalue::Storage_sync_range::static_get_type_code();
+	type_code->methods[9] = ::vnx::keyvalue::Storage_sync_all::static_get_type_code();
+	type_code->methods[10] = ::vnx::keyvalue::Storage_sync_all_keys::static_get_type_code();
+	type_code->methods[11] = ::vnx::keyvalue::Storage_cancel_sync_job::static_get_type_code();
+	type_code->methods[12] = ::vnx::keyvalue::Storage_store_value::static_get_type_code();
+	type_code->methods[13] = ::vnx::keyvalue::Storage_store_values::static_get_type_code();
+	type_code->methods[14] = ::vnx::keyvalue::Storage_delete_value::static_get_type_code();
 	type_code->fields.resize(19);
 	{
 		vnx::TypeField& field = type_code->fields[0];
@@ -362,7 +375,7 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 	{
 		vnx::TypeField& field = type_code->fields[13];
 		field.name = "max_queue_ms";
-		field.value = vnx::to_string(1000);
+		field.value = vnx::to_string(100);
 		field.code = {7};
 	}
 	{
@@ -404,90 +417,120 @@ void ServerBase::vnx_handle_switch(std::shared_ptr<const vnx::Sample> _sample) {
 
 std::shared_ptr<vnx::Value> ServerBase::vnx_call_switch(std::shared_ptr<const vnx::Value> _method, const vnx::request_id_t& _request_id) {
 	const auto _type_hash = _method->get_type_hash();
-	if(_type_hash == vnx::Hash64(0xf5f6c0eca92f8e82ull)) {
-		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_delete_value>(_method);
+	if(_type_hash == vnx::Hash64(0x305ec4d628960e5dull)) {
+		auto _args = std::dynamic_pointer_cast<const ::vnx::ModuleInterface_vnx_get_type_code>(_method);
 		if(!_args) {
 			throw std::logic_error("vnx_call_switch(): !_args");
 		}
-		auto _return_value = ::vnx::keyvalue::Server_delete_value_return::create();
-		delete_value(_args->key);
+		auto _return_value = ::vnx::ModuleInterface_vnx_get_type_code_return::create();
+		_return_value->_ret_0 = vnx_get_type_code();
 		return _return_value;
-	} else if(_type_hash == vnx::Hash64(0xe2ff2d7a976abdb8ull)) {
-		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_get_value>(_method);
+	} else if(_type_hash == vnx::Hash64(0x8f47587c24580111ull)) {
+		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_value>(_method);
 		if(!_args) {
 			throw std::logic_error("vnx_call_switch(): !_args");
 		}
 		get_value_async(_args->key, _request_id);
 		return 0;
-	} else if(_type_hash == vnx::Hash64(0x99472796c5804f63ull)) {
-		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_get_value_locked>(_method);
+	} else if(_type_hash == vnx::Hash64(0xfd0f1035b160c34full)) {
+		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_value_locked>(_method);
 		if(!_args) {
 			throw std::logic_error("vnx_call_switch(): !_args");
 		}
 		get_value_locked_async(_args->key, _args->timeout_ms, _request_id);
 		return 0;
-	} else if(_type_hash == vnx::Hash64(0x29edfe1764d9e55ull)) {
-		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_get_values>(_method);
+	} else if(_type_hash == vnx::Hash64(0x7427b9c6f9a68c30ull)) {
+		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_values>(_method);
 		if(!_args) {
 			throw std::logic_error("vnx_call_switch(): !_args");
 		}
 		get_values_async(_args->keys, _request_id);
 		return 0;
-	} else if(_type_hash == vnx::Hash64(0xf6bea692aee1018cull)) {
-		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_store_value>(_method);
+	} else if(_type_hash == vnx::Hash64(0xb99ad29183ddd3feull)) {
+		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_version_key>(_method);
 		if(!_args) {
 			throw std::logic_error("vnx_call_switch(): !_args");
 		}
-		auto _return_value = ::vnx::keyvalue::Server_store_value_return::create();
-		store_value(_args->key, _args->value);
+		get_version_key_async(_args->version, _request_id);
+		return 0;
+	} else if(_type_hash == vnx::Hash64(0xe9276407215550f2ull)) {
+		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_version_keys>(_method);
+		if(!_args) {
+			throw std::logic_error("vnx_call_switch(): !_args");
+		}
+		get_version_keys_async(_args->versions, _request_id);
+		return 0;
+	} else if(_type_hash == vnx::Hash64(0x25041c8bd6ea1977ull)) {
+		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_unlock>(_method);
+		if(!_args) {
+			throw std::logic_error("vnx_call_switch(): !_args");
+		}
+		auto _return_value = ::vnx::keyvalue::Storage_unlock_return::create();
+		unlock(_args->key);
 		return _return_value;
-	} else if(_type_hash == vnx::Hash64(0xfff6bea692aee101ull)) {
-		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_store_values>(_method);
+	} else if(_type_hash == vnx::Hash64(0xacb686150d0602a6ull)) {
+		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_sync_from>(_method);
 		if(!_args) {
 			throw std::logic_error("vnx_call_switch(): !_args");
 		}
-		auto _return_value = ::vnx::keyvalue::Server_store_values_return::create();
-		store_values(_args->values);
-		return _return_value;
-	} else if(_type_hash == vnx::Hash64(0x6173affeadaf11ddull)) {
-		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_sync_all>(_method);
-		if(!_args) {
-			throw std::logic_error("vnx_call_switch(): !_args");
-		}
-		auto _return_value = ::vnx::keyvalue::Server_sync_all_return::create();
-		_return_value->_ret_0 = sync_all(_args->topic);
-		return _return_value;
-	} else if(_type_hash == vnx::Hash64(0x5f4cae900d6d7f69ull)) {
-		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_sync_all_keys>(_method);
-		if(!_args) {
-			throw std::logic_error("vnx_call_switch(): !_args");
-		}
-		auto _return_value = ::vnx::keyvalue::Server_sync_all_keys_return::create();
-		_return_value->_ret_0 = sync_all_keys(_args->topic);
-		return _return_value;
-	} else if(_type_hash == vnx::Hash64(0xc10ef313be34be0full)) {
-		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_sync_from>(_method);
-		if(!_args) {
-			throw std::logic_error("vnx_call_switch(): !_args");
-		}
-		auto _return_value = ::vnx::keyvalue::Server_sync_from_return::create();
+		auto _return_value = ::vnx::keyvalue::Storage_sync_from_return::create();
 		_return_value->_ret_0 = sync_from(_args->topic, _args->version);
 		return _return_value;
-	} else if(_type_hash == vnx::Hash64(0x21592a9e03b544fdull)) {
-		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_sync_range>(_method);
+	} else if(_type_hash == vnx::Hash64(0x57e04cb98c5e5698ull)) {
+		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_sync_range>(_method);
 		if(!_args) {
 			throw std::logic_error("vnx_call_switch(): !_args");
 		}
-		auto _return_value = ::vnx::keyvalue::Server_sync_range_return::create();
+		auto _return_value = ::vnx::keyvalue::Storage_sync_range_return::create();
 		_return_value->_ret_0 = sync_range(_args->topic, _args->begin, _args->end);
 		return _return_value;
-	} else if(_type_hash == vnx::Hash64(0xfd9d27aa50baa773ull)) {
-		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Server_unlock>(_method);
+	} else if(_type_hash == vnx::Hash64(0x973bf802c6c0aaabull)) {
+		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_sync_all>(_method);
 		if(!_args) {
 			throw std::logic_error("vnx_call_switch(): !_args");
 		}
-		auto _return_value = ::vnx::keyvalue::Server_unlock_return::create();
-		unlock(_args->key);
+		auto _return_value = ::vnx::keyvalue::Storage_sync_all_return::create();
+		_return_value->_ret_0 = sync_all(_args->topic);
+		return _return_value;
+	} else if(_type_hash == vnx::Hash64(0xba52cec87e1556e5ull)) {
+		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_sync_all_keys>(_method);
+		if(!_args) {
+			throw std::logic_error("vnx_call_switch(): !_args");
+		}
+		auto _return_value = ::vnx::keyvalue::Storage_sync_all_keys_return::create();
+		_return_value->_ret_0 = sync_all_keys(_args->topic);
+		return _return_value;
+	} else if(_type_hash == vnx::Hash64(0x79f19daa5278fbc0ull)) {
+		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_cancel_sync_job>(_method);
+		if(!_args) {
+			throw std::logic_error("vnx_call_switch(): !_args");
+		}
+		auto _return_value = ::vnx::keyvalue::Storage_cancel_sync_job_return::create();
+		cancel_sync_job(_args->job_id);
+		return _return_value;
+	} else if(_type_hash == vnx::Hash64(0xa1b7f9743ce3a0f1ull)) {
+		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_store_value>(_method);
+		if(!_args) {
+			throw std::logic_error("vnx_call_switch(): !_args");
+		}
+		auto _return_value = ::vnx::keyvalue::Storage_store_value_return::create();
+		store_value(_args->key, _args->value);
+		return _return_value;
+	} else if(_type_hash == vnx::Hash64(0x22e477486f9c73e0ull)) {
+		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_store_values>(_method);
+		if(!_args) {
+			throw std::logic_error("vnx_call_switch(): !_args");
+		}
+		auto _return_value = ::vnx::keyvalue::Storage_store_values_return::create();
+		store_values(_args->values);
+		return _return_value;
+	} else if(_type_hash == vnx::Hash64(0x28e40902541d1c63ull)) {
+		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_delete_value>(_method);
+		if(!_args) {
+			throw std::logic_error("vnx_call_switch(): !_args");
+		}
+		auto _return_value = ::vnx::keyvalue::Storage_delete_value_return::create();
+		delete_value(_args->key);
 		return _return_value;
 	}
 	auto _ex = vnx::NoSuchMethod::create();
@@ -496,20 +539,32 @@ std::shared_ptr<vnx::Value> ServerBase::vnx_call_switch(std::shared_ptr<const vn
 	return _ex;
 }
 
-void ServerBase::get_value_async_return(const vnx::request_id_t& _request_id, const std::shared_ptr<const ::vnx::Value>& _ret_0) const {
-	auto _return_value = ::vnx::keyvalue::Server_get_value_return::create();
+void ServerBase::get_value_async_return(const vnx::request_id_t& _request_id, const std::shared_ptr<const ::vnx::keyvalue::Entry>& _ret_0) const {
+	auto _return_value = ::vnx::keyvalue::Storage_get_value_return::create();
 	_return_value->_ret_0 = _ret_0;
 	vnx_async_callback(_request_id, _return_value);
 }
 
-void ServerBase::get_value_locked_async_return(const vnx::request_id_t& _request_id, const std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>& _ret_0) const {
-	auto _return_value = ::vnx::keyvalue::Server_get_value_locked_return::create();
+void ServerBase::get_value_locked_async_return(const vnx::request_id_t& _request_id, const std::shared_ptr<const ::vnx::keyvalue::Entry>& _ret_0) const {
+	auto _return_value = ::vnx::keyvalue::Storage_get_value_locked_return::create();
 	_return_value->_ret_0 = _ret_0;
 	vnx_async_callback(_request_id, _return_value);
 }
 
-void ServerBase::get_values_async_return(const vnx::request_id_t& _request_id, const std::vector<std::shared_ptr<const ::vnx::Value>>& _ret_0) const {
-	auto _return_value = ::vnx::keyvalue::Server_get_values_return::create();
+void ServerBase::get_values_async_return(const vnx::request_id_t& _request_id, const std::vector<std::shared_ptr<const ::vnx::keyvalue::Entry>>& _ret_0) const {
+	auto _return_value = ::vnx::keyvalue::Storage_get_values_return::create();
+	_return_value->_ret_0 = _ret_0;
+	vnx_async_callback(_request_id, _return_value);
+}
+
+void ServerBase::get_version_key_async_return(const vnx::request_id_t& _request_id, const ::vnx::Variant& _ret_0) const {
+	auto _return_value = ::vnx::keyvalue::Storage_get_version_key_return::create();
+	_return_value->_ret_0 = _ret_0;
+	vnx_async_callback(_request_id, _return_value);
+}
+
+void ServerBase::get_version_keys_async_return(const vnx::request_id_t& _request_id, const std::vector<std::pair<uint64_t, ::vnx::Variant>>& _ret_0) const {
+	auto _return_value = ::vnx::keyvalue::Storage_get_version_keys_return::create();
 	_return_value->_ret_0 = _ret_0;
 	vnx_async_callback(_request_id, _return_value);
 }

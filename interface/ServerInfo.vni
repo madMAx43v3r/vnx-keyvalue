@@ -1,0 +1,9 @@
+package vnx.keyvalue;
+
+class ServerInfo {
+	
+	shard_t shard;
+	
+	vnx.Hash64 address;
+	
+}

@@ -8,8 +8,8 @@
 #include <vnx/Hash64.hpp>
 #include <vnx/Module.h>
 #include <vnx/TopicPtr.hpp>
-#include <vnx/keyvalue/KeyValuePair.hxx>
 #include <vnx/keyvalue/SyncInfo.hxx>
+#include <vnx/keyvalue/SyncUpdate.hxx>
 
 
 namespace vnx {
@@ -20,6 +20,8 @@ public:
 	SyncModuleClient(const std::string& service_name);
 	
 	SyncModuleClient(vnx::Hash64 service_addr);
+	
+	::vnx::TypeCode vnx_get_type_code();
 	
 };
 

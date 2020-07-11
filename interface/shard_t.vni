@@ -1,0 +1,8 @@
+package vnx.keyvalue;
+
+struct shard_t {
+	
+	ushort index;				// 0 to 2^x-1
+	ushort size;				// 2^x
+	
+}

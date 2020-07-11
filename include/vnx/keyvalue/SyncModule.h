@@ -22,7 +22,7 @@ public:
 protected:
 	void main() override;
 	
-	void handle(std::shared_ptr<const KeyValuePair> value) override;
+	void handle(std::shared_ptr<const SyncUpdate> value) override;
 	
 	void handle(std::shared_ptr<const SyncInfo> value) override;
 	

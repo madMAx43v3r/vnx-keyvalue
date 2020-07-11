@@ -8,8 +8,8 @@
 #include <vnx/Hash64.hpp>
 #include <vnx/Module.h>
 #include <vnx/TopicPtr.hpp>
-#include <vnx/keyvalue/KeyValuePair.hxx>
 #include <vnx/keyvalue/SyncInfo.hxx>
+#include <vnx/keyvalue/SyncUpdate.hxx>
 
 
 namespace vnx {
@@ -51,8 +51,8 @@ public:
 	static std::shared_ptr<vnx::TypeCode> static_create_type_code();
 	
 protected:
-	virtual void handle(std::shared_ptr<const ::vnx::keyvalue::KeyValuePair> _value, std::shared_ptr<const vnx::Sample> _sample) { handle(_value); }
-	virtual void handle(std::shared_ptr<const ::vnx::keyvalue::KeyValuePair> _value) {}
+	virtual void handle(std::shared_ptr<const ::vnx::keyvalue::SyncUpdate> _value, std::shared_ptr<const vnx::Sample> _sample) { handle(_value); }
+	virtual void handle(std::shared_ptr<const ::vnx::keyvalue::SyncUpdate> _value) {}
 	virtual void handle(std::shared_ptr<const ::vnx::keyvalue::SyncInfo> _value, std::shared_ptr<const vnx::Sample> _sample) { handle(_value); }
 	virtual void handle(std::shared_ptr<const ::vnx::keyvalue::SyncInfo> _value) {}
 	
