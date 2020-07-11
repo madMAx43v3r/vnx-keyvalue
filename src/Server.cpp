@@ -418,34 +418,35 @@ void Server::check_timeouts()
 
 std::shared_ptr<const Entry> Server::read_value(const Variant& key) const
 {
+	auto entry = Entry::create();
+	entry->key = key;
+	
 	value_index_t index;
 	std::shared_ptr<block_t> block;
 	{
 		std::shared_lock lock(index_mutex);
 		
 		index = get_value_index(key);
-		if(index.block_index >= 0)
-		{
+		if(index.block_index >= 0) {
 			try {
 				block = get_block(index.block_index);
 				block->num_pending++;
 			} catch(...) {
 				// ignore
 			}
+			if(index.key_iter != keyhash_map.end()) {
+				entry->version = index.key_iter->second;
+			}
 		}
 	}
 	if(!block) {
-		return 0;
+		return entry;
 	}
 	if(index.num_bytes > 65536) {
 		block->value_file.fadvise(POSIX_FADV_SEQUENTIAL, index.block_offset, index.num_bytes);
 	}
 	FileSectionInputStream stream(block->value_file.get_handle(), index.block_offset, index.num_bytes);
 	TypeInput in(&stream);
-	
-	auto entry = Entry::create();
-	entry->key = key;
-	entry->version = index.key_iter->second;
 	try {
 		entry->value = vnx::read(in);
 		num_bytes_read += index.num_bytes;
