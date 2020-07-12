@@ -874,8 +874,6 @@ void Server::rewrite_func()
 		return;
 	}
 	
-	// TODO: rewrite in own thread
-	
 	if(!rewrite.is_run) {
 		rewrite.is_run = true;
 		rewrite.key_in.reset();
