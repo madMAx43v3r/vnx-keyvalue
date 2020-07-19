@@ -455,7 +455,7 @@ std::shared_ptr<const Entry> Server::read_value(const Variant& key) const
 	}
 	block->num_pending--;
 	read_counter++;
-	{
+	if(entry->value) {
 		auto decompressed = entry->value->vnx_decompress();
 		if(decompressed) {
 			entry->value = decompressed;
