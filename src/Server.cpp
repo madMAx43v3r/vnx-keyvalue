@@ -456,9 +456,9 @@ std::shared_ptr<const Entry> Server::read_value(const Variant& key) const
 	block->num_pending--;
 	read_counter++;
 	{
-		auto compressed = std::dynamic_pointer_cast<const addons::CompressedValue>(entry->value);
-		if(compressed) {
-			entry->value = compressed->decompress();
+		auto decompressed = entry->value->vnx_decompress();
+		if(decompressed) {
+			entry->value = decompressed;
 		}
 	}
 	return entry;
