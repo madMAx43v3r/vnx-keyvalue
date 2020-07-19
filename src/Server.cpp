@@ -1108,12 +1108,18 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 			const auto& index = entry.index;
 			
 			if(index) {
-				std::shared_ptr<Value> value;
+				std::shared_ptr<const Value> value;
 				if(!job->key_only) {
 					in.reset();
 					stream.reset(block->value_file.get_handle(), index->block_offset, index->num_bytes);
 					try {
 						value = vnx::read(in);
+						if(value) {
+							auto decompressed = value->vnx_decompress();
+							if(decompressed) {
+								value = decompressed;
+							}
+						}
 						num_bytes_read += index->num_bytes;
 					} catch(...) {
 						// ignore
