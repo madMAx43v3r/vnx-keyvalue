@@ -73,7 +73,7 @@ void CacheBase::accept(vnx::Visitor& _visitor) const {
 }
 
 void CacheBase::write(std::ostream& _out) const {
-	_out << "{\"__type\": \"vnx.keyvalue.Cache\"";
+	_out << "{";
 	_out << "}";
 }
 
@@ -84,7 +84,6 @@ void CacheBase::read(std::istream& _in) {
 
 vnx::Object CacheBase::to_object() const {
 	vnx::Object _object;
-	_object["__type"] = "vnx.keyvalue.Cache";
 	return _object;
 }
 

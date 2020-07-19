@@ -111,8 +111,8 @@ void ServerBase::accept(vnx::Visitor& _visitor) const {
 }
 
 void ServerBase::write(std::ostream& _out) const {
-	_out << "{\"__type\": \"vnx.keyvalue.Server\"";
-	_out << ", \"update_topic\": "; vnx::write(_out, update_topic);
+	_out << "{";
+	_out << "\"update_topic\": "; vnx::write(_out, update_topic);
 	_out << ", \"update_topic_keys\": "; vnx::write(_out, update_topic_keys);
 	_out << ", \"domain\": "; vnx::write(_out, domain);
 	_out << ", \"collection\": "; vnx::write(_out, collection);
@@ -182,7 +182,6 @@ void ServerBase::read(std::istream& _in) {
 
 vnx::Object ServerBase::to_object() const {
 	vnx::Object _object;
-	_object["__type"] = "vnx.keyvalue.Server";
 	_object["update_topic"] = update_topic;
 	_object["update_topic_keys"] = update_topic_keys;
 	_object["domain"] = domain;
@@ -309,20 +308,20 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 		field.is_extended = true;
 		field.name = "domain";
 		field.value = vnx::to_string("keyvalue/");
-		field.code = {12, 5};
+		field.code = {32};
 	}
 	{
 		vnx::TypeField& field = type_code->fields[3];
 		field.is_extended = true;
 		field.name = "collection";
 		field.value = vnx::to_string("storage");
-		field.code = {12, 5};
+		field.code = {32};
 	}
 	{
 		vnx::TypeField& field = type_code->fields[4];
 		field.is_extended = true;
 		field.name = "storage_path";
-		field.code = {12, 5};
+		field.code = {32};
 	}
 	{
 		vnx::TypeField& field = type_code->fields[5];

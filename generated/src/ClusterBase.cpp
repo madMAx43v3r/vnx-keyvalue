@@ -73,7 +73,7 @@ void ClusterBase::accept(vnx::Visitor& _visitor) const {
 }
 
 void ClusterBase::write(std::ostream& _out) const {
-	_out << "{\"__type\": \"vnx.keyvalue.Cluster\"";
+	_out << "{";
 	_out << "}";
 }
 
@@ -84,7 +84,6 @@ void ClusterBase::read(std::istream& _in) {
 
 vnx::Object ClusterBase::to_object() const {
 	vnx::Object _object;
-	_object["__type"] = "vnx.keyvalue.Cluster";
 	return _object;
 }
 

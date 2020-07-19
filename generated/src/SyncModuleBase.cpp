@@ -57,8 +57,8 @@ void SyncModuleBase::accept(vnx::Visitor& _visitor) const {
 }
 
 void SyncModuleBase::write(std::ostream& _out) const {
-	_out << "{\"__type\": \"vnx.keyvalue.SyncModule\"";
-	_out << ", \"input_sync\": "; vnx::write(_out, input_sync);
+	_out << "{";
+	_out << "\"input_sync\": "; vnx::write(_out, input_sync);
 	_out << ", \"src_addr\": "; vnx::write(_out, src_addr);
 	_out << ", \"dst_addr\": "; vnx::write(_out, dst_addr);
 	_out << ", \"buffer_size\": "; vnx::write(_out, buffer_size);
@@ -89,7 +89,6 @@ void SyncModuleBase::read(std::istream& _in) {
 
 vnx::Object SyncModuleBase::to_object() const {
 	vnx::Object _object;
-	_object["__type"] = "vnx.keyvalue.SyncModule";
 	_object["input_sync"] = input_sync;
 	_object["src_addr"] = src_addr;
 	_object["dst_addr"] = dst_addr;

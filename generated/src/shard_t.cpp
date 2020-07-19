@@ -50,8 +50,8 @@ void shard_t::accept(vnx::Visitor& _visitor) const {
 }
 
 void shard_t::write(std::ostream& _out) const {
-	_out << "{\"__type\": \"vnx.keyvalue.shard_t\"";
-	_out << ", \"index\": "; vnx::write(_out, index);
+	_out << "{";
+	_out << "\"index\": "; vnx::write(_out, index);
 	_out << ", \"size\": "; vnx::write(_out, size);
 	_out << "}";
 }
@@ -70,7 +70,6 @@ void shard_t::read(std::istream& _in) {
 
 vnx::Object shard_t::to_object() const {
 	vnx::Object _object;
-	_object["__type"] = "vnx.keyvalue.shard_t";
 	_object["index"] = index;
 	_object["size"] = size;
 	return _object;
