@@ -663,7 +663,8 @@ void Server::store_value(const Variant& key, const std::shared_ptr<const Value>&
 	if(key.is_null()) {
 		return;
 	}
-	store_value_internal(key, do_compress ? addons::DeflatedValue::compress(value) : value, curr_version + 1);
+	store_value_internal(key, do_compress ?
+			addons::DeflatedValue::compress_ex(value, compress_level) : value, curr_version + 1);
 	curr_version++;
 	
 	auto pair = SyncUpdate::create();

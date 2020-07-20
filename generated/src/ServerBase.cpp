@@ -48,12 +48,13 @@ namespace keyvalue {
 
 
 const vnx::Hash64 ServerBase::VNX_TYPE_HASH(0xbb28aa6f1d808048ull);
-const vnx::Hash64 ServerBase::VNX_CODE_HASH(0x33bb8e235618c684ull);
+const vnx::Hash64 ServerBase::VNX_CODE_HASH(0xf6a934480bfd2872ull);
 
 ServerBase::ServerBase(const std::string& _vnx_name)
 	:	Module::Module(_vnx_name)
 {
 	vnx::read_config(vnx_name + ".collection", collection);
+	vnx::read_config(vnx_name + ".compress_level", compress_level);
 	vnx::read_config(vnx_name + ".do_compress", do_compress);
 	vnx::read_config(vnx_name + ".domain", domain);
 	vnx::read_config(vnx_name + ".idle_rewrite_interval", idle_rewrite_interval);
@@ -103,10 +104,11 @@ void ServerBase::accept(vnx::Visitor& _visitor) const {
 	_visitor.type_field(_type_code->fields[12], 12); vnx::accept(_visitor, sync_chunk_count);
 	_visitor.type_field(_type_code->fields[13], 13); vnx::accept(_visitor, max_queue_ms);
 	_visitor.type_field(_type_code->fields[14], 14); vnx::accept(_visitor, num_read_threads);
-	_visitor.type_field(_type_code->fields[15], 15); vnx::accept(_visitor, timeout_interval_ms);
-	_visitor.type_field(_type_code->fields[16], 16); vnx::accept(_visitor, stats_interval_ms);
-	_visitor.type_field(_type_code->fields[17], 17); vnx::accept(_visitor, do_compress);
-	_visitor.type_field(_type_code->fields[18], 18); vnx::accept(_visitor, ignore_errors);
+	_visitor.type_field(_type_code->fields[15], 15); vnx::accept(_visitor, compress_level);
+	_visitor.type_field(_type_code->fields[16], 16); vnx::accept(_visitor, timeout_interval_ms);
+	_visitor.type_field(_type_code->fields[17], 17); vnx::accept(_visitor, stats_interval_ms);
+	_visitor.type_field(_type_code->fields[18], 18); vnx::accept(_visitor, do_compress);
+	_visitor.type_field(_type_code->fields[19], 19); vnx::accept(_visitor, ignore_errors);
 	_visitor.type_end(*_type_code);
 }
 
@@ -127,6 +129,7 @@ void ServerBase::write(std::ostream& _out) const {
 	_out << ", \"sync_chunk_count\": "; vnx::write(_out, sync_chunk_count);
 	_out << ", \"max_queue_ms\": "; vnx::write(_out, max_queue_ms);
 	_out << ", \"num_read_threads\": "; vnx::write(_out, num_read_threads);
+	_out << ", \"compress_level\": "; vnx::write(_out, compress_level);
 	_out << ", \"timeout_interval_ms\": "; vnx::write(_out, timeout_interval_ms);
 	_out << ", \"stats_interval_ms\": "; vnx::write(_out, stats_interval_ms);
 	_out << ", \"do_compress\": "; vnx::write(_out, do_compress);
@@ -140,6 +143,8 @@ void ServerBase::read(std::istream& _in) {
 	for(const auto& _entry : _object) {
 		if(_entry.first == "collection") {
 			vnx::from_string(_entry.second, collection);
+		} else if(_entry.first == "compress_level") {
+			vnx::from_string(_entry.second, compress_level);
 		} else if(_entry.first == "do_compress") {
 			vnx::from_string(_entry.second, do_compress);
 		} else if(_entry.first == "domain") {
@@ -197,6 +202,7 @@ vnx::Object ServerBase::to_object() const {
 	_object["sync_chunk_count"] = sync_chunk_count;
 	_object["max_queue_ms"] = max_queue_ms;
 	_object["num_read_threads"] = num_read_threads;
+	_object["compress_level"] = compress_level;
 	_object["timeout_interval_ms"] = timeout_interval_ms;
 	_object["stats_interval_ms"] = stats_interval_ms;
 	_object["do_compress"] = do_compress;
@@ -208,6 +214,8 @@ void ServerBase::from_object(const vnx::Object& _object) {
 	for(const auto& _entry : _object.field) {
 		if(_entry.first == "collection") {
 			_entry.second.to(collection);
+		} else if(_entry.first == "compress_level") {
+			_entry.second.to(compress_level);
 		} else if(_entry.first == "do_compress") {
 			_entry.second.to(do_compress);
 		} else if(_entry.first == "domain") {
@@ -272,7 +280,7 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>();
 	type_code->name = "vnx.keyvalue.Server";
 	type_code->type_hash = vnx::Hash64(0xbb28aa6f1d808048ull);
-	type_code->code_hash = vnx::Hash64(0x33bb8e235618c684ull);
+	type_code->code_hash = vnx::Hash64(0xf6a934480bfd2872ull);
 	type_code->is_native = true;
 	type_code->methods.resize(15);
 	type_code->methods[0] = ::vnx::ModuleInterface_vnx_get_type_code::static_get_type_code();
@@ -290,7 +298,7 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 	type_code->methods[12] = ::vnx::keyvalue::Storage_store_value::static_get_type_code();
 	type_code->methods[13] = ::vnx::keyvalue::Storage_store_values::static_get_type_code();
 	type_code->methods[14] = ::vnx::keyvalue::Storage_delete_value::static_get_type_code();
-	type_code->fields.resize(19);
+	type_code->fields.resize(20);
 	{
 		vnx::TypeField& field = type_code->fields[0];
 		field.is_extended = true;
@@ -385,24 +393,30 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 	}
 	{
 		vnx::TypeField& field = type_code->fields[15];
+		field.name = "compress_level";
+		field.value = vnx::to_string(9);
+		field.code = {7};
+	}
+	{
+		vnx::TypeField& field = type_code->fields[16];
 		field.name = "timeout_interval_ms";
 		field.value = vnx::to_string(100);
 		field.code = {7};
 	}
 	{
-		vnx::TypeField& field = type_code->fields[16];
+		vnx::TypeField& field = type_code->fields[17];
 		field.name = "stats_interval_ms";
 		field.value = vnx::to_string(3000);
 		field.code = {7};
 	}
 	{
-		vnx::TypeField& field = type_code->fields[17];
+		vnx::TypeField& field = type_code->fields[18];
 		field.name = "do_compress";
 		field.value = vnx::to_string(false);
 		field.code = {1};
 	}
 	{
-		vnx::TypeField& field = type_code->fields[18];
+		vnx::TypeField& field = type_code->fields[19];
 		field.name = "ignore_errors";
 		field.value = vnx::to_string(false);
 		field.code = {1};
@@ -666,23 +680,29 @@ void read(TypeInput& in, ::vnx::keyvalue::ServerBase& value, const TypeCode* typ
 		{
 			const vnx::TypeField* const _field = type_code->field_map[15];
 			if(_field) {
-				vnx::read_value(_buf + _field->offset, value.timeout_interval_ms, _field->code.data());
+				vnx::read_value(_buf + _field->offset, value.compress_level, _field->code.data());
 			}
 		}
 		{
 			const vnx::TypeField* const _field = type_code->field_map[16];
 			if(_field) {
-				vnx::read_value(_buf + _field->offset, value.stats_interval_ms, _field->code.data());
+				vnx::read_value(_buf + _field->offset, value.timeout_interval_ms, _field->code.data());
 			}
 		}
 		{
 			const vnx::TypeField* const _field = type_code->field_map[17];
 			if(_field) {
-				vnx::read_value(_buf + _field->offset, value.do_compress, _field->code.data());
+				vnx::read_value(_buf + _field->offset, value.stats_interval_ms, _field->code.data());
 			}
 		}
 		{
 			const vnx::TypeField* const _field = type_code->field_map[18];
+			if(_field) {
+				vnx::read_value(_buf + _field->offset, value.do_compress, _field->code.data());
+			}
+		}
+		{
+			const vnx::TypeField* const _field = type_code->field_map[19];
 			if(_field) {
 				vnx::read_value(_buf + _field->offset, value.ignore_errors, _field->code.data());
 			}
@@ -709,7 +729,7 @@ void write(TypeOutput& out, const ::vnx::keyvalue::ServerBase& value, const Type
 	if(code && code[0] == CODE_STRUCT) {
 		type_code = type_code->depends[code[1]];
 	}
-	char* const _buf = out.write(54);
+	char* const _buf = out.write(58);
 	vnx::write_value(_buf + 0, value.max_block_size);
 	vnx::write_value(_buf + 8, value.rewrite_chunk_size);
 	vnx::write_value(_buf + 12, value.rewrite_chunk_count);
@@ -720,10 +740,11 @@ void write(TypeOutput& out, const ::vnx::keyvalue::ServerBase& value, const Type
 	vnx::write_value(_buf + 32, value.sync_chunk_count);
 	vnx::write_value(_buf + 36, value.max_queue_ms);
 	vnx::write_value(_buf + 40, value.num_read_threads);
-	vnx::write_value(_buf + 44, value.timeout_interval_ms);
-	vnx::write_value(_buf + 48, value.stats_interval_ms);
-	vnx::write_value(_buf + 52, value.do_compress);
-	vnx::write_value(_buf + 53, value.ignore_errors);
+	vnx::write_value(_buf + 44, value.compress_level);
+	vnx::write_value(_buf + 48, value.timeout_interval_ms);
+	vnx::write_value(_buf + 52, value.stats_interval_ms);
+	vnx::write_value(_buf + 56, value.do_compress);
+	vnx::write_value(_buf + 57, value.ignore_errors);
 	vnx::write(out, value.update_topic, type_code, type_code->fields[0].code.data());
 	vnx::write(out, value.update_topic_keys, type_code, type_code->fields[1].code.data());
 	vnx::write(out, value.domain, type_code, type_code->fields[2].code.data());
