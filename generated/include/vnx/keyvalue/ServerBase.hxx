@@ -32,8 +32,10 @@ public:
 	int32_t idle_rewrite_interval = 1000;
 	int32_t sync_chunk_count = 100;
 	int32_t max_queue_ms = 100;
-	int32_t num_read_threads = 1;
-	int32_t compress_level = 9;
+	int32_t max_num_pending = 100;
+	int32_t num_threads = 1;
+	int32_t num_read_threads = -1;
+	int32_t compress_level = 6;
 	int32_t timeout_interval_ms = 100;
 	int32_t stats_interval_ms = 3000;
 	vnx::bool_t do_compress = false;
