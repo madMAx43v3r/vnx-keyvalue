@@ -137,6 +137,8 @@ private:
 	
 	void multi_read_key_job(uint64_t version, size_t index, std::shared_ptr<multi_read_key_job_t> job) const;
 	
+	void store_compress_job(std::shared_ptr<const Entry> entry);
+	
 	void lock_file_exclusive(const File& file);
 	
 	std::string get_file_path(const std::string& name, int64_t index) const;
@@ -155,7 +157,14 @@ private:
 	
 	std::shared_ptr<block_t> add_new_block();
 	
-	void store_value_internal(const Variant& key, const std::shared_ptr<const Value>& value, uint64_t version);
+	void store_value_internal(	const Variant& key,
+								const std::shared_ptr<const Value>& value,
+								uint64_t version);
+	
+	void store_value_ex(const Variant& key,
+						std::shared_ptr<const Value> value,
+						std::shared_ptr<const Value> store_value,
+						uint64_t version);
 	
 	int64_t sync_range_ex(TopicPtr topic, uint64_t begin, uint64_t end, bool key_only) const;
 	
@@ -174,7 +183,7 @@ private:
 private:
 	uint64_t curr_version = 0;
 	std::shared_ptr<Collection> coll_index;
-	std::shared_ptr<ThreadPool> read_threads;
+	std::shared_ptr<ThreadPool> threads;
 	std::shared_ptr<ThreadPool> sync_threads;
 	
 	mutable std::shared_mutex index_mutex;
@@ -183,6 +192,7 @@ private:
 	std::map<int64_t, std::shared_ptr<block_t>> block_map;
 	std::map<uint64_t, index_t> index_map;							// [version => index_t]
 	std::unordered_multimap<uint64_t, uint64_t> keyhash_map;		// [key hash => version]
+	std::map<Variant, std::shared_ptr<const Entry>> write_cache;
 	std::list<std::shared_ptr<block_t>> delete_list;
 	
 	// accessed by main thread only

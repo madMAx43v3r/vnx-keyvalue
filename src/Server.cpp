@@ -46,6 +46,9 @@ void Server::main()
 	if(collection.empty()) {
 		throw std::logic_error("invalid collection config");
 	}
+	if(num_read_threads != -1) {
+		throw std::logic_error("num_read_threads is obsolete");
+	}
 	
 	for(int i = 0; i < NUM_INDEX; ++i) {
 		const auto path = get_file_path("index", i);
@@ -237,14 +240,16 @@ void Server::main()
 	
 	write_index();
 	
-	read_threads = std::make_shared<ThreadPool>(num_read_threads, 1000);
+	threads = std::make_shared<ThreadPool>(num_threads, max_num_pending);
 	sync_threads = std::make_shared<ThreadPool>(-1);
 	
 	update_thread = std::thread(&Server::update_loop, this);
 	
 	set_timer_millis(timeout_interval_ms, std::bind(&Server::check_timeouts, this));
 	set_timer_millis(rewrite_interval * 1000, std::bind(&Server::check_rewrite, this, false));
-	set_timer_millis(idle_rewrite_interval * 1000, std::bind(&Server::check_rewrite, this, true));
+	if(idle_rewrite_interval) {
+		set_timer_millis(idle_rewrite_interval * 1000, std::bind(&Server::check_rewrite, this, true));
+	}
 	if(stats_interval_ms) {
 		set_timer_millis(stats_interval_ms, std::bind(&Server::print_stats, this));
 	}
@@ -253,7 +258,7 @@ void Server::main()
 	
 	Super::main();
 	
-	read_threads->close();
+	threads->close();
 	sync_threads->close();
 	
 	update_condition.notify_all();
@@ -286,7 +291,7 @@ void Server::get_value_async(const Variant& key, const request_id_t& req_id) con
 		auto& entry = iter->second;
 		entry.waiting.push_back(std::bind(&Server::get_value_async, this, key, req_id));
 	} else {
-		read_threads->add_task(std::bind(&Server::read_job, this, key, req_id));
+		threads->add_task(std::bind(&Server::read_job, this, key, req_id));
 	}
 }
 
@@ -296,7 +301,7 @@ void Server::get_value_locked_async(const Variant& key, const int32_t& timeout_m
 	const auto& iter = ret.first;
 	if(ret.second) {
 		aquire_lock(iter, timeout_ms);
-		read_threads->add_task(std::bind(&Server::read_job_locked, this, key, req_id));
+		threads->add_task(std::bind(&Server::read_job_locked, this, key, req_id));
 	} else {
 		auto& entry = iter->second;
 		entry.waiting.push_back(std::bind(&Server::get_value_locked_async, this, key, timeout_ms, req_id));
@@ -313,7 +318,7 @@ void Server::get_value_multi_async(	const Variant& key,
 		auto& entry = iter->second;
 		entry.waiting.push_back(std::bind(&Server::get_value_multi_async, this, key, index, job, req_id));
 	} else {
-		read_threads->add_task(std::bind(&Server::multi_read_job, this, key, index, job));
+		threads->add_task(std::bind(&Server::multi_read_job, this, key, index, job));
 	}
 }
 
@@ -335,14 +340,14 @@ void Server::get_values_async(const std::vector<Variant>& keys, const request_id
 			auto& entry = iter->second;
 			entry.waiting.push_back(std::bind(&Server::get_value_multi_async, this, keys[i], i, job, req_id));
 		} else {
-			read_threads->add_task(std::bind(&Server::multi_read_job, this, keys[i], i, job));
+			threads->add_task(std::bind(&Server::multi_read_job, this, keys[i], i, job));
 		}
 	}
 }
 
 void Server::get_key_async(const uint64_t& version, const vnx::request_id_t& req_id) const
 {
-	read_threads->add_task(std::bind(&Server::read_key_job, this, version, req_id));
+	threads->add_task(std::bind(&Server::read_key_job, this, version, req_id));
 }
 
 void Server::get_keys_async(const std::vector<uint64_t>& versions, const vnx::request_id_t& req_id) const
@@ -357,7 +362,7 @@ void Server::get_keys_async(const std::vector<uint64_t>& versions, const vnx::re
 	job->result.resize(versions.size());
 	
 	for(size_t i = 0; i < versions.size(); ++i) {
-		read_threads->add_task(std::bind(&Server::multi_read_key_job, this, versions[i], i, job));
+		threads->add_task(std::bind(&Server::multi_read_key_job, this, versions[i], i, job));
 	}
 }
 
@@ -425,6 +430,13 @@ std::shared_ptr<const Entry> Server::read_value(const Variant& key) const
 	std::shared_ptr<block_t> block;
 	{
 		std::shared_lock lock(index_mutex);
+		
+		if(do_compress) {
+			const auto iter = write_cache.find(key);
+			if(iter != write_cache.end()) {
+				return iter->second;
+			}
+		}
 		
 		index = get_value_index(key);
 		if(index.block_index >= 0) {
@@ -519,6 +531,12 @@ void Server::multi_read_key_job(uint64_t version, size_t index, std::shared_ptr<
 	if(job->num_left-- == 1) {
 		get_keys_async_return(job->req_id, job->result);
 	}
+}
+
+void Server::store_compress_job(std::shared_ptr<const Entry> entry)
+{
+	auto compressed = addons::DeflatedValue::compress_ex(entry->value, compress_level);
+	add_task(std::bind(&Server::store_value_ex, this, entry->key, entry->value, compressed, entry->version));
 }
 
 int64_t Server::sync_range_ex(TopicPtr topic, uint64_t begin, uint64_t end, bool key_only) const
@@ -658,25 +676,59 @@ void Server::store_value_internal(const Variant& key, const std::shared_ptr<cons
 
 void Server::store_value(const Variant& key, const std::shared_ptr<const Value>& value)
 {
-	release_lock(key);
-	
 	if(key.is_null()) {
 		return;
 	}
-	store_value_internal(key, do_compress ?
-			addons::DeflatedValue::compress_ex(value, compress_level) : value, curr_version + 1);
-	curr_version++;
+	const uint64_t version = ++curr_version;
 	
-	auto pair = SyncUpdate::create();
-	pair->collection = collection;
-	pair->version = curr_version;
-	pair->key = key;
-	pair->value = value;
-	{
-		std::lock_guard lock(update_mutex);
-		update_queue.push(pair);
+	if(do_compress) {
+		std::shared_ptr<Entry> entry;
+		{
+			std::unique_lock lock(index_mutex);
+			
+			entry = Entry::create();
+			entry->key = key;
+			entry->value = value;
+			entry->version = version;
+			write_cache[key] = entry;
+		}
+		threads->add_task(std::bind(&Server::store_compress_job, this, entry));
+	} else {
+		store_value_ex(key, value, value, version);
 	}
-	update_condition.notify_one();
+}
+
+void Server::store_value_ex(const Variant& key,
+							std::shared_ptr<const Value> value,
+							std::shared_ptr<const Value> store_value,
+							uint64_t version)
+{
+	std::exception_ptr except;
+	try {
+		release_lock(key);
+		store_value_internal(key, store_value, version);
+	}
+	catch(...) {
+		except = std::current_exception();
+	}
+	if(do_compress) {
+		std::unique_lock lock(index_mutex);
+		write_cache.erase(key);
+	}
+	if(except) {
+		std::rethrow_exception(except);
+	} else {
+		auto pair = SyncUpdate::create();
+		pair->collection = collection;
+		pair->version = version;
+		pair->key = key;
+		pair->value = value;
+		{
+			std::lock_guard lock(update_mutex);
+			update_queue.push(pair);
+		}
+		update_condition.notify_one();
+	}
 }
 
 void Server::store_values(const std::vector<std::pair<Variant, std::shared_ptr<const Value>>>& values)
@@ -694,7 +746,7 @@ void Server::delete_value(const Variant& key)
 {
 	const auto index = get_value_index(key);
 	if(index.key_iter != keyhash_map.end()) {
-		store_value(key, 0);
+		store_value(key, nullptr);
 	} else {
 		release_lock(key);
 	}

@@ -31,9 +31,12 @@ module Server implements Storage {
 	
 	int max_queue_ms = 100;
 	
-	int num_read_threads = 1;
+	int max_num_pending = 100;					// number of read/write requests
 	
-	int compress_level = 9;						// deflate level (0 to 9)
+	int num_threads = 1;						// number of threads for reading / compression
+	int num_read_threads = -1;					// obsolete
+	
+	int compress_level = 6;						// deflate level (0 to 9)
 	
 	int timeout_interval_ms = 100;				// for checking lock timeouts [ms]
 	
