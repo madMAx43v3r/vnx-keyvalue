@@ -703,6 +703,14 @@ void Server::store_value_ex(const Variant& key,
 							std::shared_ptr<const Value> store_value,
 							uint64_t version)
 {
+	if(do_compress) {
+		std::shared_lock lock(index_mutex);
+		
+		const auto iter = write_cache.find(key);
+		if(iter == write_cache.end() || iter->second->version != version) {
+			return;		// a newer value has already been written / is in the pipeline
+		}
+	}
 	std::exception_ptr except;
 	try {
 		release_lock(key);
