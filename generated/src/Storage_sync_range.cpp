@@ -96,6 +96,31 @@ void Storage_sync_range::from_object(const vnx::Object& _object) {
 	}
 }
 
+vnx::Variant Storage_sync_range::get_field(const std::string& _name) const {
+	if(_name == "topic") {
+		return vnx::Variant(topic);
+	}
+	if(_name == "begin") {
+		return vnx::Variant(begin);
+	}
+	if(_name == "end") {
+		return vnx::Variant(end);
+	}
+	return vnx::Variant();
+}
+
+void Storage_sync_range::set_field(const std::string& _name, const vnx::Variant& _value) {
+	if(_name == "topic") {
+		_value.to(topic);
+	} else if(_name == "begin") {
+		_value.to(begin);
+	} else if(_name == "end") {
+		_value.to(end);
+	} else {
+		throw std::logic_error("no such field: '" + _name + "'");
+	}
+}
+
 /// \private
 std::ostream& operator<<(std::ostream& _out, const Storage_sync_range& _value) {
 	_value.write(_out);

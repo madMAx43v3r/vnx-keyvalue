@@ -272,6 +272,126 @@ void ServerBase::from_object(const vnx::Object& _object) {
 	}
 }
 
+vnx::Variant ServerBase::get_field(const std::string& _name) const {
+	if(_name == "update_topic") {
+		return vnx::Variant(update_topic);
+	}
+	if(_name == "update_topic_keys") {
+		return vnx::Variant(update_topic_keys);
+	}
+	if(_name == "domain") {
+		return vnx::Variant(domain);
+	}
+	if(_name == "collection") {
+		return vnx::Variant(collection);
+	}
+	if(_name == "storage_path") {
+		return vnx::Variant(storage_path);
+	}
+	if(_name == "max_block_size") {
+		return vnx::Variant(max_block_size);
+	}
+	if(_name == "rewrite_chunk_size") {
+		return vnx::Variant(rewrite_chunk_size);
+	}
+	if(_name == "rewrite_chunk_count") {
+		return vnx::Variant(rewrite_chunk_count);
+	}
+	if(_name == "rewrite_threshold") {
+		return vnx::Variant(rewrite_threshold);
+	}
+	if(_name == "idle_rewrite_threshold") {
+		return vnx::Variant(idle_rewrite_threshold);
+	}
+	if(_name == "rewrite_interval") {
+		return vnx::Variant(rewrite_interval);
+	}
+	if(_name == "idle_rewrite_interval") {
+		return vnx::Variant(idle_rewrite_interval);
+	}
+	if(_name == "sync_chunk_count") {
+		return vnx::Variant(sync_chunk_count);
+	}
+	if(_name == "max_queue_ms") {
+		return vnx::Variant(max_queue_ms);
+	}
+	if(_name == "max_num_pending") {
+		return vnx::Variant(max_num_pending);
+	}
+	if(_name == "num_threads") {
+		return vnx::Variant(num_threads);
+	}
+	if(_name == "num_read_threads") {
+		return vnx::Variant(num_read_threads);
+	}
+	if(_name == "compress_level") {
+		return vnx::Variant(compress_level);
+	}
+	if(_name == "timeout_interval_ms") {
+		return vnx::Variant(timeout_interval_ms);
+	}
+	if(_name == "stats_interval_ms") {
+		return vnx::Variant(stats_interval_ms);
+	}
+	if(_name == "do_compress") {
+		return vnx::Variant(do_compress);
+	}
+	if(_name == "ignore_errors") {
+		return vnx::Variant(ignore_errors);
+	}
+	return vnx::Variant();
+}
+
+void ServerBase::set_field(const std::string& _name, const vnx::Variant& _value) {
+	if(_name == "update_topic") {
+		_value.to(update_topic);
+	} else if(_name == "update_topic_keys") {
+		_value.to(update_topic_keys);
+	} else if(_name == "domain") {
+		_value.to(domain);
+	} else if(_name == "collection") {
+		_value.to(collection);
+	} else if(_name == "storage_path") {
+		_value.to(storage_path);
+	} else if(_name == "max_block_size") {
+		_value.to(max_block_size);
+	} else if(_name == "rewrite_chunk_size") {
+		_value.to(rewrite_chunk_size);
+	} else if(_name == "rewrite_chunk_count") {
+		_value.to(rewrite_chunk_count);
+	} else if(_name == "rewrite_threshold") {
+		_value.to(rewrite_threshold);
+	} else if(_name == "idle_rewrite_threshold") {
+		_value.to(idle_rewrite_threshold);
+	} else if(_name == "rewrite_interval") {
+		_value.to(rewrite_interval);
+	} else if(_name == "idle_rewrite_interval") {
+		_value.to(idle_rewrite_interval);
+	} else if(_name == "sync_chunk_count") {
+		_value.to(sync_chunk_count);
+	} else if(_name == "max_queue_ms") {
+		_value.to(max_queue_ms);
+	} else if(_name == "max_num_pending") {
+		_value.to(max_num_pending);
+	} else if(_name == "num_threads") {
+		_value.to(num_threads);
+	} else if(_name == "num_read_threads") {
+		_value.to(num_read_threads);
+	} else if(_name == "compress_level") {
+		_value.to(compress_level);
+	} else if(_name == "timeout_interval_ms") {
+		_value.to(timeout_interval_ms);
+	} else if(_name == "stats_interval_ms") {
+		_value.to(stats_interval_ms);
+	} else if(_name == "do_compress") {
+		_value.to(do_compress);
+	} else if(_name == "ignore_errors") {
+		_value.to(ignore_errors);
+	} else {
+		throw std::logic_error("no such field: '" + _name + "'");
+	}
+}
+
 /// \private
 std::ostream& operator<<(std::ostream& _out, const ServerBase& _value) {
 	_value.write(_out);
@@ -441,13 +561,13 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 		vnx::TypeField& field = type_code->fields[20];
 		field.name = "do_compress";
 		field.value = vnx::to_string(false);
-		field.code = {1};
+		field.code = {31};
 	}
 	{
 		vnx::TypeField& field = type_code->fields[21];
 		field.name = "ignore_errors";
 		field.value = vnx::to_string(false);
-		field.code = {1};
+		field.code = {31};
 	}
 	type_code->build();
 	return type_code;

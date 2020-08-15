@@ -108,6 +108,41 @@ void SyncUpdate::from_object(const vnx::Object& _object) {
 	}
 }
 
+vnx::Variant SyncUpdate::get_field(const std::string& _name) const {
+	if(_name == "version") {
+		return vnx::Variant(version);
+	}
+	if(_name == "key") {
+		return vnx::Variant(key);
+	}
+	if(_name == "value") {
+		return vnx::Variant(value);
+	}
+	if(_name == "collection") {
+		return vnx::Variant(collection);
+	}
+	if(_name == "previous") {
+		return vnx::Variant(previous);
+	}
+	return vnx::Variant();
+}
+
+void SyncUpdate::set_field(const std::string& _name, const vnx::Variant& _value) {
+	if(_name == "version") {
+		_value.to(version);
+	} else if(_name == "key") {
+		_value.to(key);
+	} else if(_name == "value") {
+		_value.to(value);
+	} else if(_name == "collection") {
+		_value.to(collection);
+	} else if(_name == "previous") {
+		_value.to(previous);
+	} else {
+		throw std::logic_error("no such field: '" + _name + "'");
+	}
+}
+
 /// \private
 std::ostream& operator<<(std::ostream& _out, const SyncUpdate& _value) {
 	_value.write(_out);

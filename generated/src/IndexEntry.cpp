@@ -102,6 +102,36 @@ void IndexEntry::from_object(const vnx::Object& _object) {
 	}
 }
 
+vnx::Variant IndexEntry::get_field(const std::string& _name) const {
+	if(_name == "key") {
+		return vnx::Variant(key);
+	}
+	if(_name == "version") {
+		return vnx::Variant(version);
+	}
+	if(_name == "block_offset") {
+		return vnx::Variant(block_offset);
+	}
+	if(_name == "num_bytes") {
+		return vnx::Variant(num_bytes);
+	}
+	return vnx::Variant();
+}
+
+void IndexEntry::set_field(const std::string& _name, const vnx::Variant& _value) {
+	if(_name == "key") {
+		_value.to(key);
+	} else if(_name == "version") {
+		_value.to(version);
+	} else if(_name == "block_offset") {
+		_value.to(block_offset);
+	} else if(_name == "num_bytes") {
+		_value.to(num_bytes);
+	} else {
+		throw std::logic_error("no such field: '" + _name + "'");
+	}
+}
+
 /// \private
 std::ostream& operator<<(std::ostream& _out, const IndexEntry& _value) {
 	_value.write(_out);

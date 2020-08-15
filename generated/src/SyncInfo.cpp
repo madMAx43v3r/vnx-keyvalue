@@ -103,6 +103,36 @@ void SyncInfo::from_object(const vnx::Object& _object) {
 	}
 }
 
+vnx::Variant SyncInfo::get_field(const std::string& _name) const {
+	if(_name == "collection") {
+		return vnx::Variant(collection);
+	}
+	if(_name == "version") {
+		return vnx::Variant(version);
+	}
+	if(_name == "job_id") {
+		return vnx::Variant(job_id);
+	}
+	if(_name == "code") {
+		return vnx::Variant(code);
+	}
+	return vnx::Variant();
+}
+
+void SyncInfo::set_field(const std::string& _name, const vnx::Variant& _value) {
+	if(_name == "collection") {
+		_value.to(collection);
+	} else if(_name == "version") {
+		_value.to(version);
+	} else if(_name == "job_id") {
+		_value.to(job_id);
+	} else if(_name == "code") {
+		_value.to(code);
+	} else {
+		throw std::logic_error("no such field: '" + _name + "'");
+	}
+}
+
 /// \private
 std::ostream& operator<<(std::ostream& _out, const SyncInfo& _value) {
 	_value.write(_out);

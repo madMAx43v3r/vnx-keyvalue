@@ -116,6 +116,46 @@ void SyncModuleBase::from_object(const vnx::Object& _object) {
 	}
 }
 
+vnx::Variant SyncModuleBase::get_field(const std::string& _name) const {
+	if(_name == "input_sync") {
+		return vnx::Variant(input_sync);
+	}
+	if(_name == "src_addr") {
+		return vnx::Variant(src_addr);
+	}
+	if(_name == "dst_addr") {
+		return vnx::Variant(dst_addr);
+	}
+	if(_name == "buffer_size") {
+		return vnx::Variant(buffer_size);
+	}
+	if(_name == "stats_interval_ms") {
+		return vnx::Variant(stats_interval_ms);
+	}
+	if(_name == "add_only") {
+		return vnx::Variant(add_only);
+	}
+	return vnx::Variant();
+}
+
+void SyncModuleBase::set_field(const std::string& _name, const vnx::Variant& _value) {
+	if(_name == "input_sync") {
+		_value.to(input_sync);
+	} else if(_name == "src_addr") {
+		_value.to(src_addr);
+	} else if(_name == "dst_addr") {
+		_value.to(dst_addr);
+	} else if(_name == "buffer_size") {
+		_value.to(buffer_size);
+	} else if(_name == "stats_interval_ms") {
+		_value.to(stats_interval_ms);
+	} else if(_name == "add_only") {
+		_value.to(add_only);
+	} else {
+		throw std::logic_error("no such field: '" + _name + "'");
+	}
+}
+
 /// \private
 std::ostream& operator<<(std::ostream& _out, const SyncModuleBase& _value) {
 	_value.write(_out);
@@ -179,7 +219,7 @@ std::shared_ptr<vnx::TypeCode> SyncModuleBase::static_create_type_code() {
 		vnx::TypeField& field = type_code->fields[5];
 		field.name = "add_only";
 		field.value = vnx::to_string(false);
-		field.code = {1};
+		field.code = {31};
 	}
 	type_code->build();
 	return type_code;

@@ -89,6 +89,26 @@ void ServerInfo::from_object(const vnx::Object& _object) {
 	}
 }
 
+vnx::Variant ServerInfo::get_field(const std::string& _name) const {
+	if(_name == "shard") {
+		return vnx::Variant(shard);
+	}
+	if(_name == "address") {
+		return vnx::Variant(address);
+	}
+	return vnx::Variant();
+}
+
+void ServerInfo::set_field(const std::string& _name, const vnx::Variant& _value) {
+	if(_name == "shard") {
+		_value.to(shard);
+	} else if(_name == "address") {
+		_value.to(address);
+	} else {
+		throw std::logic_error("no such field: '" + _name + "'");
+	}
+}
+
 /// \private
 std::ostream& operator<<(std::ostream& _out, const ServerInfo& _value) {
 	_value.write(_out);

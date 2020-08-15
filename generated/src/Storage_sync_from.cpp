@@ -89,6 +89,26 @@ void Storage_sync_from::from_object(const vnx::Object& _object) {
 	}
 }
 
+vnx::Variant Storage_sync_from::get_field(const std::string& _name) const {
+	if(_name == "topic") {
+		return vnx::Variant(topic);
+	}
+	if(_name == "version") {
+		return vnx::Variant(version);
+	}
+	return vnx::Variant();
+}
+
+void Storage_sync_from::set_field(const std::string& _name, const vnx::Variant& _value) {
+	if(_name == "topic") {
+		_value.to(topic);
+	} else if(_name == "version") {
+		_value.to(version);
+	} else {
+		throw std::logic_error("no such field: '" + _name + "'");
+	}
+}
+
 /// \private
 std::ostream& operator<<(std::ostream& _out, const Storage_sync_from& _value) {
 	_value.write(_out);

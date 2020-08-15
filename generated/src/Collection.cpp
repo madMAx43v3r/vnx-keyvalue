@@ -94,6 +94,31 @@ void Collection::from_object(const vnx::Object& _object) {
 	}
 }
 
+vnx::Variant Collection::get_field(const std::string& _name) const {
+	if(_name == "name") {
+		return vnx::Variant(name);
+	}
+	if(_name == "block_list") {
+		return vnx::Variant(block_list);
+	}
+	if(_name == "delete_list") {
+		return vnx::Variant(delete_list);
+	}
+	return vnx::Variant();
+}
+
+void Collection::set_field(const std::string& _name, const vnx::Variant& _value) {
+	if(_name == "name") {
+		_value.to(name);
+	} else if(_name == "block_list") {
+		_value.to(block_list);
+	} else if(_name == "delete_list") {
+		_value.to(delete_list);
+	} else {
+		throw std::logic_error("no such field: '" + _name + "'");
+	}
+}
+
 /// \private
 std::ostream& operator<<(std::ostream& _out, const Collection& _value) {
 	_value.write(_out);

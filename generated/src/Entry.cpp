@@ -95,6 +95,31 @@ void Entry::from_object(const vnx::Object& _object) {
 	}
 }
 
+vnx::Variant Entry::get_field(const std::string& _name) const {
+	if(_name == "version") {
+		return vnx::Variant(version);
+	}
+	if(_name == "key") {
+		return vnx::Variant(key);
+	}
+	if(_name == "value") {
+		return vnx::Variant(value);
+	}
+	return vnx::Variant();
+}
+
+void Entry::set_field(const std::string& _name, const vnx::Variant& _value) {
+	if(_name == "version") {
+		_value.to(version);
+	} else if(_name == "key") {
+		_value.to(key);
+	} else if(_name == "value") {
+		_value.to(value);
+	} else {
+		throw std::logic_error("no such field: '" + _name + "'");
+	}
+}
+
 /// \private
 std::ostream& operator<<(std::ostream& _out, const Entry& _value) {
 	_value.write(_out);

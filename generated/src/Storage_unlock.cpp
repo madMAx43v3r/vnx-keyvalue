@@ -82,6 +82,21 @@ void Storage_unlock::from_object(const vnx::Object& _object) {
 	}
 }
 
+vnx::Variant Storage_unlock::get_field(const std::string& _name) const {
+	if(_name == "key") {
+		return vnx::Variant(key);
+	}
+	return vnx::Variant();
+}
+
+void Storage_unlock::set_field(const std::string& _name, const vnx::Variant& _value) {
+	if(_name == "key") {
+		_value.to(key);
+	} else {
+		throw std::logic_error("no such field: '" + _name + "'");
+	}
+}
+
 /// \private
 std::ostream& operator<<(std::ostream& _out, const Storage_unlock& _value) {
 	_value.write(_out);

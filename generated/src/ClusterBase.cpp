@@ -90,6 +90,14 @@ vnx::Object ClusterBase::to_object() const {
 void ClusterBase::from_object(const vnx::Object& _object) {
 }
 
+vnx::Variant ClusterBase::get_field(const std::string& _name) const {
+	return vnx::Variant();
+}
+
+void ClusterBase::set_field(const std::string& _name, const vnx::Variant& _value) {
+	throw std::logic_error("no such field: '" + _name + "'");
+}
+
 /// \private
 std::ostream& operator<<(std::ostream& _out, const ClusterBase& _value) {
 	_value.write(_out);

@@ -82,6 +82,21 @@ void Storage_store_values::from_object(const vnx::Object& _object) {
 	}
 }
 
+vnx::Variant Storage_store_values::get_field(const std::string& _name) const {
+	if(_name == "values") {
+		return vnx::Variant(values);
+	}
+	return vnx::Variant();
+}
+
+void Storage_store_values::set_field(const std::string& _name, const vnx::Variant& _value) {
+	if(_name == "values") {
+		_value.to(values);
+	} else {
+		throw std::logic_error("no such field: '" + _name + "'");
+	}
+}
+
 /// \private
 std::ostream& operator<<(std::ostream& _out, const Storage_store_values& _value) {
 	_value.write(_out);

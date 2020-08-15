@@ -81,6 +81,21 @@ void Storage_get_keys::from_object(const vnx::Object& _object) {
 	}
 }
 
+vnx::Variant Storage_get_keys::get_field(const std::string& _name) const {
+	if(_name == "versions") {
+		return vnx::Variant(versions);
+	}
+	return vnx::Variant();
+}
+
+void Storage_get_keys::set_field(const std::string& _name, const vnx::Variant& _value) {
+	if(_name == "versions") {
+		_value.to(versions);
+	} else {
+		throw std::logic_error("no such field: '" + _name + "'");
+	}
+}
+
 /// \private
 std::ostream& operator<<(std::ostream& _out, const Storage_get_keys& _value) {
 	_value.write(_out);

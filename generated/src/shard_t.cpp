@@ -85,6 +85,26 @@ void shard_t::from_object(const vnx::Object& _object) {
 	}
 }
 
+vnx::Variant shard_t::get_field(const std::string& _name) const {
+	if(_name == "index") {
+		return vnx::Variant(index);
+	}
+	if(_name == "size") {
+		return vnx::Variant(size);
+	}
+	return vnx::Variant();
+}
+
+void shard_t::set_field(const std::string& _name, const vnx::Variant& _value) {
+	if(_name == "index") {
+		_value.to(index);
+	} else if(_name == "size") {
+		_value.to(size);
+	} else {
+		throw std::logic_error("no such field: '" + _name + "'");
+	}
+}
+
 /// \private
 std::ostream& operator<<(std::ostream& _out, const shard_t& _value) {
 	_value.write(_out);

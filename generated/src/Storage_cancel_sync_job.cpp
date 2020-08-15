@@ -81,6 +81,21 @@ void Storage_cancel_sync_job::from_object(const vnx::Object& _object) {
 	}
 }
 
+vnx::Variant Storage_cancel_sync_job::get_field(const std::string& _name) const {
+	if(_name == "job_id") {
+		return vnx::Variant(job_id);
+	}
+	return vnx::Variant();
+}
+
+void Storage_cancel_sync_job::set_field(const std::string& _name, const vnx::Variant& _value) {
+	if(_name == "job_id") {
+		_value.to(job_id);
+	} else {
+		throw std::logic_error("no such field: '" + _name + "'");
+	}
+}
+
 /// \private
 std::ostream& operator<<(std::ostream& _out, const Storage_cancel_sync_job& _value) {
 	_value.write(_out);
