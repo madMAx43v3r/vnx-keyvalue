@@ -1109,6 +1109,7 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 		index_t key_index;
 		std::shared_ptr<block_t> block;
 		std::shared_ptr<IndexEntry> index;
+		std::shared_ptr<const Value> value;
 	};
 	
 	bool is_done = false;
@@ -1145,58 +1146,76 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 				}
 			}
 		}
-		FileSectionInputStream stream;
-		TypeInput in(&stream);
+		job->num_left = list.size();
 		
 		for(auto& entry : list)
 		{
-			const auto& block = entry.block;
-			const auto& key_index = entry.key_index;
-			{
-				in.reset();
-				stream.reset(block->key_file.get_handle(), key_index.block_offset, key_index.num_bytes);
-				try {
-					entry.index = std::dynamic_pointer_cast<IndexEntry>(vnx::read(in));
-					num_bytes_read += key_index.num_bytes;
-				} catch(...) {
-					// ignore
+			threads->add_task([this, job, &entry]() {
+				FileSectionInputStream stream;
+				TypeInput in(&stream);
+				const auto& block = entry.block;
+				const auto& key_index = entry.key_index;
+				{
+					in.reset();
+					stream.reset(block->key_file.get_handle(), key_index.block_offset, key_index.num_bytes);
+					try {
+						entry.index = std::dynamic_pointer_cast<IndexEntry>(vnx::read(in));
+						num_bytes_read += key_index.num_bytes;
+					} catch(...) {
+						// ignore
+					}
 				}
-			}
-		}
-		for(const auto& entry : list)
-		{
-			const auto& block = entry.block;
-			const auto& index = entry.index;
-			
-			if(index) {
-				std::shared_ptr<const Value> value;
-				if(!job->key_only) {
+				const auto& index = entry.index;
+				
+				if(index && !job->key_only)
+				{
 					in.reset();
 					stream.reset(block->value_file.get_handle(), index->block_offset, index->num_bytes);
 					try {
-						value = vnx::read(in);
+						std::shared_ptr<const Value> value = vnx::read(in);
 						if(value) {
 							auto decompressed = value->vnx_decompress();
 							if(decompressed) {
 								value = decompressed;
 							}
 						}
+						entry.value = value;
 						num_bytes_read += index->num_bytes;
+						read_counter++;
 					} catch(...) {
 						// ignore
 					}
 				}
+				block->num_pending--;
+				{
+					std::lock_guard lock(job->mutex);
+					if(--job->num_left == 0) {
+						job->condition.notify_all();
+					}
+				}
+			});
+		}
+		while(vnx_do_run())
+		{
+			std::unique_lock lock(job->mutex);
+			if(job->num_left > 0) {
+				job->condition.wait(lock);
+			} else {
+				break;
+			}
+		}
+		for(const auto& entry : list)
+		{
+			if(entry.index) {
 				auto pair = SyncUpdate::create();
 				pair->collection = collection;
 				pair->version = entry.version;
 				pair->previous = previous;
-				pair->key = index->key;
-				pair->value = value;
+				pair->key = entry.index->key;
+				pair->value = entry.value;
 				publisher.publish(pair, job->topic, BLOCKING);
 				previous = entry.version;
 			}
-			block->num_pending--;
-			read_counter++;
 		}
 	}
 	if(vnx_do_run() && job->do_run)

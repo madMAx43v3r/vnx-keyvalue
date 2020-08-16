@@ -103,6 +103,9 @@ private:
 		uint64_t end = 0;
 		bool key_only = false;
 		std::atomic_bool do_run {true};
+		std::atomic<size_t> num_left {0};
+		std::mutex mutex;
+		std::condition_variable condition;
 	};
 	
 	struct lock_entry_t {
