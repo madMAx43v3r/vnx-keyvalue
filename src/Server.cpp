@@ -46,9 +46,6 @@ void Server::main()
 	if(collection.empty()) {
 		throw std::logic_error("invalid collection config");
 	}
-	if(num_read_threads != -1) {
-		throw std::logic_error("num_read_threads is obsolete");
-	}
 	
 	for(int i = 0; i < NUM_INDEX; ++i) {
 		const auto path = get_file_path("index", i);

@@ -34,7 +34,6 @@ module Server implements Storage {
 	int max_num_pending = 100;					// number of read/write requests
 	
 	int num_threads = 1;						// number of threads for reading / compression
-	int num_read_threads = -1;					// obsolete
 	
 	int compress_level = 6;						// deflate level (0 to 9)
 	
