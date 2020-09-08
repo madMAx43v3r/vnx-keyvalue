@@ -962,6 +962,7 @@ void Server::rewrite_func()
 	struct pair_t {
 		std::shared_ptr<IndexEntry> index;
 		std::shared_ptr<Value> value;
+		bool is_error = true;
 	};
 	
 	bool is_done = false;
@@ -978,7 +979,9 @@ void Server::rewrite_func()
 					const auto& key_index = iter->second;
 					if(key_index.block_index == rewrite.block->index)
 					{
-						list.emplace_back(pair_t{index, 0});
+						pair_t entry;
+						entry.index = index;
+						list.push_back(entry);
 						num_bytes += index->num_bytes + key_index.num_bytes;
 						if(num_bytes > rewrite_chunk_size) {
 							break;
@@ -992,30 +995,40 @@ void Server::rewrite_func()
 			break;
 		}
 		catch(const std::exception& ex) {
-			log(ERROR).out << "Block " << block->index << " rewrite: " << ex.what();
-			return;
+			log(ERROR).out << "Block " << block->index << " (key) rewrite: " << ex.what();
+			is_done = true;
+			break;
 		}
 	}
 	read_counter += list.size();
 	num_bytes_read += num_bytes;
 	
-	try {
-		FileSectionInputStream stream;
-		TypeInput in(&stream);
-		const auto fd = block->value_file.get_handle();
-		
-		for(auto& entry : list) {
+	FileSectionInputStream stream;
+	TypeInput in(&stream);
+	const auto fd = block->value_file.get_handle();
+	
+	for(auto& entry : list) {
+		try {
 			in.reset();
 			stream.reset(fd, entry.index->block_offset, entry.index->num_bytes);
 			entry.value = vnx::read(in);
+			entry.is_error = false;
 		}
+		catch(const std::exception& ex) {
+			log(ERROR).out << "Block " << block->index << " (value) rewrite: " << ex.what();
+			// keep going, since we are not reading the file as a stream
+		}
+	}
+	try {
 		for(const auto& entry : list) {
-			store_value_internal(entry.index->key, entry.value, entry.index->version);
+			if(!entry.is_error) {
+				store_value_internal(entry.index->key, entry.value, entry.index->version);
+			}
 		}
 	}
 	catch(const std::exception& ex) {
-		log(ERROR).out << "Block " << block->index << " rewrite: " << ex.what();
-		return;
+		log(ERROR).out << "Block " << block->index << " (store) rewrite: " << ex.what();
+		return;		// stop rewriting in case storage fails
 	}
 	
 	if(is_done) {
