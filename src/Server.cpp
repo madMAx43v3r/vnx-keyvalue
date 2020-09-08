@@ -605,6 +605,13 @@ void Server::store_value_internal(const Variant& key, const std::shared_ptr<cons
 	auto prev_key_pos = key_out.get_output_pos();
 	auto prev_value_pos = value_out.get_output_pos();
 	
+	if(prev_key_pos >= MAX_BLOCK_SIZE) {
+		throw std::runtime_error("key file overflow (MAX_BLOCK_SIZE)");
+	}
+	if(prev_value_pos >= MAX_BLOCK_SIZE) {
+		throw std::runtime_error("value file overflow (MAX_BLOCK_SIZE)");
+	}
+	
 	try {
 		if(value) {
 			auto type_code = value->get_type_code();
