@@ -99,7 +99,11 @@ void Server::main()
 			int64_t prev_key_pos = 0;
 			int64_t value_end_pos = -1;
 			
-			block->key_file.fadvise(POSIX_FADV_SEQUENTIAL);
+			try {
+				block->key_file.fadvise(POSIX_FADV_SEQUENTIAL);
+			} catch(...) {
+				// ignore
+			}
 			
 			while(vnx_do_run())
 			{
@@ -452,11 +456,15 @@ std::shared_ptr<const Entry> Server::read_value(const Variant& key) const
 		return entry;
 	}
 	if(index.num_bytes > 65536) {
-		block->value_file.fadvise(POSIX_FADV_SEQUENTIAL, index.block_offset, index.num_bytes);
+		try {
+			block->value_file.fadvise(POSIX_FADV_SEQUENTIAL, index.block_offset, index.num_bytes);
+		} catch(...) {
+			// ignore
+		}
 	}
-	FileSectionInputStream stream(block->value_file.get_handle(), index.block_offset, index.num_bytes);
-	TypeInput in(&stream);
 	try {
+		FileSectionInputStream stream(block->value_file.get_handle(), index.block_offset, index.num_bytes);
+		TypeInput in(&stream);
 		entry->value = vnx::read(in);
 		num_bytes_read += index.num_bytes;
 	} catch(...) {
@@ -829,7 +837,7 @@ Server::value_index_t Server::get_value_index(const Variant& key) const
 
 void Server::delete_internal(const value_index_t& index)
 {
-	// index_mutex needs to be locked by caller
+	// index_mutex needs to be unique locked by caller
 	if(index.key_iter != keyhash_map.end()) {
 		try {
 			auto block = get_block(index.block_index);
@@ -936,8 +944,12 @@ void Server::rewrite_func()
 		rewrite.is_run = true;
 		rewrite.key_in.reset();
 		rewrite.key_stream.reset(block->key_file.get_handle());
-		block->key_file.fadvise(POSIX_FADV_SEQUENTIAL);
-		block->value_file.fadvise(POSIX_FADV_SEQUENTIAL);
+		try {
+			block->key_file.fadvise(POSIX_FADV_SEQUENTIAL);
+			block->value_file.fadvise(POSIX_FADV_SEQUENTIAL);
+		} catch(...) {
+			// ignore
+		}
 	}
 	
 	struct pair_t {
