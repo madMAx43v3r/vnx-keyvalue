@@ -117,6 +117,11 @@ private:
 		std::multimap<int64_t, std::map<Variant, lock_entry_t>::iterator>::iterator queue_iter;
 	};
 	
+	struct delay_entry_t {
+		int64_t deadline_ms = 0;
+		std::shared_ptr<const Entry> entry;
+	};
+	
 	typedef std::map<Variant, lock_entry_t> lock_map_t;
 	
 	void get_value_multi_async(	const Variant& key,
@@ -165,13 +170,13 @@ private:
 	std::shared_ptr<block_t> add_new_block();
 	
 	void store_value_internal(	const Variant& key,
-								const std::shared_ptr<const Value>& value,
-								uint64_t version);
+								std::shared_ptr<const Value> value,
+								const uint64_t version);
 	
 	void store_value_ex(const Variant& key,
 						std::shared_ptr<const Value> value,
 						std::shared_ptr<const Value> store_value,
-						uint64_t version);
+						const uint64_t version);
 	
 	int64_t sync_range_ex(TopicPtr topic, uint64_t begin, uint64_t end, bool key_only) const;
 	
@@ -200,7 +205,7 @@ private:
 	std::map<uint64_t, index_t> index_map;							// [version => index_t]
 	std::unordered_multimap<uint64_t, uint64_t> keyhash_map;		// [key hash => version]
 	std::map<Variant, std::shared_ptr<const Entry>> write_cache;
-	std::map<Variant, std::pair<int64_t, std::shared_ptr<const Entry>>> delay_cache;	// [key => (deadline_ms, entry)]
+	std::map<Variant, delay_entry_t> delay_cache;	// [key => (deadline_ms, entry)]
 	std::list<std::shared_ptr<block_t>> delete_list;
 	
 	// accessed by main thread only

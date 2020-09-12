@@ -425,15 +425,15 @@ void Server::check_timeouts()
 		const auto iter = delay_queue.begin();
 		if(iter->first <= now_ms)
 		{
-			const auto cached = delay_cache.find(iter->second);
-			if(cached->second.first == iter->first)
+			const auto iter2 = delay_cache.find(iter->second);
+			if(iter2 != delay_cache.end())
 			{
-				auto entry = cached->second.second;
+				const auto& cached = iter2->second;
+				if(cached.deadline_ms == iter->first)
 				{
-					std::unique_lock lock(index_mutex);
-					delay_cache.erase(cached);
+					auto entry = cached.entry;
+					store_value_ex(entry->key, entry->value, entry->value, entry->version);
 				}
-				store_value_ex(entry->key, entry->value, entry->value, entry->version);
 			}
 			delay_queue.erase(iter);
 		} else {
@@ -454,7 +454,7 @@ std::shared_ptr<const Entry> Server::read_value(const Variant& key) const
 		{
 			const auto iter = delay_cache.find(key);
 			if(iter != delay_cache.end()) {
-				return iter->second.second;
+				return iter->second.entry;
 			}
 		}
 		{
@@ -616,13 +616,14 @@ void Server::cancel_sync_job(const int64_t& job_id)
 	}
 }
 
-void Server::store_value_internal(const Variant& key, const std::shared_ptr<const Value>& value, uint64_t version)
+void Server::store_value_internal(	const Variant& key,
+									std::shared_ptr<const Value> value,
+									const uint64_t version)
 {
 	auto block = get_current_block();
 	if(!block) {
 		throw std::runtime_error("storage closed");
 	}
-	
 	auto& key_out = block->key_file.out;
 	auto& value_out = block->value_file.out;
 	
@@ -635,7 +636,6 @@ void Server::store_value_internal(const Variant& key, const std::shared_ptr<cons
 	if(prev_value_pos >= MAX_BLOCK_SIZE) {
 		throw std::runtime_error("value file overflow (MAX_BLOCK_SIZE)");
 	}
-	
 	try {
 		if(value) {
 			auto type_code = value->get_type_code();
@@ -687,22 +687,39 @@ void Server::store_value_internal(const Variant& key, const std::shared_ptr<cons
 		log(WARN).out << "store_value(): " << ex.what();
 		throw;
 	}
-	
-	const auto value_index = get_value_index(key);
 	{
+		const auto prev_value_index = get_value_index(key);
+		const auto prev_key_iter = prev_value_index.key_iter;
+		const auto key_hash = prev_value_index.key_hash;
+		
 		std::unique_lock lock(index_mutex);
 		
-		delete_internal(value_index);
-		keyhash_map.emplace(value_index.key_hash, version);
-		
-		index_t& key_index = index_map[version];
-		key_index.block_index = block->index;
-		key_index.block_offset = prev_key_pos;
-		key_index.num_bytes = num_bytes_key;
-		num_bytes_written += index.num_bytes + key_index.num_bytes;
+		if(prev_key_iter == keyhash_map.cend() || version >= prev_key_iter->second)
+		{
+			delete_internal(prev_value_index);
+			keyhash_map.emplace(key_hash, version);
+			
+			index_t& key_index = index_map[version];
+			key_index.block_index = block->index;
+			key_index.block_offset = prev_key_pos;
+			key_index.num_bytes = num_bytes_key;
+		}
+		{
+			const auto iter = delay_cache.find(key);
+			if(iter != delay_cache.end() && version >= iter->second.entry->version) {
+				delay_cache.erase(key);
+			}
+		}
+		{
+			const auto iter = write_cache.find(key);
+			if(iter != write_cache.end() && version >= iter->second->version) {
+				write_cache.erase(iter);
+			}
+		}
 	}
 	block->num_bytes_used += index.num_bytes;
 	block->num_bytes_total += index.num_bytes;
+	num_bytes_written += index.num_bytes + num_bytes_key;
 	write_counter++;
 	
 	if(block->num_bytes_total >= max_block_size) {
@@ -718,14 +735,12 @@ void Server::store_value(const Variant& key, const std::shared_ptr<const Value>&
 	const uint64_t version = ++curr_version;
 	
 	if(do_compress) {
-		std::shared_ptr<Entry> entry;
+		auto entry = Entry::create();
+		entry->key = key;
+		entry->value = value;
+		entry->version = version;
 		{
 			std::unique_lock lock(index_mutex);
-			
-			entry = Entry::create();
-			entry->key = key;
-			entry->value = value;
-			entry->version = version;
 			write_cache[key] = entry;
 		}
 		threads->add_task(std::bind(&Server::store_compress_job, this, entry));
@@ -737,42 +752,21 @@ void Server::store_value(const Variant& key, const std::shared_ptr<const Value>&
 void Server::store_value_ex(const Variant& key,
 							std::shared_ptr<const Value> value,
 							std::shared_ptr<const Value> store_value,
-							uint64_t version)
+							const uint64_t version)
 {
-	if(do_compress) {
-		std::shared_lock lock(index_mutex);
-		
-		const auto iter = write_cache.find(key);
-		if(iter == write_cache.end() || iter->second->version != version) {
-			return;		// a newer value has already been written / is in the pipeline
-		}
+	release_lock(key);
+	store_value_internal(key, store_value, version);
+	
+	auto pair = SyncUpdate::create();
+	pair->collection = collection;
+	pair->version = version;
+	pair->key = key;
+	pair->value = value;
+	{
+		std::lock_guard lock(update_mutex);
+		update_queue.push(pair);
 	}
-	std::exception_ptr except;
-	try {
-		release_lock(key);
-		store_value_internal(key, store_value, version);
-	}
-	catch(...) {
-		except = std::current_exception();
-	}
-	if(do_compress) {
-		std::unique_lock lock(index_mutex);
-		write_cache.erase(key);
-	}
-	if(except) {
-		std::rethrow_exception(except);
-	} else {
-		auto pair = SyncUpdate::create();
-		pair->collection = collection;
-		pair->version = version;
-		pair->key = key;
-		pair->value = value;
-		{
-			std::lock_guard lock(update_mutex);
-			update_queue.push(pair);
-		}
-		update_condition.notify_one();
-	}
+	update_condition.notify_one();
 }
 
 void Server::store_values(const std::vector<std::pair<Variant, std::shared_ptr<const Value>>>& values)
@@ -788,20 +782,23 @@ void Server::store_values(const std::vector<std::pair<Variant, std::shared_ptr<c
 
 void Server::store_value_delay(const Variant& key, const std::shared_ptr<const Value>& value, const int32_t& delay_ms)
 {
-	if(delay_ms > 0)
-	{
-		if(key.is_null()) {
-			return;
-		}
+	if(key.is_null()) {
+		return;
+	}
+	if(delay_ms > 0) {
 		const auto deadline_ms = vnx::get_wall_time_millis() + delay_ms;
 		
 		auto entry = Entry::create();
 		entry->key = key;
 		entry->value = value;
 		entry->version = ++curr_version;
-		
-		std::unique_lock lock(index_mutex);
-		delay_cache[key] = std::make_pair(deadline_ms, entry);
+		{
+			std::unique_lock lock(index_mutex);
+			
+			auto& cached = delay_cache[key];
+			cached.deadline_ms = deadline_ms;
+			cached.entry = entry;
+		}
 		delay_queue.emplace(deadline_ms, key);
 	} else {
 		store_value(key, value);
@@ -902,15 +899,16 @@ Server::value_index_t Server::get_value_index(const Variant& key) const
 void Server::delete_internal(const value_index_t& index)
 {
 	// index_mutex needs to be unique locked by caller
-	if(index.key_iter != keyhash_map.end()) {
+	const auto key_iter = index.key_iter;
+	if(key_iter != keyhash_map.end()) {
 		try {
 			auto block = get_block(index.block_index);
 			block->num_bytes_used -= index.num_bytes;
 		} catch(...) {
 			// ignore
 		}
-		index_map.erase(index.key_iter->second);
-		keyhash_map.erase(index.key_iter);
+		index_map.erase(key_iter->second);
+		keyhash_map.erase(key_iter);
 	}
 }
 
