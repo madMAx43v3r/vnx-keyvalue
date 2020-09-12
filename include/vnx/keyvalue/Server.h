@@ -57,6 +57,10 @@ protected:
 	
 	void store_values(const std::vector<std::pair<Variant, std::shared_ptr<const Value>>>& values) override;
 	
+	void store_value_delay(const Variant& key, const std::shared_ptr<const Value>& value, const int32_t& delay_ms) override;
+	
+	void store_values_delay(const std::vector<std::pair<Variant, std::shared_ptr<const Value>>>& values, const int32_t& delay_ms) override;
+	
 	void delete_value(const Variant& key) override;
 	
 private:
@@ -196,11 +200,13 @@ private:
 	std::map<uint64_t, index_t> index_map;							// [version => index_t]
 	std::unordered_multimap<uint64_t, uint64_t> keyhash_map;		// [key hash => version]
 	std::map<Variant, std::shared_ptr<const Entry>> write_cache;
+	std::map<Variant, std::pair<int64_t, std::shared_ptr<const Entry>>> delay_cache;	// [key => (deadline_ms, entry)]
 	std::list<std::shared_ptr<block_t>> delete_list;
 	
 	// accessed by main thread only
 	mutable lock_map_t lock_map;											// [key => lock_entry_t]
-	mutable std::multimap<int64_t, lock_map_t::iterator> lock_queue;		// [deadline => lock_map iter]
+	mutable std::multimap<int64_t, lock_map_t::iterator> lock_queue;		// [deadline_ms => lock_map iter]
+	mutable std::multimap<int64_t, Variant> delay_queue;					// [deadline_ms => key]
 	
 	mutable std::mutex update_mutex;
 	mutable std::condition_variable update_condition;

@@ -420,6 +420,26 @@ void Server::check_timeouts()
 			break;
 		}
 	}
+	while(!delay_queue.empty())
+	{
+		const auto iter = delay_queue.begin();
+		if(iter->first <= now_ms)
+		{
+			const auto cached = delay_cache.find(iter->second);
+			if(cached->second.first == iter->first)
+			{
+				auto entry = cached->second.second;
+				{
+					std::unique_lock lock(index_mutex);
+					delay_cache.erase(cached);
+				}
+				store_value_ex(entry->key, entry->value, entry->value, entry->version);
+			}
+			delay_queue.erase(iter);
+		} else {
+			break;
+		}
+	}
 }
 
 std::shared_ptr<const Entry> Server::read_value(const Variant& key) const
@@ -431,14 +451,18 @@ std::shared_ptr<const Entry> Server::read_value(const Variant& key) const
 	std::shared_ptr<block_t> block;
 	{
 		std::shared_lock lock(index_mutex);
-		
-		if(do_compress) {
+		{
+			const auto iter = delay_cache.find(key);
+			if(iter != delay_cache.end()) {
+				return iter->second.second;
+			}
+		}
+		{
 			const auto iter = write_cache.find(key);
 			if(iter != write_cache.end()) {
 				return iter->second;
 			}
 		}
-		
 		index = get_value_index(key);
 		if(index.block_index >= 0) {
 			try {
@@ -762,6 +786,39 @@ void Server::store_values(const std::vector<std::pair<Variant, std::shared_ptr<c
 	}
 }
 
+void Server::store_value_delay(const Variant& key, const std::shared_ptr<const Value>& value, const int32_t& delay_ms)
+{
+	if(delay_ms > 0)
+	{
+		if(key.is_null()) {
+			return;
+		}
+		const auto deadline_ms = vnx::get_wall_time_millis() + delay_ms;
+		
+		auto entry = Entry::create();
+		entry->key = key;
+		entry->value = value;
+		entry->version = ++curr_version;
+		
+		std::unique_lock lock(index_mutex);
+		delay_cache[key] = std::make_pair(deadline_ms, entry);
+		delay_queue.emplace(deadline_ms, key);
+	} else {
+		store_value(key, value);
+	}
+}
+
+void Server::store_values_delay(const std::vector<std::pair<Variant, std::shared_ptr<const Value>>>& values, const int32_t& delay_ms)
+{
+	for(const auto& entry : values) {
+		try {
+			store_value_delay(entry.first, entry.second, delay_ms);
+		} catch(const std::exception& ex) {
+			log(WARN).out << "store_values_delay(): " << ex.what();
+		}
+	}
+}
+
 void Server::delete_value(const Variant& key)
 {
 	const auto index = get_value_index(key);
@@ -1079,7 +1136,7 @@ void Server::print_stats()
 			<< (1000 * write_counter) / stats_interval_ms << " writes/s, "
 			<< (1000 * num_bytes_written) / 1024 / stats_interval_ms << " KB/s write, "
 			<< lock_map.size() << " locks, " << num_lock_timeouts << " timeout, "
-			<< index_map.size() << " entries, "
+			<< delay_cache.size() << " cached, " << index_map.size() << " entries, "
 			<< sync_jobs.size() << " sync jobs" << (rewrite.block ? ", rewriting " : "")
 			<< (rewrite.block ? std::to_string(rewrite.block->index) : "");
 	

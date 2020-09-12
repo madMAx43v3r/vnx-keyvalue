@@ -35,6 +35,10 @@ interface Storage {
 	
 	void store_values(vector<pair<Variant, Value*>> values);
 	
+	void store_value_delay(Variant key, Value* value, int delay_ms);
+	
+	void store_values_delay(vector<pair<Variant, Value*>> values, int delay_ms);
+	
 	void delete_value(Variant key);
 	
 }
