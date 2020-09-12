@@ -747,6 +747,7 @@ void Server::store_value(const Variant& key, const std::shared_ptr<const Value>&
 	} else {
 		store_value_ex(key, value, value, version);
 	}
+	release_lock(key);
 }
 
 void Server::store_value_ex(const Variant& key,
@@ -754,7 +755,6 @@ void Server::store_value_ex(const Variant& key,
 							std::shared_ptr<const Value> store_value,
 							const uint64_t version)
 {
-	release_lock(key);
 	store_value_internal(key, store_value, version);
 	
 	auto pair = SyncUpdate::create();
@@ -799,6 +799,7 @@ void Server::store_value_delay(const Variant& key, const std::shared_ptr<const V
 			cached.deadline_ms = deadline_ms;
 			cached.entry = entry;
 		}
+		release_lock(key);
 		delay_queue.emplace(deadline_ms, key);
 	} else {
 		store_value(key, value);
