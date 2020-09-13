@@ -299,7 +299,7 @@ void Server::get_value_async(const Variant& key, const request_id_t& req_id) con
 void Server::get_value_locked_async(const Variant& key, const int32_t& timeout_ms, const request_id_t& req_id) const
 {
 	const auto ret = lock_map.emplace(key, lock_entry_t());
-	const auto& iter = ret.first;
+	const auto iter = ret.first;
 	if(ret.second) {
 		aquire_lock(iter, timeout_ms);
 		threads->add_task(std::bind(&Server::read_job_locked, this, key, req_id));
@@ -372,7 +372,7 @@ void Server::unlock(const Variant& key)
 	release_lock(key);
 }
 
-void Server::aquire_lock(const lock_map_t::iterator& iter, int32_t timeout_ms) const
+void Server::aquire_lock(lock_map_t::iterator iter, int32_t timeout_ms) const
 {
 	auto& entry = iter->second;
 	if(timeout_ms > 0) {
@@ -387,7 +387,7 @@ void Server::aquire_lock(const lock_map_t::iterator& iter, int32_t timeout_ms) c
 	}
 }
 
-void Server::release_lock(const lock_map_t::iterator& iter)
+void Server::release_lock(lock_map_t::iterator iter)
 {
 	const auto& entry = iter->second;
 	for(const auto& func : entry.waiting) {
