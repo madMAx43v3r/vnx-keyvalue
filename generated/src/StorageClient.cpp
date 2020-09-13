@@ -22,8 +22,12 @@
 #include <vnx/keyvalue/Storage_get_values.hxx>
 #include <vnx/keyvalue/Storage_get_values_return.hxx>
 #include <vnx/keyvalue/Storage_store_value.hxx>
+#include <vnx/keyvalue/Storage_store_value_delay.hxx>
+#include <vnx/keyvalue/Storage_store_value_delay_return.hxx>
 #include <vnx/keyvalue/Storage_store_value_return.hxx>
 #include <vnx/keyvalue/Storage_store_values.hxx>
+#include <vnx/keyvalue/Storage_store_values_delay.hxx>
+#include <vnx/keyvalue/Storage_store_values_delay_return.hxx>
 #include <vnx/keyvalue/Storage_store_values_return.hxx>
 #include <vnx/keyvalue/Storage_sync_all.hxx>
 #include <vnx/keyvalue/Storage_sync_all_keys.hxx>
@@ -198,6 +202,31 @@ void StorageClient::store_values(const std::vector<std::pair<::vnx::Variant, std
 void StorageClient::store_values_async(const std::vector<std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>>& values) {
 	vnx_is_async = true;
 	store_values(values);
+}
+
+void StorageClient::store_value_delay(const ::vnx::Variant& key, const std::shared_ptr<const ::vnx::Value>& value, const int32_t& delay_ms) {
+	auto _method = ::vnx::keyvalue::Storage_store_value_delay::create();
+	_method->key = key;
+	_method->value = value;
+	_method->delay_ms = delay_ms;
+	auto _return_value = vnx_request(_method);
+}
+
+void StorageClient::store_value_delay_async(const ::vnx::Variant& key, const std::shared_ptr<const ::vnx::Value>& value, const int32_t& delay_ms) {
+	vnx_is_async = true;
+	store_value_delay(key, value, delay_ms);
+}
+
+void StorageClient::store_values_delay(const std::vector<std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>>& values, const int32_t& delay_ms) {
+	auto _method = ::vnx::keyvalue::Storage_store_values_delay::create();
+	_method->values = values;
+	_method->delay_ms = delay_ms;
+	auto _return_value = vnx_request(_method);
+}
+
+void StorageClient::store_values_delay_async(const std::vector<std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>>& values, const int32_t& delay_ms) {
+	vnx_is_async = true;
+	store_values_delay(values, delay_ms);
 }
 
 void StorageClient::delete_value(const ::vnx::Variant& key) {

@@ -54,6 +54,14 @@ public:
 	
 	void store_values_async(const std::vector<std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>>& values);
 	
+	void store_value_delay(const ::vnx::Variant& key, const std::shared_ptr<const ::vnx::Value>& value, const int32_t& delay_ms);
+	
+	void store_value_delay_async(const ::vnx::Variant& key, const std::shared_ptr<const ::vnx::Value>& value, const int32_t& delay_ms);
+	
+	void store_values_delay(const std::vector<std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>>& values, const int32_t& delay_ms);
+	
+	void store_values_delay_async(const std::vector<std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>>& values, const int32_t& delay_ms);
+	
 	void delete_value(const ::vnx::Variant& key);
 	
 	void delete_value_async(const ::vnx::Variant& key);

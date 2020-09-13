@@ -22,8 +22,12 @@
 #include <vnx/keyvalue/Storage_get_values.hxx>
 #include <vnx/keyvalue/Storage_get_values_return.hxx>
 #include <vnx/keyvalue/Storage_store_value.hxx>
+#include <vnx/keyvalue/Storage_store_value_delay.hxx>
+#include <vnx/keyvalue/Storage_store_value_delay_return.hxx>
 #include <vnx/keyvalue/Storage_store_value_return.hxx>
 #include <vnx/keyvalue/Storage_store_values.hxx>
+#include <vnx/keyvalue/Storage_store_values_delay.hxx>
+#include <vnx/keyvalue/Storage_store_values_delay_return.hxx>
 #include <vnx/keyvalue/Storage_store_values_return.hxx>
 #include <vnx/keyvalue/Storage_sync_all.hxx>
 #include <vnx/keyvalue/Storage_sync_all_keys.hxx>

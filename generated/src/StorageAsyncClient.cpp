@@ -22,8 +22,12 @@
 #include <vnx/keyvalue/Storage_get_values.hxx>
 #include <vnx/keyvalue/Storage_get_values_return.hxx>
 #include <vnx/keyvalue/Storage_store_value.hxx>
+#include <vnx/keyvalue/Storage_store_value_delay.hxx>
+#include <vnx/keyvalue/Storage_store_value_delay_return.hxx>
 #include <vnx/keyvalue/Storage_store_value_return.hxx>
 #include <vnx/keyvalue/Storage_store_values.hxx>
+#include <vnx/keyvalue/Storage_store_values_delay.hxx>
+#include <vnx/keyvalue/Storage_store_values_delay_return.hxx>
 #include <vnx/keyvalue/Storage_store_values_return.hxx>
 #include <vnx/keyvalue/Storage_sync_all.hxx>
 #include <vnx/keyvalue/Storage_sync_all_keys.hxx>
@@ -174,6 +178,27 @@ uint64_t StorageAsyncClient::store_values(const std::vector<std::pair<::vnx::Var
 	return _request_id;
 }
 
+uint64_t StorageAsyncClient::store_value_delay(const ::vnx::Variant& key, const std::shared_ptr<const ::vnx::Value>& value, const int32_t& delay_ms, const std::function<void()>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+	auto _method = ::vnx::keyvalue::Storage_store_value_delay::create();
+	_method->key = key;
+	_method->value = value;
+	_method->delay_ms = delay_ms;
+	const auto _request_id = vnx_request(_method);
+	vnx_queue_store_value_delay[_request_id] = std::make_pair(_callback, _error_callback);
+	vnx_num_pending++;
+	return _request_id;
+}
+
+uint64_t StorageAsyncClient::store_values_delay(const std::vector<std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>>& values, const int32_t& delay_ms, const std::function<void()>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+	auto _method = ::vnx::keyvalue::Storage_store_values_delay::create();
+	_method->values = values;
+	_method->delay_ms = delay_ms;
+	const auto _request_id = vnx_request(_method);
+	vnx_queue_store_values_delay[_request_id] = std::make_pair(_callback, _error_callback);
+	vnx_num_pending++;
+	return _request_id;
+}
+
 uint64_t StorageAsyncClient::delete_value(const ::vnx::Variant& key, const std::function<void()>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_delete_value::create();
 	_method->key = key;
@@ -222,6 +247,12 @@ std::vector<uint64_t> StorageAsyncClient::vnx_get_pending_ids() const {
 		_list.push_back(entry.first);
 	}
 	for(const auto& entry : vnx_queue_store_values) {
+		_list.push_back(entry.first);
+	}
+	for(const auto& entry : vnx_queue_store_value_delay) {
+		_list.push_back(entry.first);
+	}
+	for(const auto& entry : vnx_queue_store_values_delay) {
 		_list.push_back(entry.first);
 	}
 	for(const auto& entry : vnx_queue_delete_value) {
@@ -358,6 +389,26 @@ void StorageAsyncClient::vnx_purge_request(uint64_t _request_id, const std::exce
 				_iter->second.second(_ex);
 			}
 			vnx_queue_store_values.erase(_iter);
+			vnx_num_pending--;
+		}
+	}
+	{
+		const auto _iter = vnx_queue_store_value_delay.find(_request_id);
+		if(_iter != vnx_queue_store_value_delay.end()) {
+			if(_iter->second.second) {
+				_iter->second.second(_ex);
+			}
+			vnx_queue_store_value_delay.erase(_iter);
+			vnx_num_pending--;
+		}
+	}
+	{
+		const auto _iter = vnx_queue_store_values_delay.find(_request_id);
+		if(_iter != vnx_queue_store_values_delay.end()) {
+			if(_iter->second.second) {
+				_iter->second.second(_ex);
+			}
+			vnx_queue_store_values_delay.erase(_iter);
 			vnx_num_pending--;
 		}
 	}
@@ -572,6 +623,32 @@ void StorageAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_p
 		if(_iter != vnx_queue_store_values.end()) {
 			const auto _callback = std::move(_iter->second.first);
 			vnx_queue_store_values.erase(_iter);
+			vnx_num_pending--;
+			if(_callback) {
+				_callback();
+			}
+		} else {
+			throw std::runtime_error("StorageAsyncClient: invalid return received");
+		}
+	}
+	else if(_type_hash == vnx::Hash64(0x5120f9f0f9c280bbull)) {
+		const auto _iter = vnx_queue_store_value_delay.find(_request_id);
+		if(_iter != vnx_queue_store_value_delay.end()) {
+			const auto _callback = std::move(_iter->second.first);
+			vnx_queue_store_value_delay.erase(_iter);
+			vnx_num_pending--;
+			if(_callback) {
+				_callback();
+			}
+		} else {
+			throw std::runtime_error("StorageAsyncClient: invalid return received");
+		}
+	}
+	else if(_type_hash == vnx::Hash64(0xc60b951a5784d824ull)) {
+		const auto _iter = vnx_queue_store_values_delay.find(_request_id);
+		if(_iter != vnx_queue_store_values_delay.end()) {
+			const auto _callback = std::move(_iter->second.first);
+			vnx_queue_store_values_delay.erase(_iter);
 			vnx_num_pending--;
 			if(_callback) {
 				_callback();

@@ -25,8 +25,12 @@
 #include <vnx/keyvalue/Storage_get_values_return.hxx>
 #include <vnx/keyvalue/Storage_store_value.hxx>
 #include <vnx/keyvalue/Storage_store_value_return.hxx>
+#include <vnx/keyvalue/Storage_store_value_delay.hxx>
+#include <vnx/keyvalue/Storage_store_value_delay_return.hxx>
 #include <vnx/keyvalue/Storage_store_values.hxx>
 #include <vnx/keyvalue/Storage_store_values_return.hxx>
+#include <vnx/keyvalue/Storage_store_values_delay.hxx>
+#include <vnx/keyvalue/Storage_store_values_delay_return.hxx>
 #include <vnx/keyvalue/Storage_sync_all.hxx>
 #include <vnx/keyvalue/Storage_sync_all_return.hxx>
 #include <vnx/keyvalue/Storage_sync_all_keys.hxx>
@@ -76,8 +80,12 @@ static void register_all_types() {
 	vnx::register_type_code(::vnx::keyvalue::Storage_get_values_return::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Storage_store_value::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Storage_store_value_return::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Storage_store_value_delay::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Storage_store_value_delay_return::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Storage_store_values::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Storage_store_values_return::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Storage_store_values_delay::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Storage_store_values_delay_return::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Storage_sync_all::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Storage_sync_all_return::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Storage_sync_all_keys::static_create_type_code());
@@ -125,8 +133,12 @@ const vnx::TypeCode* const vnx_native_type_code_Storage_get_values = vnx::get_ty
 const vnx::TypeCode* const vnx_native_type_code_Storage_get_values_return = vnx::get_type_code(vnx::Hash64(0xe59fbd8a92b4aaf7ull));
 const vnx::TypeCode* const vnx_native_type_code_Storage_store_value = vnx::get_type_code(vnx::Hash64(0xa1b7f9743ce3a0f1ull));
 const vnx::TypeCode* const vnx_native_type_code_Storage_store_value_return = vnx::get_type_code(vnx::Hash64(0x5f02038d66b3d8b5ull));
+const vnx::TypeCode* const vnx_native_type_code_Storage_store_value_delay = vnx::get_type_code(vnx::Hash64(0x8e78c89a3ce01406ull));
+const vnx::TypeCode* const vnx_native_type_code_Storage_store_value_delay_return = vnx::get_type_code(vnx::Hash64(0x5120f9f0f9c280bbull));
 const vnx::TypeCode* const vnx_native_type_code_Storage_store_values = vnx::get_type_code(vnx::Hash64(0x22e477486f9c73e0ull));
 const vnx::TypeCode* const vnx_native_type_code_Storage_store_values_return = vnx::get_type_code(vnx::Hash64(0xd19a5a98ea9c632eull));
+const vnx::TypeCode* const vnx_native_type_code_Storage_store_values_delay = vnx::get_type_code(vnx::Hash64(0xd00ca16a73abf985ull));
+const vnx::TypeCode* const vnx_native_type_code_Storage_store_values_delay_return = vnx::get_type_code(vnx::Hash64(0xc60b951a5784d824ull));
 const vnx::TypeCode* const vnx_native_type_code_Storage_sync_all = vnx::get_type_code(vnx::Hash64(0x973bf802c6c0aaabull));
 const vnx::TypeCode* const vnx_native_type_code_Storage_sync_all_return = vnx::get_type_code(vnx::Hash64(0x68518904fdf771c7ull));
 const vnx::TypeCode* const vnx_native_type_code_Storage_sync_all_keys = vnx::get_type_code(vnx::Hash64(0xba52cec87e1556e5ull));
