@@ -1177,7 +1177,6 @@ void Server::update_loop() const noexcept
 
 void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 {
-	Publisher publisher;
 	uint64_t version = job->begin;
 	uint64_t previous = job->begin;
 	{
@@ -1186,7 +1185,7 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 		info->version = job->begin;
 		info->job_id = job->id;
 		info->code = SyncInfo::BEGIN;
-		publisher.publish(info, job->topic, BLOCKING);
+		publish(info, job->topic, BLOCKING);
 	}
 	
 	struct entry_t {
@@ -1298,7 +1297,7 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 				pair->previous = previous;
 				pair->key = entry.index->key;
 				pair->value = entry.value;
-				publisher.publish(pair, job->topic, BLOCKING);
+				publish(pair, job->topic, BLOCKING);
 				previous = entry.version;
 			}
 		}
@@ -1310,7 +1309,7 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 		info->version = version;
 		info->job_id = job->id;
 		info->code = SyncInfo::END;
-		publisher.publish(info, job->topic, BLOCKING);
+		publish(info, job->topic, BLOCKING);
 	}
 	{
 		std::lock_guard lock(sync_mutex);
