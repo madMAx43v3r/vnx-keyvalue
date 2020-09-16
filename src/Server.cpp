@@ -1279,13 +1279,10 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 				}
 			});
 		}
-		while(vnx_do_run())
 		{
 			std::unique_lock lock(job->mutex);
-			if(job->num_left > 0) {
+			while(job->num_left > 0) {
 				job->condition.wait(lock);
-			} else {
-				break;
 			}
 		}
 		for(const auto& entry : list)
