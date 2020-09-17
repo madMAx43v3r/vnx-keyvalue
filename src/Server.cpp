@@ -65,14 +65,14 @@ void Server::main()
 		try {
 			File file(get_file_path("key", block_index));
 			file.remove();
-			log(INFO).out << "Deleted old key file from block " << block_index;
+			log(INFO) << "Deleted old key file from block " << block_index;
 		} catch(...) {
 			// ignore
 		}
 		try {
 			File file(get_file_path("value", block_index));
 			file.remove();
-			log(INFO).out << "Deleted old value file from block " << block_index;
+			log(INFO) << "Deleted old value file from block " << block_index;
 		} catch(...) {
 			// ignore
 		}
@@ -81,7 +81,7 @@ void Server::main()
 	
 	for(const auto block_index : coll_index->block_list)
 	{
-		log(INFO).out << "Reading block " << block_index << " ...";
+		log(INFO) << "Reading block " << block_index << " ...";
 		try {
 			auto block = std::make_shared<block_t>();
 			block->index = block_index;
@@ -134,7 +134,7 @@ void Server::main()
 								block->num_bytes_total += index_entry->num_bytes;
 							}
 							else {
-								log(WARN).out << "Lost value for key '" << index_entry->key.to_string_value() << "'";
+								log(WARN) << "Lost value for key '" << index_entry->key.to_string_value() << "'";
 							}
 						}
 					}
@@ -155,7 +155,7 @@ void Server::main()
 								} catch(const std::underflow_error& ex) {
 									break;
 								} catch(const std::exception& ex) {
-									log(WARN).out << "Error while reading type codes from block "
+									log(WARN) << "Error while reading type codes from block "
 											<< block_index << ": " << ex.what();
 									break;
 								}
@@ -171,14 +171,14 @@ void Server::main()
 					}
 				}
 				catch(const std::exception& ex) {
-					log(WARN).out << "Error reading block " << block_index << " key file: " << ex.what();
+					log(WARN) << "Error reading block " << block_index << " key file: " << ex.what();
 					is_error = true;
 					break;
 				}
 			}
 			
 			if(is_error) {
-				log(INFO).out << "Verifying block " << block->index << " ...";
+				log(INFO) << "Verifying block " << block->index << " ...";
 				value_in.reset();
 				block->value_file.seek_begin();
 				while(vnx_do_run())
@@ -198,7 +198,7 @@ void Server::main()
 					block->key_file.open("rb");
 					lock_file_exclusive(block->key_file);
 				}
-				log(INFO).out << "Done verifying block " << block->index << ": " << value_end_pos << " bytes";
+				log(INFO) << "Done verifying block " << block->index << ": " << value_end_pos << " bytes";
 			}
 			
 			block->key_file.seek_to(prev_key_pos);
@@ -206,7 +206,7 @@ void Server::main()
 		}
 		catch(const std::exception& ex) {
 			if(ignore_errors) {
-				log(ERROR).out << "Failed to read block " << block_index << ": " << ex.what();
+				log(ERROR) << "Failed to read block " << block_index << ": " << ex.what();
 			} else {
 				throw;
 			}
@@ -215,7 +215,7 @@ void Server::main()
 	
 	for(const auto& entry : block_map) {
 		auto block = entry.second;
-		log(INFO).out << "Block " << block->index << ": " << block->num_bytes_used << " bytes used, "
+		log(INFO) << "Block " << block->index << ": " << block->num_bytes_used << " bytes used, "
 				<< block->num_bytes_total << " bytes total, "
 				<< 100 * float(block->num_bytes_used) / block->num_bytes_total << " % use factor";
 	}
@@ -236,7 +236,7 @@ void Server::main()
 		}
 		lock_file_exclusive(block->key_file);
 		lock_file_exclusive(block->value_file);
-		log(INFO).out << "Got " << keyhash_map.size() << " entries.";
+		log(INFO) << "Got " << keyhash_map.size() << " entries.";
 	}
 	
 	write_index();
@@ -275,12 +275,12 @@ void Server::main()
 		try {
 			block->key_file.close();
 		} catch(const std::exception& ex) {
-			log(ERROR).out << "Failed to close key file " << block->index << ": " << ex.what();
+			log(ERROR) << "Failed to close key file " << block->index << ": " << ex.what();
 		}
 		try {
 			block->value_file.close();
 		} catch(const std::exception& ex) {
-			log(ERROR).out << "Failed to close value file " << block->index << ": " << ex.what();
+			log(ERROR) << "Failed to close value file " << block->index << ": " << ex.what();
 		}
 	}
 }
@@ -582,7 +582,7 @@ int64_t Server::sync_range_ex(TopicPtr topic, uint64_t begin, uint64_t end, bool
 	}
 	sync_threads->add_task(std::bind(&Server::sync_loop, this, job));
 	
-	log(INFO).out << "Started sync job " << job->id << " ...";
+	log(INFO) << "Started sync job " << job->id << " ...";
 	return job->id;
 }
 
@@ -654,7 +654,7 @@ void Server::store_value_internal(	const Variant& key,
 	{
 		block->key_file.seek_to(prev_key_pos);
 		block->value_file.seek_to(prev_value_pos);
-		log(WARN).out << "store_value(): " << ex.what();
+		log(WARN) << "store_value(): " << ex.what();
 		throw;
 	}
 	
@@ -684,7 +684,7 @@ void Server::store_value_internal(	const Variant& key,
 	{
 		block->key_file.seek_to(prev_key_pos);
 		block->value_file.seek_to(prev_value_pos);
-		log(WARN).out << "store_value(): " << ex.what();
+		log(WARN) << "store_value(): " << ex.what();
 		throw;
 	}
 	{
@@ -775,7 +775,7 @@ void Server::store_values(const std::vector<std::pair<Variant, std::shared_ptr<c
 		try {
 			store_value(entry.first, entry.second);
 		} catch(const std::exception& ex) {
-			log(WARN).out << "store_values(): " << ex.what();
+			log(WARN) << "store_values(): " << ex.what();
 		}
 	}
 }
@@ -812,7 +812,7 @@ void Server::store_values_delay(const std::vector<std::pair<Variant, std::shared
 		try {
 			store_value_delay(entry.first, entry.second, delay_ms);
 		} catch(const std::exception& ex) {
-			log(WARN).out << "store_values_delay(): " << ex.what();
+			log(WARN) << "store_values_delay(): " << ex.what();
 		}
 	}
 }
@@ -923,7 +923,7 @@ void Server::close_block(std::shared_ptr<block_t> block)
 		block->value_file.flush();
 	}
 	catch(const std::exception& ex) {
-		log(ERROR).out << "Failed to close block " << block->index << ": " << ex.what();
+		log(ERROR) << "Failed to close block " << block->index << ": " << ex.what();
 	}
 }
 
@@ -952,13 +952,13 @@ std::shared_ptr<Server::block_t> Server::add_new_block()
 		write_index();
 	}
 	catch(const std::exception& ex) {
-		log(ERROR).out << "Failed to write new block " << block->index << ": " << ex.what();
+		log(ERROR) << "Failed to write new block " << block->index << ": " << ex.what();
 		return curr_block;
 	}
 	if(curr_block) {
 		close_block(curr_block);
 	}
-	log(INFO).out << "Added new block " << block->index;
+	log(INFO) << "Added new block " << block->index;
 	return block;
 }
 
@@ -971,7 +971,7 @@ void Server::check_rewrite(bool is_idle)
 				const double use_factor = double(block->num_bytes_used) / block->num_bytes_total;
 				if(use_factor < rewrite_threshold || (is_idle && use_factor < idle_rewrite_threshold))
 				{
-					log(INFO).out << "Rewriting block " << block->index << " with use factor " << float(100 * use_factor) << " % ...";
+					log(INFO) << "Rewriting block " << block->index << " with use factor " << float(100 * use_factor) << " % ...";
 					rewrite.block = block;
 					rewrite.timer->set_millis(0);
 					break;
@@ -1051,7 +1051,7 @@ void Server::rewrite_func()
 			break;
 		}
 		catch(const std::exception& ex) {
-			log(ERROR).out << "Block " << block->index << " (key) rewrite: " << ex.what();
+			log(ERROR) << "Block " << block->index << " (key) rewrite: " << ex.what();
 			is_done = true;
 			break;
 		}
@@ -1061,17 +1061,17 @@ void Server::rewrite_func()
 	
 	FileSectionInputStream stream;
 	TypeInput in(&stream);
-	const auto fd = block->value_file.get_handle();
+	const auto value_file = block->value_file.get_handle();
 	
 	for(auto& entry : list) {
 		try {
 			in.reset();
-			stream.reset(fd, entry.index->block_offset, entry.index->num_bytes);
+			stream.reset(value_file, entry.index->block_offset, entry.index->num_bytes);
 			entry.value = vnx::read(in);
 			entry.is_error = false;
 		}
 		catch(const std::exception& ex) {
-			log(ERROR).out << "Block " << block->index << " (value) rewrite: " << ex.what();
+			log(ERROR) << "Block " << block->index << " (value) rewrite: " << ex.what();
 			// keep going, since we are not reading the file as a stream
 		}
 	}
@@ -1083,12 +1083,12 @@ void Server::rewrite_func()
 		}
 	}
 	catch(const std::exception& ex) {
-		log(ERROR).out << "Block " << block->index << " (store) rewrite: " << ex.what();
+		log(ERROR) << "Block " << block->index << " (store) rewrite: " << ex.what();
 		return;		// stop rewriting in case storage fails
 	}
 	
 	if(is_done) {
-		log(INFO).out << "Rewrite of block " << block->index << " finished.";
+		log(INFO) << "Rewrite of block " << block->index << " finished.";
 		{
 			std::unique_lock lock(index_mutex);
 			block_map.erase(block->index);
@@ -1115,7 +1115,7 @@ void Server::write_index()
 		try {
 			vnx::write_to_file(get_file_path("index", i), coll_index);
 		} catch(const std::exception& ex) {
-			log(ERROR).out << "Failed to write collection index " << i << ": " << ex.what();
+			log(ERROR) << "Failed to write collection index " << i << ": " << ex.what();
 		}
 	}
 }
@@ -1123,14 +1123,14 @@ void Server::write_index()
 void Server::lock_file_exclusive(const File& file)
 {
 	while(::flock(::fileno(file.get_handle()), LOCK_EX | LOCK_NB)) {
-		log(WARN).out << "Cannot lock file: '" << file.get_name() << "'";
+		log(WARN) << "Cannot lock file: '" << file.get_name() << "'";
 		::usleep(1000 * 1000);
 	}
 }
 
 void Server::print_stats()
 {
-	log(INFO).out << (1000 * read_counter) / stats_interval_ms << " reads/s, "
+	log(INFO) << (1000 * read_counter) / stats_interval_ms << " reads/s, "
 			<< (1000 * num_bytes_read) / 1024 / stats_interval_ms << " KB/s read, "
 			<< (1000 * write_counter) / stats_interval_ms << " writes/s, "
 			<< (1000 * num_bytes_written) / 1024 / stats_interval_ms << " KB/s write, "
@@ -1311,7 +1311,7 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 	{
 		std::lock_guard lock(sync_mutex);
 		sync_jobs.erase(job->id);
-		log(INFO).out << "Finished sync job " << job->id;
+		log(INFO) << "Finished sync job " << job->id;
 	}
 }
 
