@@ -465,13 +465,11 @@ std::shared_ptr<const Entry> Server::read_value(const Variant& key) const
 		}
 		index = get_value_index(key);
 		if(index.block_index >= 0) {
-			try {
-				block = get_block(index.block_index);
+			block = get_block(index.block_index);
+			if(block) {
 				block->num_pending++;
-			} catch(...) {
-				// ignore
 			}
-			if(index.key_iter != keyhash_map.end()) {
+			if(index.key_iter != keyhash_map.cend()) {
 				entry->version = index.key_iter->second;
 			}
 		}
@@ -820,7 +818,7 @@ void Server::store_values_delay(const std::vector<std::pair<Variant, std::shared
 void Server::delete_value(const Variant& key)
 {
 	const auto index = get_value_index(key);
-	if(index.key_iter != keyhash_map.end()) {
+	if(index.key_iter != keyhash_map.cend()) {
 		store_value(key, nullptr);
 	} else {
 		release_lock(key);
@@ -843,10 +841,10 @@ std::shared_ptr<Server::block_t> Server::get_current_block() const
 std::shared_ptr<Server::block_t> Server::get_block(int64_t index) const
 {
 	auto iter = block_map.find(index);
-	if(iter == block_map.end()) {
-		throw std::runtime_error("unknown block: " + std::to_string(index));
+	if(iter != block_map.end()) {
+		return iter->second;
 	}
-	return iter->second;
+	return nullptr;
 }
 
 
@@ -859,7 +857,7 @@ Server::version_index_t Server::get_version_index(const uint64_t& version) const
 		const auto block = get_block(key_index.block_index);
 		
 		std::shared_ptr<IndexEntry> entry;
-		{
+		if(block) {
 			FileSectionInputStream stream(block->key_file.get_handle(), key_index.block_offset, key_index.num_bytes);
 			TypeInput in(&stream);
 			try {
@@ -893,7 +891,7 @@ Server::value_index_t Server::get_value_index(const Variant& key) const
 			return result;
 		}
 	}
-	result.key_iter = keyhash_map.end();
+	result.key_iter = keyhash_map.cend();
 	return result;
 }
 
@@ -901,12 +899,10 @@ void Server::delete_internal(const value_index_t& index)
 {
 	// index_mutex needs to be unique locked by caller
 	const auto key_iter = index.key_iter;
-	if(key_iter != keyhash_map.end()) {
-		try {
-			auto block = get_block(index.block_index);
+	if(key_iter != keyhash_map.cend()) {
+		auto block = get_block(index.block_index);
+		if(block) {
 			block->num_bytes_used -= index.num_bytes;
-		} catch(...) {
-			// ignore
 		}
 		index_map.erase(key_iter->second);
 		keyhash_map.erase(key_iter);
@@ -1222,8 +1218,10 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 					entry.version = version;
 					entry.key_index = iter->second;
 					entry.block = get_block(entry.key_index.block_index);
-					entry.block->num_pending++;
-					list.push_back(entry);
+					if(entry.block) {
+						entry.block->num_pending++;
+						list.push_back(entry);
+					}
 				}
 				catch(...) {
 					// ignore
