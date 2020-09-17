@@ -432,7 +432,7 @@ void Server::check_timeouts()
 				if(cached.deadline_ms == iter->first)
 				{
 					auto entry = cached.entry;
-					store_value_ex(entry->key, entry->value, entry->value, entry->version);
+					store_value_version(entry->key, entry->value, entry->version);
 				}
 			}
 			delay_queue.erase(iter);
@@ -563,7 +563,7 @@ void Server::multi_read_key_job(uint64_t version, size_t index, std::shared_ptr<
 void Server::store_compress_job(std::shared_ptr<const Entry> entry)
 {
 	auto compressed = addons::DeflatedValue::compress_ex(entry->value, compress_level);
-	add_task(std::bind(&Server::store_value_ex, this, entry->key, entry->value, compressed, entry->version));
+	add_task(std::bind(&Server::store_value_version_ex, this, entry->key, entry->value, compressed, entry->version));
 }
 
 int64_t Server::sync_range_ex(TopicPtr topic, uint64_t begin, uint64_t end, bool key_only) const
@@ -730,8 +730,14 @@ void Server::store_value(const Variant& key, const std::shared_ptr<const Value>&
 	if(key.is_null()) {
 		return;
 	}
-	const uint64_t version = ++curr_version;
-	
+	store_value_version(key, value, ++curr_version);
+	release_lock(key);
+}
+
+void Server::store_value_version(	const Variant& key,
+									std::shared_ptr<const Value> value,
+									const uint64_t version)
+{
 	if(do_compress) {
 		auto entry = Entry::create();
 		entry->key = key;
@@ -743,15 +749,14 @@ void Server::store_value(const Variant& key, const std::shared_ptr<const Value>&
 		}
 		threads->add_task(std::bind(&Server::store_compress_job, this, entry));
 	} else {
-		store_value_ex(key, value, value, version);
+		store_value_version_ex(key, value, value, version);
 	}
-	release_lock(key);
 }
 
-void Server::store_value_ex(const Variant& key,
-							std::shared_ptr<const Value> value,
-							std::shared_ptr<const Value> store_value,
-							const uint64_t version)
+void Server::store_value_version_ex(const Variant& key,
+									std::shared_ptr<const Value> value,
+									std::shared_ptr<const Value> store_value,
+									const uint64_t version)
 {
 	store_value_internal(key, store_value, version);
 	

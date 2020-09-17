@@ -173,10 +173,14 @@ private:
 								std::shared_ptr<const Value> value,
 								const uint64_t version);
 	
-	void store_value_ex(const Variant& key,
-						std::shared_ptr<const Value> value,
-						std::shared_ptr<const Value> store_value,
-						const uint64_t version);
+	void store_value_version(	const Variant& key,
+								std::shared_ptr<const Value> value,
+								const uint64_t version);
+	
+	void store_value_version_ex(const Variant& key,
+								std::shared_ptr<const Value> value,
+								std::shared_ptr<const Value> store_value,
+								const uint64_t version);
 	
 	int64_t sync_range_ex(TopicPtr topic, uint64_t begin, uint64_t end, bool key_only) const;
 	
