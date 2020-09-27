@@ -24,6 +24,7 @@ vnx::Hash64 Storage_sync_all_keys::get_type_hash() const {
 const char* Storage_sync_all_keys::get_type_name() const {
 	return "vnx.keyvalue.Storage.sync_all_keys";
 }
+
 const vnx::TypeCode* Storage_sync_all_keys::get_type_code() const {
 	return vnx::keyvalue::vnx_native_type_code_Storage_sync_all_keys;
 }
@@ -182,6 +183,10 @@ void read(TypeInput& in, ::vnx::keyvalue::Storage_sync_all_keys& value, const Ty
 }
 
 void write(TypeOutput& out, const ::vnx::keyvalue::Storage_sync_all_keys& value, const TypeCode* type_code, const uint16_t* code) {
+	if(code && code[0] == CODE_OBJECT) {
+		vnx::write(out, value.to_object(), nullptr, code);
+		return;
+	}
 	if(!type_code || (code && code[0] == CODE_ANY)) {
 		type_code = vnx::keyvalue::vnx_native_type_code_Storage_sync_all_keys;
 		out.write_type_code(type_code);

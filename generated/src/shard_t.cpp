@@ -21,6 +21,7 @@ vnx::Hash64 shard_t::get_type_hash() const {
 const char* shard_t::get_type_name() const {
 	return "vnx.keyvalue.shard_t";
 }
+
 const vnx::TypeCode* shard_t::get_type_code() const {
 	return vnx::keyvalue::vnx_native_type_code_shard_t;
 }
@@ -203,6 +204,10 @@ void read(TypeInput& in, ::vnx::keyvalue::shard_t& value, const TypeCode* type_c
 }
 
 void write(TypeOutput& out, const ::vnx::keyvalue::shard_t& value, const TypeCode* type_code, const uint16_t* code) {
+	if(code && code[0] == CODE_OBJECT) {
+		vnx::write(out, value.to_object(), nullptr, code);
+		return;
+	}
 	if(!type_code || (code && code[0] == CODE_ANY)) {
 		type_code = vnx::keyvalue::vnx_native_type_code_shard_t;
 		out.write_type_code(type_code);

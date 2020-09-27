@@ -22,6 +22,7 @@ vnx::Hash64 Storage_cancel_sync_job_return::get_type_hash() const {
 const char* Storage_cancel_sync_job_return::get_type_name() const {
 	return "vnx.keyvalue.Storage.cancel_sync_job.return";
 }
+
 const vnx::TypeCode* Storage_cancel_sync_job_return::get_type_code() const {
 	return vnx::keyvalue::vnx_native_type_code_Storage_cancel_sync_job_return;
 }
@@ -151,6 +152,10 @@ void read(TypeInput& in, ::vnx::keyvalue::Storage_cancel_sync_job_return& value,
 }
 
 void write(TypeOutput& out, const ::vnx::keyvalue::Storage_cancel_sync_job_return& value, const TypeCode* type_code, const uint16_t* code) {
+	if(code && code[0] == CODE_OBJECT) {
+		vnx::write(out, value.to_object(), nullptr, code);
+		return;
+	}
 	if(!type_code || (code && code[0] == CODE_ANY)) {
 		type_code = vnx::keyvalue::vnx_native_type_code_Storage_cancel_sync_job_return;
 		out.write_type_code(type_code);

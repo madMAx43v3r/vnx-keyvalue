@@ -22,6 +22,7 @@ vnx::Hash64 CloseEntry::get_type_hash() const {
 const char* CloseEntry::get_type_name() const {
 	return "vnx.keyvalue.CloseEntry";
 }
+
 const vnx::TypeCode* CloseEntry::get_type_code() const {
 	return vnx::keyvalue::vnx_native_type_code_CloseEntry;
 }
@@ -183,6 +184,10 @@ void read(TypeInput& in, ::vnx::keyvalue::CloseEntry& value, const TypeCode* typ
 }
 
 void write(TypeOutput& out, const ::vnx::keyvalue::CloseEntry& value, const TypeCode* type_code, const uint16_t* code) {
+	if(code && code[0] == CODE_OBJECT) {
+		vnx::write(out, value.to_object(), nullptr, code);
+		return;
+	}
 	if(!type_code || (code && code[0] == CODE_ANY)) {
 		type_code = vnx::keyvalue::vnx_native_type_code_CloseEntry;
 		out.write_type_code(type_code);

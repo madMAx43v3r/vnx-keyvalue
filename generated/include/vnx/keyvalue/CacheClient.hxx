@@ -21,7 +21,27 @@ public:
 	
 	CacheClient(vnx::Hash64 service_addr);
 	
+	::vnx::Object vnx_get_config_object();
+	
+	::vnx::Variant vnx_get_config(const std::string& name);
+	
+	void vnx_set_config_object(const ::vnx::Object& config);
+	
+	void vnx_set_config_object_async(const ::vnx::Object& config);
+	
+	void vnx_set_config(const std::string& name, const ::vnx::Variant& value);
+	
+	void vnx_set_config_async(const std::string& name, const ::vnx::Variant& value);
+	
 	::vnx::TypeCode vnx_get_type_code();
+	
+	void vnx_restart();
+	
+	void vnx_restart_async();
+	
+	void vnx_close();
+	
+	void vnx_close_async();
 	
 	std::shared_ptr<const ::vnx::keyvalue::Entry> get_value(const ::vnx::Variant& key);
 	

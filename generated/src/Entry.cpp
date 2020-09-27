@@ -23,6 +23,7 @@ vnx::Hash64 Entry::get_type_hash() const {
 const char* Entry::get_type_name() const {
 	return "vnx.keyvalue.Entry";
 }
+
 const vnx::TypeCode* Entry::get_type_code() const {
 	return vnx::keyvalue::vnx_native_type_code_Entry;
 }
@@ -222,6 +223,10 @@ void read(TypeInput& in, ::vnx::keyvalue::Entry& value, const TypeCode* type_cod
 }
 
 void write(TypeOutput& out, const ::vnx::keyvalue::Entry& value, const TypeCode* type_code, const uint16_t* code) {
+	if(code && code[0] == CODE_OBJECT) {
+		vnx::write(out, value.to_object(), nullptr, code);
+		return;
+	}
 	if(!type_code || (code && code[0] == CODE_ANY)) {
 		type_code = vnx::keyvalue::vnx_native_type_code_Entry;
 		out.write_type_code(type_code);
