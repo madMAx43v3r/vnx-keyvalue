@@ -124,11 +124,6 @@ private:
 	
 	typedef std::map<Variant, lock_entry_t> lock_map_t;
 	
-	void get_value_multi_async(	const Variant& key,
-								size_t index,
-								std::shared_ptr<multi_read_job_t> job,
-								const request_id_t& req_id) const;
-	
 	void aquire_lock(lock_map_t::iterator iter, int32_t timeout_ms) const;
 	
 	void release_lock(lock_map_t::iterator iter);

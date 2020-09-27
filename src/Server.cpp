@@ -287,13 +287,7 @@ void Server::main()
 
 void Server::get_value_async(const Variant& key, const request_id_t& req_id) const
 {
-	const auto iter = lock_map.find(key);
-	if(iter != lock_map.end()) {
-		auto& entry = iter->second;
-		entry.waiting.push_back(std::bind(&Server::get_value_async, this, key, req_id));
-	} else {
-		threads->add_task(std::bind(&Server::read_job, this, key, req_id));
-	}
+	threads->add_task(std::bind(&Server::read_job, this, key, req_id));
 }
 
 void Server::get_value_locked_async(const Variant& key, const int32_t& timeout_ms, const request_id_t& req_id) const
@@ -309,20 +303,6 @@ void Server::get_value_locked_async(const Variant& key, const int32_t& timeout_m
 	}
 }
 
-void Server::get_value_multi_async(	const Variant& key,
-									size_t index,
-									std::shared_ptr<multi_read_job_t> job,
-									const request_id_t& req_id) const
-{
-	const auto iter = lock_map.find(key);
-	if(iter != lock_map.end()) {
-		auto& entry = iter->second;
-		entry.waiting.push_back(std::bind(&Server::get_value_multi_async, this, key, index, job, req_id));
-	} else {
-		threads->add_task(std::bind(&Server::multi_read_job, this, key, index, job));
-	}
-}
-
 void Server::get_values_async(const std::vector<Variant>& keys, const request_id_t& req_id) const
 {
 	if(keys.empty()) {
@@ -334,15 +314,8 @@ void Server::get_values_async(const std::vector<Variant>& keys, const request_id
 	job->num_left = keys.size();
 	job->entries.resize(keys.size());
 	
-	for(size_t i = 0; i < keys.size(); ++i)
-	{
-		const auto iter = lock_map.find(keys[i]);
-		if(iter != lock_map.end()) {
-			auto& entry = iter->second;
-			entry.waiting.push_back(std::bind(&Server::get_value_multi_async, this, keys[i], i, job, req_id));
-		} else {
-			threads->add_task(std::bind(&Server::multi_read_job, this, keys[i], i, job));
-		}
+	for(size_t i = 0; i < keys.size(); ++i) {
+		threads->add_task(std::bind(&Server::multi_read_job, this, keys[i], i, job));
 	}
 }
 
