@@ -203,7 +203,7 @@ private:
 	
 	// protected by index_mutex, only main thread may modify
 	std::map<int64_t, std::shared_ptr<block_t>> block_map;
-	flat_index_map<index_t> index_map;								// [version => index_t]
+	flat_index_map<index_t, 64> index_map;							// [version => index_t]
 	std::unordered_multimap<uint64_t, uint64_t> keyhash_map;		// [key hash => version]
 	std::map<Variant, std::shared_ptr<const Entry>> write_cache;
 	std::map<Variant, delay_entry_t> delay_cache;	// [key => (deadline_ms, entry)]
