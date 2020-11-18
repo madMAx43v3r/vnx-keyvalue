@@ -65,7 +65,7 @@ protected:
 	
 private:
 	struct index_t {
-		int64_t block_index = -1;
+		uint32_t block_index = -1;
 		uint32_t block_offset = 0;
 		uint32_t num_bytes = 0;
 	};
@@ -82,7 +82,7 @@ private:
 	struct block_t {
 		File key_file;
 		File value_file;
-		int64_t index = -1;
+		uint32_t index = -1;
 		int64_t num_bytes_used = 0;
 		int64_t num_bytes_total = 0;
 		std::atomic<size_t> num_pending {0};
@@ -148,11 +148,11 @@ private:
 	
 	void lock_file_exclusive(const File& file);
 	
-	std::string get_file_path(const std::string& name, int64_t index) const;
+	std::string get_file_path(const std::string& name, uint32_t index) const;
 	
 	std::shared_ptr<block_t> get_current_block() const;
 	
-	std::shared_ptr<block_t> get_block(int64_t index) const;
+	std::shared_ptr<block_t> get_block(uint32_t index) const;
 	
 	version_index_t get_version_index(const uint64_t& version) const;
 	

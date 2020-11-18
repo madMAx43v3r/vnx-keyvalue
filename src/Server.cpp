@@ -803,7 +803,7 @@ void Server::delete_value(const Variant& key)
 	}
 }
 
-std::string Server::get_file_path(const std::string& name, int64_t index) const
+std::string Server::get_file_path(const std::string& name, uint32_t index) const
 {
 	return storage_path + collection + "." + name + "." + std::to_string(index) + ".dat";
 }
@@ -816,7 +816,7 @@ std::shared_ptr<Server::block_t> Server::get_current_block() const
 	return block_map.rbegin()->second;
 }
 
-std::shared_ptr<Server::block_t> Server::get_block(int64_t index) const
+std::shared_ptr<Server::block_t> Server::get_block(uint32_t index) const
 {
 	auto iter = block_map.find(index);
 	if(iter != block_map.end()) {
