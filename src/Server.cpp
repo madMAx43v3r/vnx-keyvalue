@@ -829,25 +829,23 @@ std::shared_ptr<Server::block_t> Server::get_block(uint32_t index) const
 Server::version_index_t Server::get_version_index(const uint64_t& version) const
 {
 	version_index_t result;
-	auto iter = index_map.find(version);
-	if(iter != index_map.end()) {
-		const auto& key_index = iter->second;
-		const auto block = get_block(key_index.block_index);
-		
+	if(auto* key_index = index_map.find(version))
+	{
+		const auto block = get_block(key_index->block_index);
 		std::shared_ptr<IndexEntry> entry;
 		if(block) {
-			FileSectionInputStream stream(block->key_file.get_handle(), key_index.block_offset, key_index.num_bytes);
+			FileSectionInputStream stream(block->key_file.get_handle(), key_index->block_offset, key_index->num_bytes);
 			TypeInput in(&stream);
 			try {
 				entry = std::dynamic_pointer_cast<IndexEntry>(vnx::read(in));
-				num_bytes_read += key_index.num_bytes;
+				num_bytes_read += key_index->num_bytes;
 			} catch(...) {
 				// ignore
 			}
 		}
 		if(entry) {
 			result.key = std::move(entry->key);
-			result.block_index = key_index.block_index;
+			result.block_index = key_index->block_index;
 			result.block_offset = entry->block_offset;
 			result.num_bytes = entry->num_bytes;
 		}
@@ -1003,16 +1001,12 @@ void Server::rewrite_func()
 		try {
 			const auto index = std::dynamic_pointer_cast<IndexEntry>(vnx::read(rewrite.key_in));
 			if(index) {
-				const auto iter = index_map.find(index->version);
-				if(iter != index_map.end())
-				{
-					const auto& key_index = iter->second;
-					if(key_index.block_index == rewrite.block->index)
-					{
+				if(const auto* key_index = index_map.find(index->version)) {
+					if(key_index->block_index == rewrite.block->index) {
 						pair_t entry;
 						entry.index = index;
 						list.push_back(entry);
-						num_bytes += index->num_bytes + key_index.num_bytes;
+						num_bytes += index->num_bytes + key_index->num_bytes;
 						if(num_bytes > rewrite_chunk_size) {
 							break;
 						}
@@ -1109,7 +1103,7 @@ void Server::print_stats()
 			<< (1000 * write_counter) / stats_interval_ms << " writes/s, "
 			<< (1000 * num_bytes_written) / 1024 / stats_interval_ms << " KB/s write, "
 			<< lock_map.size() << " locks, " << num_lock_timeouts << " timeout, "
-			<< delay_cache.size() << " cached, " << index_map.size() << " entries, "
+			<< delay_cache.size() << " cached, " << keyhash_map.size() << " entries, "
 			<< sync_jobs.size() << " sync jobs" << (rewrite.block ? ", rewriting " : "")
 			<< (rewrite.block ? std::to_string(rewrite.block->index) : "");
 	
@@ -1179,14 +1173,13 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 		{
 			std::shared_lock lock(index_mutex);
 			
-			auto iter = index_map.upper_bound(version);
-			for(int i = 0; i < sync_chunk_count; ++iter, ++i)
+			for(int i = 0; i < sync_chunk_count; ++i)
 			{
-				if(iter == index_map.end()) {
+				const auto* iter = index_map.find_next(version);
+				if(!iter) {
 					is_done = true;
 					break;
 				}
-				version = iter->first;
 				if(job->end > 0 && version >= job->end) {
 					is_done = true;
 					break;
@@ -1194,7 +1187,7 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 				try {
 					entry_t entry;
 					entry.version = version;
-					entry.key_index = iter->second;
+					entry.key_index = *iter;
 					entry.block = get_block(entry.key_index.block_index);
 					if(entry.block) {
 						entry.block->num_pending++;
