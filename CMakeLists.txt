@@ -38,6 +38,9 @@ target_link_libraries(test_server_delete vnx_keyvalue)
 add_executable(test_server_sync test/test_server_sync.cpp)
 target_link_libraries(test_server_sync vnx_keyvalue)
 
+add_executable(test_btree_index_map test/test_btree_index_map.cpp)
+target_link_libraries(test_btree_index_map vnx_keyvalue)
+
 install(DIRECTORY include/ DESTINATION include)
 install(DIRECTORY generated/include/ DESTINATION include)
 install(DIRECTORY interface/ DESTINATION interface/vnx/keyvalue)
