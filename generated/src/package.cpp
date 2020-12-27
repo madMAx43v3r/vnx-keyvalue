@@ -47,8 +47,179 @@
 #include <vnx/keyvalue/TypeEntry.hxx>
 #include <vnx/keyvalue/shard_t.hxx>
 
+#include <vnx/keyvalue/package.hxx>
 #include <vnx/vnx.h>
 
+
+
+namespace vnx {
+
+void type<::vnx::keyvalue::CloseEntry>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::CloseEntry());
+}
+
+void type<::vnx::keyvalue::Collection>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Collection());
+}
+
+void type<::vnx::keyvalue::Entry>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Entry());
+}
+
+void type<::vnx::keyvalue::IndexEntry>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::IndexEntry());
+}
+
+void type<::vnx::keyvalue::ServerInfo>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::ServerInfo());
+}
+
+void type<::vnx::keyvalue::Storage_cancel_sync_job>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_cancel_sync_job());
+}
+
+void type<::vnx::keyvalue::Storage_cancel_sync_job_return>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_cancel_sync_job_return());
+}
+
+void type<::vnx::keyvalue::Storage_delete_value>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_delete_value());
+}
+
+void type<::vnx::keyvalue::Storage_delete_value_return>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_delete_value_return());
+}
+
+void type<::vnx::keyvalue::Storage_get_key>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_get_key());
+}
+
+void type<::vnx::keyvalue::Storage_get_key_return>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_get_key_return());
+}
+
+void type<::vnx::keyvalue::Storage_get_keys>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_get_keys());
+}
+
+void type<::vnx::keyvalue::Storage_get_keys_return>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_get_keys_return());
+}
+
+void type<::vnx::keyvalue::Storage_get_value>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_get_value());
+}
+
+void type<::vnx::keyvalue::Storage_get_value_return>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_get_value_return());
+}
+
+void type<::vnx::keyvalue::Storage_get_value_locked>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_get_value_locked());
+}
+
+void type<::vnx::keyvalue::Storage_get_value_locked_return>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_get_value_locked_return());
+}
+
+void type<::vnx::keyvalue::Storage_get_values>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_get_values());
+}
+
+void type<::vnx::keyvalue::Storage_get_values_return>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_get_values_return());
+}
+
+void type<::vnx::keyvalue::Storage_store_value>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_store_value());
+}
+
+void type<::vnx::keyvalue::Storage_store_value_return>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_store_value_return());
+}
+
+void type<::vnx::keyvalue::Storage_store_value_delay>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_store_value_delay());
+}
+
+void type<::vnx::keyvalue::Storage_store_value_delay_return>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_store_value_delay_return());
+}
+
+void type<::vnx::keyvalue::Storage_store_values>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_store_values());
+}
+
+void type<::vnx::keyvalue::Storage_store_values_return>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_store_values_return());
+}
+
+void type<::vnx::keyvalue::Storage_store_values_delay>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_store_values_delay());
+}
+
+void type<::vnx::keyvalue::Storage_store_values_delay_return>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_store_values_delay_return());
+}
+
+void type<::vnx::keyvalue::Storage_sync_all>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_sync_all());
+}
+
+void type<::vnx::keyvalue::Storage_sync_all_return>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_sync_all_return());
+}
+
+void type<::vnx::keyvalue::Storage_sync_all_keys>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_sync_all_keys());
+}
+
+void type<::vnx::keyvalue::Storage_sync_all_keys_return>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_sync_all_keys_return());
+}
+
+void type<::vnx::keyvalue::Storage_sync_from>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_sync_from());
+}
+
+void type<::vnx::keyvalue::Storage_sync_from_return>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_sync_from_return());
+}
+
+void type<::vnx::keyvalue::Storage_sync_range>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_sync_range());
+}
+
+void type<::vnx::keyvalue::Storage_sync_range_return>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_sync_range_return());
+}
+
+void type<::vnx::keyvalue::Storage_unlock>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_unlock());
+}
+
+void type<::vnx::keyvalue::Storage_unlock_return>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_unlock_return());
+}
+
+void type<::vnx::keyvalue::SyncInfo>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::SyncInfo());
+}
+
+void type<::vnx::keyvalue::SyncUpdate>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::SyncUpdate());
+}
+
+void type<::vnx::keyvalue::TypeEntry>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::TypeEntry());
+}
+
+void type<::vnx::keyvalue::shard_t>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::shard_t());
+}
+
+
+} // namespace vnx
 
 
 namespace vnx {

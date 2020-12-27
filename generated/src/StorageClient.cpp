@@ -183,14 +183,14 @@ void StorageClient::cancel_sync_job_async(const int64_t& job_id) {
 	vnx_request(_method, true);
 }
 
-void StorageClient::store_value(const ::vnx::Variant& key, const std::shared_ptr<const ::vnx::Value>& value) {
+void StorageClient::store_value(const ::vnx::Variant& key, std::shared_ptr<const ::vnx::Value> value) {
 	auto _method = ::vnx::keyvalue::Storage_store_value::create();
 	_method->key = key;
 	_method->value = value;
 	vnx_request(_method, false);
 }
 
-void StorageClient::store_value_async(const ::vnx::Variant& key, const std::shared_ptr<const ::vnx::Value>& value) {
+void StorageClient::store_value_async(const ::vnx::Variant& key, std::shared_ptr<const ::vnx::Value> value) {
 	auto _method = ::vnx::keyvalue::Storage_store_value::create();
 	_method->key = key;
 	_method->value = value;
@@ -209,7 +209,7 @@ void StorageClient::store_values_async(const std::vector<std::pair<::vnx::Varian
 	vnx_request(_method, true);
 }
 
-void StorageClient::store_value_delay(const ::vnx::Variant& key, const std::shared_ptr<const ::vnx::Value>& value, const int32_t& delay_ms) {
+void StorageClient::store_value_delay(const ::vnx::Variant& key, std::shared_ptr<const ::vnx::Value> value, const int32_t& delay_ms) {
 	auto _method = ::vnx::keyvalue::Storage_store_value_delay::create();
 	_method->key = key;
 	_method->value = value;
@@ -217,7 +217,7 @@ void StorageClient::store_value_delay(const ::vnx::Variant& key, const std::shar
 	vnx_request(_method, false);
 }
 
-void StorageClient::store_value_delay_async(const ::vnx::Variant& key, const std::shared_ptr<const ::vnx::Value>& value, const int32_t& delay_ms) {
+void StorageClient::store_value_delay_async(const ::vnx::Variant& key, std::shared_ptr<const ::vnx::Value> value, const int32_t& delay_ms) {
 	auto _method = ::vnx::keyvalue::Storage_store_value_delay::create();
 	_method->key = key;
 	_method->value = value;

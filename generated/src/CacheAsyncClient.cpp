@@ -4,12 +4,12 @@
 #include <vnx/keyvalue/package.hxx>
 #include <vnx/keyvalue/CacheAsyncClient.hxx>
 #include <vnx/Module.h>
-#include <vnx/ModuleInterface_vnx_close.hxx>
-#include <vnx/ModuleInterface_vnx_close_return.hxx>
 #include <vnx/ModuleInterface_vnx_get_config.hxx>
 #include <vnx/ModuleInterface_vnx_get_config_object.hxx>
 #include <vnx/ModuleInterface_vnx_get_config_object_return.hxx>
 #include <vnx/ModuleInterface_vnx_get_config_return.hxx>
+#include <vnx/ModuleInterface_vnx_get_module_info.hxx>
+#include <vnx/ModuleInterface_vnx_get_module_info_return.hxx>
 #include <vnx/ModuleInterface_vnx_get_type_code.hxx>
 #include <vnx/ModuleInterface_vnx_get_type_code_return.hxx>
 #include <vnx/ModuleInterface_vnx_restart.hxx>
@@ -18,6 +18,8 @@
 #include <vnx/ModuleInterface_vnx_set_config_object.hxx>
 #include <vnx/ModuleInterface_vnx_set_config_object_return.hxx>
 #include <vnx/ModuleInterface_vnx_set_config_return.hxx>
+#include <vnx/ModuleInterface_vnx_stop.hxx>
+#include <vnx/ModuleInterface_vnx_stop_return.hxx>
 #include <vnx/TopicPtr.hpp>
 #include <vnx/Value.h>
 #include <vnx/Variant.hpp>
@@ -71,7 +73,7 @@ CacheAsyncClient::CacheAsyncClient(vnx::Hash64 service_addr)
 {
 }
 
-uint64_t CacheAsyncClient::vnx_get_config_object(const std::function<void(::vnx::Object)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t CacheAsyncClient::vnx_get_config_object(const std::function<void(const ::vnx::Object&)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::ModuleInterface_vnx_get_config_object::create();
 	const auto _request_id = ++vnx_next_id;
 	{
@@ -83,7 +85,7 @@ uint64_t CacheAsyncClient::vnx_get_config_object(const std::function<void(::vnx:
 	return _request_id;
 }
 
-uint64_t CacheAsyncClient::vnx_get_config(const std::string& name, const std::function<void(::vnx::Variant)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t CacheAsyncClient::vnx_get_config(const std::string& name, const std::function<void(const ::vnx::Variant&)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::ModuleInterface_vnx_get_config::create();
 	_method->name = name;
 	const auto _request_id = ++vnx_next_id;
@@ -96,7 +98,7 @@ uint64_t CacheAsyncClient::vnx_get_config(const std::string& name, const std::fu
 	return _request_id;
 }
 
-uint64_t CacheAsyncClient::vnx_set_config_object(const ::vnx::Object& config, const std::function<void()>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t CacheAsyncClient::vnx_set_config_object(const ::vnx::Object& config, const std::function<void()>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::ModuleInterface_vnx_set_config_object::create();
 	_method->config = config;
 	const auto _request_id = ++vnx_next_id;
@@ -109,7 +111,7 @@ uint64_t CacheAsyncClient::vnx_set_config_object(const ::vnx::Object& config, co
 	return _request_id;
 }
 
-uint64_t CacheAsyncClient::vnx_set_config(const std::string& name, const ::vnx::Variant& value, const std::function<void()>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t CacheAsyncClient::vnx_set_config(const std::string& name, const ::vnx::Variant& value, const std::function<void()>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::ModuleInterface_vnx_set_config::create();
 	_method->name = name;
 	_method->value = value;
@@ -123,7 +125,7 @@ uint64_t CacheAsyncClient::vnx_set_config(const std::string& name, const ::vnx::
 	return _request_id;
 }
 
-uint64_t CacheAsyncClient::vnx_get_type_code(const std::function<void(::vnx::TypeCode)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t CacheAsyncClient::vnx_get_type_code(const std::function<void(const ::vnx::TypeCode&)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::ModuleInterface_vnx_get_type_code::create();
 	const auto _request_id = ++vnx_next_id;
 	{
@@ -135,7 +137,19 @@ uint64_t CacheAsyncClient::vnx_get_type_code(const std::function<void(::vnx::Typ
 	return _request_id;
 }
 
-uint64_t CacheAsyncClient::vnx_restart(const std::function<void()>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t CacheAsyncClient::vnx_get_module_info(const std::function<void(std::shared_ptr<const ::vnx::ModuleInfo>)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
+	auto _method = ::vnx::ModuleInterface_vnx_get_module_info::create();
+	const auto _request_id = ++vnx_next_id;
+	{
+		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_queue_vnx_get_module_info[_request_id] = std::make_pair(_callback, _error_callback);
+		vnx_num_pending++;
+	}
+	vnx_request(_method, _request_id);
+	return _request_id;
+}
+
+uint64_t CacheAsyncClient::vnx_restart(const std::function<void()>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::ModuleInterface_vnx_restart::create();
 	const auto _request_id = ++vnx_next_id;
 	{
@@ -147,19 +161,19 @@ uint64_t CacheAsyncClient::vnx_restart(const std::function<void()>& _callback, c
 	return _request_id;
 }
 
-uint64_t CacheAsyncClient::vnx_close(const std::function<void()>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
-	auto _method = ::vnx::ModuleInterface_vnx_close::create();
+uint64_t CacheAsyncClient::vnx_stop(const std::function<void()>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
+	auto _method = ::vnx::ModuleInterface_vnx_stop::create();
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
-		vnx_queue_vnx_close[_request_id] = std::make_pair(_callback, _error_callback);
+		vnx_queue_vnx_stop[_request_id] = std::make_pair(_callback, _error_callback);
 		vnx_num_pending++;
 	}
 	vnx_request(_method, _request_id);
 	return _request_id;
 }
 
-uint64_t CacheAsyncClient::get_value(const ::vnx::Variant& key, const std::function<void(std::shared_ptr<const ::vnx::keyvalue::Entry>)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t CacheAsyncClient::get_value(const ::vnx::Variant& key, const std::function<void(std::shared_ptr<const ::vnx::keyvalue::Entry>)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_get_value::create();
 	_method->key = key;
 	const auto _request_id = ++vnx_next_id;
@@ -172,7 +186,7 @@ uint64_t CacheAsyncClient::get_value(const ::vnx::Variant& key, const std::funct
 	return _request_id;
 }
 
-uint64_t CacheAsyncClient::get_value_locked(const ::vnx::Variant& key, const int32_t& timeout_ms, const std::function<void(std::shared_ptr<const ::vnx::keyvalue::Entry>)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t CacheAsyncClient::get_value_locked(const ::vnx::Variant& key, const int32_t& timeout_ms, const std::function<void(std::shared_ptr<const ::vnx::keyvalue::Entry>)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_get_value_locked::create();
 	_method->key = key;
 	_method->timeout_ms = timeout_ms;
@@ -186,7 +200,7 @@ uint64_t CacheAsyncClient::get_value_locked(const ::vnx::Variant& key, const int
 	return _request_id;
 }
 
-uint64_t CacheAsyncClient::get_values(const std::vector<::vnx::Variant>& keys, const std::function<void(std::vector<std::shared_ptr<const ::vnx::keyvalue::Entry>>)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t CacheAsyncClient::get_values(const std::vector<::vnx::Variant>& keys, const std::function<void(const std::vector<std::shared_ptr<const ::vnx::keyvalue::Entry>>&)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_get_values::create();
 	_method->keys = keys;
 	const auto _request_id = ++vnx_next_id;
@@ -199,7 +213,7 @@ uint64_t CacheAsyncClient::get_values(const std::vector<::vnx::Variant>& keys, c
 	return _request_id;
 }
 
-uint64_t CacheAsyncClient::get_key(const uint64_t& version, const std::function<void(::vnx::Variant)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t CacheAsyncClient::get_key(const uint64_t& version, const std::function<void(const ::vnx::Variant&)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_get_key::create();
 	_method->version = version;
 	const auto _request_id = ++vnx_next_id;
@@ -212,7 +226,7 @@ uint64_t CacheAsyncClient::get_key(const uint64_t& version, const std::function<
 	return _request_id;
 }
 
-uint64_t CacheAsyncClient::get_keys(const std::vector<uint64_t>& versions, const std::function<void(std::vector<std::pair<uint64_t, ::vnx::Variant>>)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t CacheAsyncClient::get_keys(const std::vector<uint64_t>& versions, const std::function<void(const std::vector<std::pair<uint64_t, ::vnx::Variant>>&)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_get_keys::create();
 	_method->versions = versions;
 	const auto _request_id = ++vnx_next_id;
@@ -225,7 +239,7 @@ uint64_t CacheAsyncClient::get_keys(const std::vector<uint64_t>& versions, const
 	return _request_id;
 }
 
-uint64_t CacheAsyncClient::unlock(const ::vnx::Variant& key, const std::function<void()>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t CacheAsyncClient::unlock(const ::vnx::Variant& key, const std::function<void()>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_unlock::create();
 	_method->key = key;
 	const auto _request_id = ++vnx_next_id;
@@ -238,7 +252,7 @@ uint64_t CacheAsyncClient::unlock(const ::vnx::Variant& key, const std::function
 	return _request_id;
 }
 
-uint64_t CacheAsyncClient::sync_from(const ::vnx::TopicPtr& topic, const uint64_t& version, const std::function<void(int64_t)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t CacheAsyncClient::sync_from(const ::vnx::TopicPtr& topic, const uint64_t& version, const std::function<void(const int64_t&)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_sync_from::create();
 	_method->topic = topic;
 	_method->version = version;
@@ -252,7 +266,7 @@ uint64_t CacheAsyncClient::sync_from(const ::vnx::TopicPtr& topic, const uint64_
 	return _request_id;
 }
 
-uint64_t CacheAsyncClient::sync_range(const ::vnx::TopicPtr& topic, const uint64_t& begin, const uint64_t& end, const std::function<void(int64_t)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t CacheAsyncClient::sync_range(const ::vnx::TopicPtr& topic, const uint64_t& begin, const uint64_t& end, const std::function<void(const int64_t&)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_sync_range::create();
 	_method->topic = topic;
 	_method->begin = begin;
@@ -267,7 +281,7 @@ uint64_t CacheAsyncClient::sync_range(const ::vnx::TopicPtr& topic, const uint64
 	return _request_id;
 }
 
-uint64_t CacheAsyncClient::sync_all(const ::vnx::TopicPtr& topic, const std::function<void(int64_t)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t CacheAsyncClient::sync_all(const ::vnx::TopicPtr& topic, const std::function<void(const int64_t&)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_sync_all::create();
 	_method->topic = topic;
 	const auto _request_id = ++vnx_next_id;
@@ -280,7 +294,7 @@ uint64_t CacheAsyncClient::sync_all(const ::vnx::TopicPtr& topic, const std::fun
 	return _request_id;
 }
 
-uint64_t CacheAsyncClient::sync_all_keys(const ::vnx::TopicPtr& topic, const std::function<void(int64_t)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t CacheAsyncClient::sync_all_keys(const ::vnx::TopicPtr& topic, const std::function<void(const int64_t&)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_sync_all_keys::create();
 	_method->topic = topic;
 	const auto _request_id = ++vnx_next_id;
@@ -293,7 +307,7 @@ uint64_t CacheAsyncClient::sync_all_keys(const ::vnx::TopicPtr& topic, const std
 	return _request_id;
 }
 
-uint64_t CacheAsyncClient::cancel_sync_job(const int64_t& job_id, const std::function<void()>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t CacheAsyncClient::cancel_sync_job(const int64_t& job_id, const std::function<void()>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_cancel_sync_job::create();
 	_method->job_id = job_id;
 	const auto _request_id = ++vnx_next_id;
@@ -306,7 +320,7 @@ uint64_t CacheAsyncClient::cancel_sync_job(const int64_t& job_id, const std::fun
 	return _request_id;
 }
 
-uint64_t CacheAsyncClient::store_value(const ::vnx::Variant& key, const std::shared_ptr<const ::vnx::Value>& value, const std::function<void()>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t CacheAsyncClient::store_value(const ::vnx::Variant& key, std::shared_ptr<const ::vnx::Value> value, const std::function<void()>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_store_value::create();
 	_method->key = key;
 	_method->value = value;
@@ -320,7 +334,7 @@ uint64_t CacheAsyncClient::store_value(const ::vnx::Variant& key, const std::sha
 	return _request_id;
 }
 
-uint64_t CacheAsyncClient::store_values(const std::vector<std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>>& values, const std::function<void()>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t CacheAsyncClient::store_values(const std::vector<std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>>& values, const std::function<void()>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_store_values::create();
 	_method->values = values;
 	const auto _request_id = ++vnx_next_id;
@@ -333,7 +347,7 @@ uint64_t CacheAsyncClient::store_values(const std::vector<std::pair<::vnx::Varia
 	return _request_id;
 }
 
-uint64_t CacheAsyncClient::store_value_delay(const ::vnx::Variant& key, const std::shared_ptr<const ::vnx::Value>& value, const int32_t& delay_ms, const std::function<void()>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t CacheAsyncClient::store_value_delay(const ::vnx::Variant& key, std::shared_ptr<const ::vnx::Value> value, const int32_t& delay_ms, const std::function<void()>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_store_value_delay::create();
 	_method->key = key;
 	_method->value = value;
@@ -348,7 +362,7 @@ uint64_t CacheAsyncClient::store_value_delay(const ::vnx::Variant& key, const st
 	return _request_id;
 }
 
-uint64_t CacheAsyncClient::store_values_delay(const std::vector<std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>>& values, const int32_t& delay_ms, const std::function<void()>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t CacheAsyncClient::store_values_delay(const std::vector<std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>>& values, const int32_t& delay_ms, const std::function<void()>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_store_values_delay::create();
 	_method->values = values;
 	_method->delay_ms = delay_ms;
@@ -362,7 +376,7 @@ uint64_t CacheAsyncClient::store_values_delay(const std::vector<std::pair<::vnx:
 	return _request_id;
 }
 
-uint64_t CacheAsyncClient::delete_value(const ::vnx::Variant& key, const std::function<void()>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t CacheAsyncClient::delete_value(const ::vnx::Variant& key, const std::function<void()>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_delete_value::create();
 	_method->key = key;
 	const auto _request_id = ++vnx_next_id;
@@ -393,10 +407,13 @@ std::vector<uint64_t> CacheAsyncClient::vnx_get_pending_ids() const {
 	for(const auto& entry : vnx_queue_vnx_get_type_code) {
 		_list.push_back(entry.first);
 	}
+	for(const auto& entry : vnx_queue_vnx_get_module_info) {
+		_list.push_back(entry.first);
+	}
 	for(const auto& entry : vnx_queue_vnx_restart) {
 		_list.push_back(entry.first);
 	}
-	for(const auto& entry : vnx_queue_vnx_close) {
+	for(const auto& entry : vnx_queue_vnx_stop) {
 		_list.push_back(entry.first);
 	}
 	for(const auto& entry : vnx_queue_get_value) {
@@ -450,7 +467,7 @@ std::vector<uint64_t> CacheAsyncClient::vnx_get_pending_ids() const {
 	return _list;
 }
 
-void CacheAsyncClient::vnx_purge_request(uint64_t _request_id, const std::exception& _ex) {
+void CacheAsyncClient::vnx_purge_request(uint64_t _request_id, const vnx::exception& _ex) {
 	std::unique_lock<std::mutex> _lock(vnx_mutex);
 	{
 		const auto _iter = vnx_queue_vnx_get_config_object.find(_request_id);
@@ -518,6 +535,19 @@ void CacheAsyncClient::vnx_purge_request(uint64_t _request_id, const std::except
 		}
 	}
 	{
+		const auto _iter = vnx_queue_vnx_get_module_info.find(_request_id);
+		if(_iter != vnx_queue_vnx_get_module_info.end()) {
+			const auto _callback = std::move(_iter->second.second);
+			vnx_queue_vnx_get_module_info.erase(_iter);
+			vnx_num_pending--;
+			_lock.unlock();
+			if(_callback) {
+				_callback(_ex);
+			}
+			return;
+		}
+	}
+	{
 		const auto _iter = vnx_queue_vnx_restart.find(_request_id);
 		if(_iter != vnx_queue_vnx_restart.end()) {
 			const auto _callback = std::move(_iter->second.second);
@@ -531,10 +561,10 @@ void CacheAsyncClient::vnx_purge_request(uint64_t _request_id, const std::except
 		}
 	}
 	{
-		const auto _iter = vnx_queue_vnx_close.find(_request_id);
-		if(_iter != vnx_queue_vnx_close.end()) {
+		const auto _iter = vnx_queue_vnx_stop.find(_request_id);
+		if(_iter != vnx_queue_vnx_stop.end()) {
 			const auto _callback = std::move(_iter->second.second);
-			vnx_queue_vnx_close.erase(_iter);
+			vnx_queue_vnx_stop.erase(_iter);
 			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {
@@ -838,6 +868,24 @@ void CacheAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_ptr
 			throw std::runtime_error("CacheAsyncClient: received unknown return request_id");
 		}
 	}
+	else if(_type_hash == vnx::Hash64(0xfa24b8a5a75620cfull)) {
+		auto _result = std::dynamic_pointer_cast<const ::vnx::ModuleInterface_vnx_get_module_info_return>(_value);
+		if(!_result) {
+			throw std::logic_error("CacheAsyncClient: !_result");
+		}
+		const auto _iter = vnx_queue_vnx_get_module_info.find(_request_id);
+		if(_iter != vnx_queue_vnx_get_module_info.end()) {
+			const auto _callback = std::move(_iter->second.first);
+			vnx_queue_vnx_get_module_info.erase(_iter);
+			vnx_num_pending--;
+			_lock.unlock();
+			if(_callback) {
+				_callback(_result->_ret_0);
+			}
+		} else {
+			throw std::runtime_error("CacheAsyncClient: received unknown return request_id");
+		}
+	}
 	else if(_type_hash == vnx::Hash64(0x2133a6eee0102018ull)) {
 		const auto _iter = vnx_queue_vnx_restart.find(_request_id);
 		if(_iter != vnx_queue_vnx_restart.end()) {
@@ -852,11 +900,11 @@ void CacheAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_ptr
 			throw std::runtime_error("CacheAsyncClient: received unknown return request_id");
 		}
 	}
-	else if(_type_hash == vnx::Hash64(0x88dc702251f03a54ull)) {
-		const auto _iter = vnx_queue_vnx_close.find(_request_id);
-		if(_iter != vnx_queue_vnx_close.end()) {
+	else if(_type_hash == vnx::Hash64(0xfc3b62878a8d924ull)) {
+		const auto _iter = vnx_queue_vnx_stop.find(_request_id);
+		if(_iter != vnx_queue_vnx_stop.end()) {
 			const auto _callback = std::move(_iter->second.first);
-			vnx_queue_vnx_close.erase(_iter);
+			vnx_queue_vnx_stop.erase(_iter);
 			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {

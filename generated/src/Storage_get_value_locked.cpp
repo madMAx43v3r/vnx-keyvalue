@@ -21,7 +21,7 @@ vnx::Hash64 Storage_get_value_locked::get_type_hash() const {
 	return VNX_TYPE_HASH;
 }
 
-const char* Storage_get_value_locked::get_type_name() const {
+std::string Storage_get_value_locked::get_type_name() const {
 	return "vnx.keyvalue.Storage.get_value_locked";
 }
 
@@ -139,6 +139,8 @@ std::shared_ptr<vnx::TypeCode> Storage_get_value_locked::static_create_type_code
 	type_code->is_class = true;
 	type_code->is_method = true;
 	type_code->create_value = []() -> std::shared_ptr<vnx::Value> { return std::make_shared<Storage_get_value_locked>(); };
+	type_code->is_const = true;
+	type_code->is_async = true;
 	type_code->return_type = ::vnx::keyvalue::Storage_get_value_locked_return::static_get_type_code();
 	type_code->fields.resize(2);
 	{
@@ -180,13 +182,17 @@ void read(TypeInput& in, ::vnx::keyvalue::Storage_get_value_locked& value, const
 		}
 	}
 	if(!type_code) {
-		throw std::logic_error("read(): type_code == 0");
+		vnx::skip(in, type_code, code);
+		return;
 	}
 	if(code) {
 		switch(code[0]) {
 			case CODE_STRUCT: type_code = type_code->depends[code[1]]; break;
 			case CODE_ALT_STRUCT: type_code = type_code->depends[vnx::flip_bytes(code[1])]; break;
-			default: vnx::skip(in, type_code, code); return;
+			default: {
+				vnx::skip(in, type_code, code);
+				return;
+			}
 		}
 	}
 	const char* const _buf = in.read(type_code->total_field_size);

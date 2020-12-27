@@ -5,12 +5,12 @@
 #include <vnx/keyvalue/SyncModuleAsyncClient.hxx>
 #include <vnx/Hash64.hpp>
 #include <vnx/Module.h>
-#include <vnx/ModuleInterface_vnx_close.hxx>
-#include <vnx/ModuleInterface_vnx_close_return.hxx>
 #include <vnx/ModuleInterface_vnx_get_config.hxx>
 #include <vnx/ModuleInterface_vnx_get_config_object.hxx>
 #include <vnx/ModuleInterface_vnx_get_config_object_return.hxx>
 #include <vnx/ModuleInterface_vnx_get_config_return.hxx>
+#include <vnx/ModuleInterface_vnx_get_module_info.hxx>
+#include <vnx/ModuleInterface_vnx_get_module_info_return.hxx>
 #include <vnx/ModuleInterface_vnx_get_type_code.hxx>
 #include <vnx/ModuleInterface_vnx_get_type_code_return.hxx>
 #include <vnx/ModuleInterface_vnx_restart.hxx>
@@ -19,6 +19,8 @@
 #include <vnx/ModuleInterface_vnx_set_config_object.hxx>
 #include <vnx/ModuleInterface_vnx_set_config_object_return.hxx>
 #include <vnx/ModuleInterface_vnx_set_config_return.hxx>
+#include <vnx/ModuleInterface_vnx_stop.hxx>
+#include <vnx/ModuleInterface_vnx_stop_return.hxx>
 #include <vnx/TopicPtr.hpp>
 #include <vnx/keyvalue/SyncInfo.hxx>
 #include <vnx/keyvalue/SyncUpdate.hxx>
@@ -39,7 +41,7 @@ SyncModuleAsyncClient::SyncModuleAsyncClient(vnx::Hash64 service_addr)
 {
 }
 
-uint64_t SyncModuleAsyncClient::vnx_get_config_object(const std::function<void(::vnx::Object)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t SyncModuleAsyncClient::vnx_get_config_object(const std::function<void(const ::vnx::Object&)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::ModuleInterface_vnx_get_config_object::create();
 	const auto _request_id = ++vnx_next_id;
 	{
@@ -51,7 +53,7 @@ uint64_t SyncModuleAsyncClient::vnx_get_config_object(const std::function<void(:
 	return _request_id;
 }
 
-uint64_t SyncModuleAsyncClient::vnx_get_config(const std::string& name, const std::function<void(::vnx::Variant)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t SyncModuleAsyncClient::vnx_get_config(const std::string& name, const std::function<void(const ::vnx::Variant&)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::ModuleInterface_vnx_get_config::create();
 	_method->name = name;
 	const auto _request_id = ++vnx_next_id;
@@ -64,7 +66,7 @@ uint64_t SyncModuleAsyncClient::vnx_get_config(const std::string& name, const st
 	return _request_id;
 }
 
-uint64_t SyncModuleAsyncClient::vnx_set_config_object(const ::vnx::Object& config, const std::function<void()>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t SyncModuleAsyncClient::vnx_set_config_object(const ::vnx::Object& config, const std::function<void()>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::ModuleInterface_vnx_set_config_object::create();
 	_method->config = config;
 	const auto _request_id = ++vnx_next_id;
@@ -77,7 +79,7 @@ uint64_t SyncModuleAsyncClient::vnx_set_config_object(const ::vnx::Object& confi
 	return _request_id;
 }
 
-uint64_t SyncModuleAsyncClient::vnx_set_config(const std::string& name, const ::vnx::Variant& value, const std::function<void()>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t SyncModuleAsyncClient::vnx_set_config(const std::string& name, const ::vnx::Variant& value, const std::function<void()>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::ModuleInterface_vnx_set_config::create();
 	_method->name = name;
 	_method->value = value;
@@ -91,7 +93,7 @@ uint64_t SyncModuleAsyncClient::vnx_set_config(const std::string& name, const ::
 	return _request_id;
 }
 
-uint64_t SyncModuleAsyncClient::vnx_get_type_code(const std::function<void(::vnx::TypeCode)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t SyncModuleAsyncClient::vnx_get_type_code(const std::function<void(const ::vnx::TypeCode&)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::ModuleInterface_vnx_get_type_code::create();
 	const auto _request_id = ++vnx_next_id;
 	{
@@ -103,7 +105,19 @@ uint64_t SyncModuleAsyncClient::vnx_get_type_code(const std::function<void(::vnx
 	return _request_id;
 }
 
-uint64_t SyncModuleAsyncClient::vnx_restart(const std::function<void()>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t SyncModuleAsyncClient::vnx_get_module_info(const std::function<void(std::shared_ptr<const ::vnx::ModuleInfo>)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
+	auto _method = ::vnx::ModuleInterface_vnx_get_module_info::create();
+	const auto _request_id = ++vnx_next_id;
+	{
+		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_queue_vnx_get_module_info[_request_id] = std::make_pair(_callback, _error_callback);
+		vnx_num_pending++;
+	}
+	vnx_request(_method, _request_id);
+	return _request_id;
+}
+
+uint64_t SyncModuleAsyncClient::vnx_restart(const std::function<void()>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::ModuleInterface_vnx_restart::create();
 	const auto _request_id = ++vnx_next_id;
 	{
@@ -115,12 +129,12 @@ uint64_t SyncModuleAsyncClient::vnx_restart(const std::function<void()>& _callba
 	return _request_id;
 }
 
-uint64_t SyncModuleAsyncClient::vnx_close(const std::function<void()>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
-	auto _method = ::vnx::ModuleInterface_vnx_close::create();
+uint64_t SyncModuleAsyncClient::vnx_stop(const std::function<void()>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
+	auto _method = ::vnx::ModuleInterface_vnx_stop::create();
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
-		vnx_queue_vnx_close[_request_id] = std::make_pair(_callback, _error_callback);
+		vnx_queue_vnx_stop[_request_id] = std::make_pair(_callback, _error_callback);
 		vnx_num_pending++;
 	}
 	vnx_request(_method, _request_id);
@@ -145,16 +159,19 @@ std::vector<uint64_t> SyncModuleAsyncClient::vnx_get_pending_ids() const {
 	for(const auto& entry : vnx_queue_vnx_get_type_code) {
 		_list.push_back(entry.first);
 	}
+	for(const auto& entry : vnx_queue_vnx_get_module_info) {
+		_list.push_back(entry.first);
+	}
 	for(const auto& entry : vnx_queue_vnx_restart) {
 		_list.push_back(entry.first);
 	}
-	for(const auto& entry : vnx_queue_vnx_close) {
+	for(const auto& entry : vnx_queue_vnx_stop) {
 		_list.push_back(entry.first);
 	}
 	return _list;
 }
 
-void SyncModuleAsyncClient::vnx_purge_request(uint64_t _request_id, const std::exception& _ex) {
+void SyncModuleAsyncClient::vnx_purge_request(uint64_t _request_id, const vnx::exception& _ex) {
 	std::unique_lock<std::mutex> _lock(vnx_mutex);
 	{
 		const auto _iter = vnx_queue_vnx_get_config_object.find(_request_id);
@@ -222,6 +239,19 @@ void SyncModuleAsyncClient::vnx_purge_request(uint64_t _request_id, const std::e
 		}
 	}
 	{
+		const auto _iter = vnx_queue_vnx_get_module_info.find(_request_id);
+		if(_iter != vnx_queue_vnx_get_module_info.end()) {
+			const auto _callback = std::move(_iter->second.second);
+			vnx_queue_vnx_get_module_info.erase(_iter);
+			vnx_num_pending--;
+			_lock.unlock();
+			if(_callback) {
+				_callback(_ex);
+			}
+			return;
+		}
+	}
+	{
 		const auto _iter = vnx_queue_vnx_restart.find(_request_id);
 		if(_iter != vnx_queue_vnx_restart.end()) {
 			const auto _callback = std::move(_iter->second.second);
@@ -235,10 +265,10 @@ void SyncModuleAsyncClient::vnx_purge_request(uint64_t _request_id, const std::e
 		}
 	}
 	{
-		const auto _iter = vnx_queue_vnx_close.find(_request_id);
-		if(_iter != vnx_queue_vnx_close.end()) {
+		const auto _iter = vnx_queue_vnx_stop.find(_request_id);
+		if(_iter != vnx_queue_vnx_stop.end()) {
 			const auto _callback = std::move(_iter->second.second);
-			vnx_queue_vnx_close.erase(_iter);
+			vnx_queue_vnx_stop.erase(_iter);
 			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {
@@ -334,6 +364,24 @@ void SyncModuleAsyncClient::vnx_callback_switch(uint64_t _request_id, std::share
 			throw std::runtime_error("SyncModuleAsyncClient: received unknown return request_id");
 		}
 	}
+	else if(_type_hash == vnx::Hash64(0xfa24b8a5a75620cfull)) {
+		auto _result = std::dynamic_pointer_cast<const ::vnx::ModuleInterface_vnx_get_module_info_return>(_value);
+		if(!_result) {
+			throw std::logic_error("SyncModuleAsyncClient: !_result");
+		}
+		const auto _iter = vnx_queue_vnx_get_module_info.find(_request_id);
+		if(_iter != vnx_queue_vnx_get_module_info.end()) {
+			const auto _callback = std::move(_iter->second.first);
+			vnx_queue_vnx_get_module_info.erase(_iter);
+			vnx_num_pending--;
+			_lock.unlock();
+			if(_callback) {
+				_callback(_result->_ret_0);
+			}
+		} else {
+			throw std::runtime_error("SyncModuleAsyncClient: received unknown return request_id");
+		}
+	}
 	else if(_type_hash == vnx::Hash64(0x2133a6eee0102018ull)) {
 		const auto _iter = vnx_queue_vnx_restart.find(_request_id);
 		if(_iter != vnx_queue_vnx_restart.end()) {
@@ -348,11 +396,11 @@ void SyncModuleAsyncClient::vnx_callback_switch(uint64_t _request_id, std::share
 			throw std::runtime_error("SyncModuleAsyncClient: received unknown return request_id");
 		}
 	}
-	else if(_type_hash == vnx::Hash64(0x88dc702251f03a54ull)) {
-		const auto _iter = vnx_queue_vnx_close.find(_request_id);
-		if(_iter != vnx_queue_vnx_close.end()) {
+	else if(_type_hash == vnx::Hash64(0xfc3b62878a8d924ull)) {
+		const auto _iter = vnx_queue_vnx_stop.find(_request_id);
+		if(_iter != vnx_queue_vnx_stop.end()) {
 			const auto _callback = std::move(_iter->second.first);
-			vnx_queue_vnx_close.erase(_iter);
+			vnx_queue_vnx_stop.erase(_iter);
 			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {

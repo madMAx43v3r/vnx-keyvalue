@@ -56,7 +56,7 @@ StorageAsyncClient::StorageAsyncClient(vnx::Hash64 service_addr)
 {
 }
 
-uint64_t StorageAsyncClient::get_value(const ::vnx::Variant& key, const std::function<void(std::shared_ptr<const ::vnx::keyvalue::Entry>)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t StorageAsyncClient::get_value(const ::vnx::Variant& key, const std::function<void(std::shared_ptr<const ::vnx::keyvalue::Entry>)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_get_value::create();
 	_method->key = key;
 	const auto _request_id = ++vnx_next_id;
@@ -69,7 +69,7 @@ uint64_t StorageAsyncClient::get_value(const ::vnx::Variant& key, const std::fun
 	return _request_id;
 }
 
-uint64_t StorageAsyncClient::get_value_locked(const ::vnx::Variant& key, const int32_t& timeout_ms, const std::function<void(std::shared_ptr<const ::vnx::keyvalue::Entry>)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t StorageAsyncClient::get_value_locked(const ::vnx::Variant& key, const int32_t& timeout_ms, const std::function<void(std::shared_ptr<const ::vnx::keyvalue::Entry>)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_get_value_locked::create();
 	_method->key = key;
 	_method->timeout_ms = timeout_ms;
@@ -83,7 +83,7 @@ uint64_t StorageAsyncClient::get_value_locked(const ::vnx::Variant& key, const i
 	return _request_id;
 }
 
-uint64_t StorageAsyncClient::get_values(const std::vector<::vnx::Variant>& keys, const std::function<void(std::vector<std::shared_ptr<const ::vnx::keyvalue::Entry>>)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t StorageAsyncClient::get_values(const std::vector<::vnx::Variant>& keys, const std::function<void(const std::vector<std::shared_ptr<const ::vnx::keyvalue::Entry>>&)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_get_values::create();
 	_method->keys = keys;
 	const auto _request_id = ++vnx_next_id;
@@ -96,7 +96,7 @@ uint64_t StorageAsyncClient::get_values(const std::vector<::vnx::Variant>& keys,
 	return _request_id;
 }
 
-uint64_t StorageAsyncClient::get_key(const uint64_t& version, const std::function<void(::vnx::Variant)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t StorageAsyncClient::get_key(const uint64_t& version, const std::function<void(const ::vnx::Variant&)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_get_key::create();
 	_method->version = version;
 	const auto _request_id = ++vnx_next_id;
@@ -109,7 +109,7 @@ uint64_t StorageAsyncClient::get_key(const uint64_t& version, const std::functio
 	return _request_id;
 }
 
-uint64_t StorageAsyncClient::get_keys(const std::vector<uint64_t>& versions, const std::function<void(std::vector<std::pair<uint64_t, ::vnx::Variant>>)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t StorageAsyncClient::get_keys(const std::vector<uint64_t>& versions, const std::function<void(const std::vector<std::pair<uint64_t, ::vnx::Variant>>&)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_get_keys::create();
 	_method->versions = versions;
 	const auto _request_id = ++vnx_next_id;
@@ -122,7 +122,7 @@ uint64_t StorageAsyncClient::get_keys(const std::vector<uint64_t>& versions, con
 	return _request_id;
 }
 
-uint64_t StorageAsyncClient::unlock(const ::vnx::Variant& key, const std::function<void()>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t StorageAsyncClient::unlock(const ::vnx::Variant& key, const std::function<void()>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_unlock::create();
 	_method->key = key;
 	const auto _request_id = ++vnx_next_id;
@@ -135,7 +135,7 @@ uint64_t StorageAsyncClient::unlock(const ::vnx::Variant& key, const std::functi
 	return _request_id;
 }
 
-uint64_t StorageAsyncClient::sync_from(const ::vnx::TopicPtr& topic, const uint64_t& version, const std::function<void(int64_t)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t StorageAsyncClient::sync_from(const ::vnx::TopicPtr& topic, const uint64_t& version, const std::function<void(const int64_t&)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_sync_from::create();
 	_method->topic = topic;
 	_method->version = version;
@@ -149,7 +149,7 @@ uint64_t StorageAsyncClient::sync_from(const ::vnx::TopicPtr& topic, const uint6
 	return _request_id;
 }
 
-uint64_t StorageAsyncClient::sync_range(const ::vnx::TopicPtr& topic, const uint64_t& begin, const uint64_t& end, const std::function<void(int64_t)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t StorageAsyncClient::sync_range(const ::vnx::TopicPtr& topic, const uint64_t& begin, const uint64_t& end, const std::function<void(const int64_t&)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_sync_range::create();
 	_method->topic = topic;
 	_method->begin = begin;
@@ -164,7 +164,7 @@ uint64_t StorageAsyncClient::sync_range(const ::vnx::TopicPtr& topic, const uint
 	return _request_id;
 }
 
-uint64_t StorageAsyncClient::sync_all(const ::vnx::TopicPtr& topic, const std::function<void(int64_t)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t StorageAsyncClient::sync_all(const ::vnx::TopicPtr& topic, const std::function<void(const int64_t&)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_sync_all::create();
 	_method->topic = topic;
 	const auto _request_id = ++vnx_next_id;
@@ -177,7 +177,7 @@ uint64_t StorageAsyncClient::sync_all(const ::vnx::TopicPtr& topic, const std::f
 	return _request_id;
 }
 
-uint64_t StorageAsyncClient::sync_all_keys(const ::vnx::TopicPtr& topic, const std::function<void(int64_t)>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t StorageAsyncClient::sync_all_keys(const ::vnx::TopicPtr& topic, const std::function<void(const int64_t&)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_sync_all_keys::create();
 	_method->topic = topic;
 	const auto _request_id = ++vnx_next_id;
@@ -190,7 +190,7 @@ uint64_t StorageAsyncClient::sync_all_keys(const ::vnx::TopicPtr& topic, const s
 	return _request_id;
 }
 
-uint64_t StorageAsyncClient::cancel_sync_job(const int64_t& job_id, const std::function<void()>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t StorageAsyncClient::cancel_sync_job(const int64_t& job_id, const std::function<void()>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_cancel_sync_job::create();
 	_method->job_id = job_id;
 	const auto _request_id = ++vnx_next_id;
@@ -203,7 +203,7 @@ uint64_t StorageAsyncClient::cancel_sync_job(const int64_t& job_id, const std::f
 	return _request_id;
 }
 
-uint64_t StorageAsyncClient::store_value(const ::vnx::Variant& key, const std::shared_ptr<const ::vnx::Value>& value, const std::function<void()>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t StorageAsyncClient::store_value(const ::vnx::Variant& key, std::shared_ptr<const ::vnx::Value> value, const std::function<void()>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_store_value::create();
 	_method->key = key;
 	_method->value = value;
@@ -217,7 +217,7 @@ uint64_t StorageAsyncClient::store_value(const ::vnx::Variant& key, const std::s
 	return _request_id;
 }
 
-uint64_t StorageAsyncClient::store_values(const std::vector<std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>>& values, const std::function<void()>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t StorageAsyncClient::store_values(const std::vector<std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>>& values, const std::function<void()>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_store_values::create();
 	_method->values = values;
 	const auto _request_id = ++vnx_next_id;
@@ -230,7 +230,7 @@ uint64_t StorageAsyncClient::store_values(const std::vector<std::pair<::vnx::Var
 	return _request_id;
 }
 
-uint64_t StorageAsyncClient::store_value_delay(const ::vnx::Variant& key, const std::shared_ptr<const ::vnx::Value>& value, const int32_t& delay_ms, const std::function<void()>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t StorageAsyncClient::store_value_delay(const ::vnx::Variant& key, std::shared_ptr<const ::vnx::Value> value, const int32_t& delay_ms, const std::function<void()>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_store_value_delay::create();
 	_method->key = key;
 	_method->value = value;
@@ -245,7 +245,7 @@ uint64_t StorageAsyncClient::store_value_delay(const ::vnx::Variant& key, const 
 	return _request_id;
 }
 
-uint64_t StorageAsyncClient::store_values_delay(const std::vector<std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>>& values, const int32_t& delay_ms, const std::function<void()>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t StorageAsyncClient::store_values_delay(const std::vector<std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>>& values, const int32_t& delay_ms, const std::function<void()>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_store_values_delay::create();
 	_method->values = values;
 	_method->delay_ms = delay_ms;
@@ -259,7 +259,7 @@ uint64_t StorageAsyncClient::store_values_delay(const std::vector<std::pair<::vn
 	return _request_id;
 }
 
-uint64_t StorageAsyncClient::delete_value(const ::vnx::Variant& key, const std::function<void()>& _callback, const std::function<void(const std::exception&)>& _error_callback) {
+uint64_t StorageAsyncClient::delete_value(const ::vnx::Variant& key, const std::function<void()>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_delete_value::create();
 	_method->key = key;
 	const auto _request_id = ++vnx_next_id;
@@ -326,7 +326,7 @@ std::vector<uint64_t> StorageAsyncClient::vnx_get_pending_ids() const {
 	return _list;
 }
 
-void StorageAsyncClient::vnx_purge_request(uint64_t _request_id, const std::exception& _ex) {
+void StorageAsyncClient::vnx_purge_request(uint64_t _request_id, const vnx::exception& _ex) {
 	std::unique_lock<std::mutex> _lock(vnx_mutex);
 	{
 		const auto _iter = vnx_queue_get_value.find(_request_id);

@@ -4,12 +4,12 @@
 #include <vnx/keyvalue/package.hxx>
 #include <vnx/keyvalue/ServerClient.hxx>
 #include <vnx/Module.h>
-#include <vnx/ModuleInterface_vnx_close.hxx>
-#include <vnx/ModuleInterface_vnx_close_return.hxx>
 #include <vnx/ModuleInterface_vnx_get_config.hxx>
 #include <vnx/ModuleInterface_vnx_get_config_object.hxx>
 #include <vnx/ModuleInterface_vnx_get_config_object_return.hxx>
 #include <vnx/ModuleInterface_vnx_get_config_return.hxx>
+#include <vnx/ModuleInterface_vnx_get_module_info.hxx>
+#include <vnx/ModuleInterface_vnx_get_module_info_return.hxx>
 #include <vnx/ModuleInterface_vnx_get_type_code.hxx>
 #include <vnx/ModuleInterface_vnx_get_type_code_return.hxx>
 #include <vnx/ModuleInterface_vnx_restart.hxx>
@@ -18,6 +18,8 @@
 #include <vnx/ModuleInterface_vnx_set_config_object.hxx>
 #include <vnx/ModuleInterface_vnx_set_config_object_return.hxx>
 #include <vnx/ModuleInterface_vnx_set_config_return.hxx>
+#include <vnx/ModuleInterface_vnx_stop.hxx>
+#include <vnx/ModuleInterface_vnx_stop_return.hxx>
 #include <vnx/TopicPtr.hpp>
 #include <vnx/Value.h>
 #include <vnx/Variant.hpp>
@@ -128,6 +130,16 @@ void ServerClient::vnx_set_config_async(const std::string& name, const ::vnx::Va
 	return _result->_ret_0;
 }
 
+std::shared_ptr<const ::vnx::ModuleInfo> ServerClient::vnx_get_module_info() {
+	auto _method = ::vnx::ModuleInterface_vnx_get_module_info::create();
+	auto _return_value = vnx_request(_method, false);
+	auto _result = std::dynamic_pointer_cast<const ::vnx::ModuleInterface_vnx_get_module_info_return>(_return_value);
+	if(!_result) {
+		throw std::logic_error("ServerClient: !_result");
+	}
+	return _result->_ret_0;
+}
+
 void ServerClient::vnx_restart() {
 	auto _method = ::vnx::ModuleInterface_vnx_restart::create();
 	vnx_request(_method, false);
@@ -138,13 +150,13 @@ void ServerClient::vnx_restart_async() {
 	vnx_request(_method, true);
 }
 
-void ServerClient::vnx_close() {
-	auto _method = ::vnx::ModuleInterface_vnx_close::create();
+void ServerClient::vnx_stop() {
+	auto _method = ::vnx::ModuleInterface_vnx_stop::create();
 	vnx_request(_method, false);
 }
 
-void ServerClient::vnx_close_async() {
-	auto _method = ::vnx::ModuleInterface_vnx_close::create();
+void ServerClient::vnx_stop_async() {
+	auto _method = ::vnx::ModuleInterface_vnx_stop::create();
 	vnx_request(_method, true);
 }
 
@@ -275,14 +287,14 @@ void ServerClient::cancel_sync_job_async(const int64_t& job_id) {
 	vnx_request(_method, true);
 }
 
-void ServerClient::store_value(const ::vnx::Variant& key, const std::shared_ptr<const ::vnx::Value>& value) {
+void ServerClient::store_value(const ::vnx::Variant& key, std::shared_ptr<const ::vnx::Value> value) {
 	auto _method = ::vnx::keyvalue::Storage_store_value::create();
 	_method->key = key;
 	_method->value = value;
 	vnx_request(_method, false);
 }
 
-void ServerClient::store_value_async(const ::vnx::Variant& key, const std::shared_ptr<const ::vnx::Value>& value) {
+void ServerClient::store_value_async(const ::vnx::Variant& key, std::shared_ptr<const ::vnx::Value> value) {
 	auto _method = ::vnx::keyvalue::Storage_store_value::create();
 	_method->key = key;
 	_method->value = value;
@@ -301,7 +313,7 @@ void ServerClient::store_values_async(const std::vector<std::pair<::vnx::Variant
 	vnx_request(_method, true);
 }
 
-void ServerClient::store_value_delay(const ::vnx::Variant& key, const std::shared_ptr<const ::vnx::Value>& value, const int32_t& delay_ms) {
+void ServerClient::store_value_delay(const ::vnx::Variant& key, std::shared_ptr<const ::vnx::Value> value, const int32_t& delay_ms) {
 	auto _method = ::vnx::keyvalue::Storage_store_value_delay::create();
 	_method->key = key;
 	_method->value = value;
@@ -309,7 +321,7 @@ void ServerClient::store_value_delay(const ::vnx::Variant& key, const std::share
 	vnx_request(_method, false);
 }
 
-void ServerClient::store_value_delay_async(const ::vnx::Variant& key, const std::shared_ptr<const ::vnx::Value>& value, const int32_t& delay_ms) {
+void ServerClient::store_value_delay_async(const ::vnx::Variant& key, std::shared_ptr<const ::vnx::Value> value, const int32_t& delay_ms) {
 	auto _method = ::vnx::keyvalue::Storage_store_value_delay::create();
 	_method->key = key;
 	_method->value = value;

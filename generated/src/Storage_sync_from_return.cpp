@@ -19,7 +19,7 @@ vnx::Hash64 Storage_sync_from_return::get_type_hash() const {
 	return VNX_TYPE_HASH;
 }
 
-const char* Storage_sync_from_return::get_type_name() const {
+std::string Storage_sync_from_return::get_type_name() const {
 	return "vnx.keyvalue.Storage.sync_from.return";
 }
 
@@ -159,13 +159,17 @@ void read(TypeInput& in, ::vnx::keyvalue::Storage_sync_from_return& value, const
 		}
 	}
 	if(!type_code) {
-		throw std::logic_error("read(): type_code == 0");
+		vnx::skip(in, type_code, code);
+		return;
 	}
 	if(code) {
 		switch(code[0]) {
 			case CODE_STRUCT: type_code = type_code->depends[code[1]]; break;
 			case CODE_ALT_STRUCT: type_code = type_code->depends[vnx::flip_bytes(code[1])]; break;
-			default: vnx::skip(in, type_code, code); return;
+			default: {
+				vnx::skip(in, type_code, code);
+				return;
+			}
 		}
 	}
 	const char* const _buf = in.read(type_code->total_field_size);

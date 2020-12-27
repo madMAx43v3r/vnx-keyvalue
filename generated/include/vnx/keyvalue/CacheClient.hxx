@@ -35,13 +35,15 @@ public:
 	
 	::vnx::TypeCode vnx_get_type_code();
 	
+	std::shared_ptr<const ::vnx::ModuleInfo> vnx_get_module_info();
+	
 	void vnx_restart();
 	
 	void vnx_restart_async();
 	
-	void vnx_close();
+	void vnx_stop();
 	
-	void vnx_close_async();
+	void vnx_stop_async();
 	
 	std::shared_ptr<const ::vnx::keyvalue::Entry> get_value(const ::vnx::Variant& key);
 	
@@ -69,17 +71,17 @@ public:
 	
 	void cancel_sync_job_async(const int64_t& job_id);
 	
-	void store_value(const ::vnx::Variant& key, const std::shared_ptr<const ::vnx::Value>& value);
+	void store_value(const ::vnx::Variant& key, std::shared_ptr<const ::vnx::Value> value);
 	
-	void store_value_async(const ::vnx::Variant& key, const std::shared_ptr<const ::vnx::Value>& value);
+	void store_value_async(const ::vnx::Variant& key, std::shared_ptr<const ::vnx::Value> value);
 	
 	void store_values(const std::vector<std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>>& values);
 	
 	void store_values_async(const std::vector<std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>>& values);
 	
-	void store_value_delay(const ::vnx::Variant& key, const std::shared_ptr<const ::vnx::Value>& value, const int32_t& delay_ms);
+	void store_value_delay(const ::vnx::Variant& key, std::shared_ptr<const ::vnx::Value> value, const int32_t& delay_ms);
 	
-	void store_value_delay_async(const ::vnx::Variant& key, const std::shared_ptr<const ::vnx::Value>& value, const int32_t& delay_ms);
+	void store_value_delay_async(const ::vnx::Variant& key, std::shared_ptr<const ::vnx::Value> value, const int32_t& delay_ms);
 	
 	void store_values_delay(const std::vector<std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>>& values, const int32_t& delay_ms);
 	

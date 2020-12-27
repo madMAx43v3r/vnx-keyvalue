@@ -18,7 +18,7 @@ vnx::Hash64 shard_t::get_type_hash() const {
 	return VNX_TYPE_HASH;
 }
 
-const char* shard_t::get_type_name() const {
+std::string shard_t::get_type_name() const {
 	return "vnx.keyvalue.shard_t";
 }
 
@@ -71,6 +71,7 @@ void shard_t::read(std::istream& _in) {
 
 vnx::Object shard_t::to_object() const {
 	vnx::Object _object;
+	_object["__type"] = "vnx.keyvalue.shard_t";
 	_object["index"] = index;
 	_object["size"] = size;
 	return _object;
@@ -172,13 +173,17 @@ void read(TypeInput& in, ::vnx::keyvalue::shard_t& value, const TypeCode* type_c
 		}
 	}
 	if(!type_code) {
-		throw std::logic_error("read(): type_code == 0");
+		vnx::skip(in, type_code, code);
+		return;
 	}
 	if(code) {
 		switch(code[0]) {
 			case CODE_STRUCT: type_code = type_code->depends[code[1]]; break;
 			case CODE_ALT_STRUCT: type_code = type_code->depends[vnx::flip_bytes(code[1])]; break;
-			default: vnx::skip(in, type_code, code); return;
+			default: {
+				vnx::skip(in, type_code, code);
+				return;
+			}
 		}
 	}
 	const char* const _buf = in.read(type_code->total_field_size);

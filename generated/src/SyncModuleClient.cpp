@@ -5,12 +5,12 @@
 #include <vnx/keyvalue/SyncModuleClient.hxx>
 #include <vnx/Hash64.hpp>
 #include <vnx/Module.h>
-#include <vnx/ModuleInterface_vnx_close.hxx>
-#include <vnx/ModuleInterface_vnx_close_return.hxx>
 #include <vnx/ModuleInterface_vnx_get_config.hxx>
 #include <vnx/ModuleInterface_vnx_get_config_object.hxx>
 #include <vnx/ModuleInterface_vnx_get_config_object_return.hxx>
 #include <vnx/ModuleInterface_vnx_get_config_return.hxx>
+#include <vnx/ModuleInterface_vnx_get_module_info.hxx>
+#include <vnx/ModuleInterface_vnx_get_module_info_return.hxx>
 #include <vnx/ModuleInterface_vnx_get_type_code.hxx>
 #include <vnx/ModuleInterface_vnx_get_type_code_return.hxx>
 #include <vnx/ModuleInterface_vnx_restart.hxx>
@@ -19,6 +19,8 @@
 #include <vnx/ModuleInterface_vnx_set_config_object.hxx>
 #include <vnx/ModuleInterface_vnx_set_config_object_return.hxx>
 #include <vnx/ModuleInterface_vnx_set_config_return.hxx>
+#include <vnx/ModuleInterface_vnx_stop.hxx>
+#include <vnx/ModuleInterface_vnx_stop_return.hxx>
 #include <vnx/TopicPtr.hpp>
 #include <vnx/keyvalue/SyncInfo.hxx>
 #include <vnx/keyvalue/SyncUpdate.hxx>
@@ -96,6 +98,16 @@ void SyncModuleClient::vnx_set_config_async(const std::string& name, const ::vnx
 	return _result->_ret_0;
 }
 
+std::shared_ptr<const ::vnx::ModuleInfo> SyncModuleClient::vnx_get_module_info() {
+	auto _method = ::vnx::ModuleInterface_vnx_get_module_info::create();
+	auto _return_value = vnx_request(_method, false);
+	auto _result = std::dynamic_pointer_cast<const ::vnx::ModuleInterface_vnx_get_module_info_return>(_return_value);
+	if(!_result) {
+		throw std::logic_error("SyncModuleClient: !_result");
+	}
+	return _result->_ret_0;
+}
+
 void SyncModuleClient::vnx_restart() {
 	auto _method = ::vnx::ModuleInterface_vnx_restart::create();
 	vnx_request(_method, false);
@@ -106,13 +118,13 @@ void SyncModuleClient::vnx_restart_async() {
 	vnx_request(_method, true);
 }
 
-void SyncModuleClient::vnx_close() {
-	auto _method = ::vnx::ModuleInterface_vnx_close::create();
+void SyncModuleClient::vnx_stop() {
+	auto _method = ::vnx::ModuleInterface_vnx_stop::create();
 	vnx_request(_method, false);
 }
 
-void SyncModuleClient::vnx_close_async() {
-	auto _method = ::vnx::ModuleInterface_vnx_close::create();
+void SyncModuleClient::vnx_stop_async() {
+	auto _method = ::vnx::ModuleInterface_vnx_stop::create();
 	vnx_request(_method, true);
 }
 

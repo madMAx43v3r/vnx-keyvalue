@@ -365,9 +365,6 @@ struct type<::vnx::keyvalue::CacheBase> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::CacheBase& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
-		code.push_back(CODE_OBJECT);
-	}
 };
 
 /// \private
@@ -388,7 +385,8 @@ struct type<::vnx::keyvalue::CloseEntry> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::CloseEntry& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::CloseEntry& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -411,9 +409,6 @@ struct type<::vnx::keyvalue::ClusterBase> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::ClusterBase& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
-		code.push_back(CODE_OBJECT);
-	}
 };
 
 /// \private
@@ -434,7 +429,8 @@ struct type<::vnx::keyvalue::Collection> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Collection& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Collection& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -457,7 +453,8 @@ struct type<::vnx::keyvalue::Entry> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Entry& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Entry& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -480,7 +477,8 @@ struct type<::vnx::keyvalue::IndexEntry> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::IndexEntry& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::IndexEntry& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -503,9 +501,6 @@ struct type<::vnx::keyvalue::ServerBase> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::ServerBase& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
-		code.push_back(CODE_OBJECT);
-	}
 };
 
 /// \private
@@ -526,7 +521,8 @@ struct type<::vnx::keyvalue::ServerInfo> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::ServerInfo& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::ServerInfo& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -549,9 +545,6 @@ struct type<::vnx::keyvalue::Storage> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
-		code.push_back(CODE_OBJECT);
-	}
 };
 
 /// \private
@@ -572,7 +565,8 @@ struct type<::vnx::keyvalue::Storage_cancel_sync_job> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_cancel_sync_job& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_cancel_sync_job& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -595,7 +589,8 @@ struct type<::vnx::keyvalue::Storage_cancel_sync_job_return> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_cancel_sync_job_return& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_cancel_sync_job_return& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -618,7 +613,8 @@ struct type<::vnx::keyvalue::Storage_delete_value> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_delete_value& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_delete_value& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -641,7 +637,8 @@ struct type<::vnx::keyvalue::Storage_delete_value_return> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_delete_value_return& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_delete_value_return& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -664,7 +661,8 @@ struct type<::vnx::keyvalue::Storage_get_key> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_get_key& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_get_key& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -687,7 +685,8 @@ struct type<::vnx::keyvalue::Storage_get_key_return> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_get_key_return& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_get_key_return& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -710,7 +709,8 @@ struct type<::vnx::keyvalue::Storage_get_keys> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_get_keys& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_get_keys& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -733,7 +733,8 @@ struct type<::vnx::keyvalue::Storage_get_keys_return> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_get_keys_return& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_get_keys_return& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -756,7 +757,8 @@ struct type<::vnx::keyvalue::Storage_get_value> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_get_value& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_get_value& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -779,7 +781,8 @@ struct type<::vnx::keyvalue::Storage_get_value_return> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_get_value_return& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_get_value_return& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -802,7 +805,8 @@ struct type<::vnx::keyvalue::Storage_get_value_locked> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_get_value_locked& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_get_value_locked& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -825,7 +829,8 @@ struct type<::vnx::keyvalue::Storage_get_value_locked_return> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_get_value_locked_return& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_get_value_locked_return& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -848,7 +853,8 @@ struct type<::vnx::keyvalue::Storage_get_values> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_get_values& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_get_values& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -871,7 +877,8 @@ struct type<::vnx::keyvalue::Storage_get_values_return> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_get_values_return& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_get_values_return& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -894,7 +901,8 @@ struct type<::vnx::keyvalue::Storage_store_value> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_store_value& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_store_value& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -917,7 +925,8 @@ struct type<::vnx::keyvalue::Storage_store_value_return> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_store_value_return& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_store_value_return& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -940,7 +949,8 @@ struct type<::vnx::keyvalue::Storage_store_value_delay> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_store_value_delay& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_store_value_delay& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -963,7 +973,8 @@ struct type<::vnx::keyvalue::Storage_store_value_delay_return> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_store_value_delay_return& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_store_value_delay_return& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -986,7 +997,8 @@ struct type<::vnx::keyvalue::Storage_store_values> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_store_values& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_store_values& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -1009,7 +1021,8 @@ struct type<::vnx::keyvalue::Storage_store_values_return> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_store_values_return& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_store_values_return& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -1032,7 +1045,8 @@ struct type<::vnx::keyvalue::Storage_store_values_delay> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_store_values_delay& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_store_values_delay& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -1055,7 +1069,8 @@ struct type<::vnx::keyvalue::Storage_store_values_delay_return> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_store_values_delay_return& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_store_values_delay_return& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -1078,7 +1093,8 @@ struct type<::vnx::keyvalue::Storage_sync_all> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_sync_all& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_sync_all& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -1101,7 +1117,8 @@ struct type<::vnx::keyvalue::Storage_sync_all_return> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_sync_all_return& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_sync_all_return& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -1124,7 +1141,8 @@ struct type<::vnx::keyvalue::Storage_sync_all_keys> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_sync_all_keys& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_sync_all_keys& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -1147,7 +1165,8 @@ struct type<::vnx::keyvalue::Storage_sync_all_keys_return> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_sync_all_keys_return& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_sync_all_keys_return& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -1170,7 +1189,8 @@ struct type<::vnx::keyvalue::Storage_sync_from> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_sync_from& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_sync_from& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -1193,7 +1213,8 @@ struct type<::vnx::keyvalue::Storage_sync_from_return> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_sync_from_return& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_sync_from_return& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -1216,7 +1237,8 @@ struct type<::vnx::keyvalue::Storage_sync_range> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_sync_range& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_sync_range& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -1239,7 +1261,8 @@ struct type<::vnx::keyvalue::Storage_sync_range_return> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_sync_range_return& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_sync_range_return& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -1262,7 +1285,8 @@ struct type<::vnx::keyvalue::Storage_unlock> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_unlock& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_unlock& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -1285,7 +1309,8 @@ struct type<::vnx::keyvalue::Storage_unlock_return> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_unlock_return& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_unlock_return& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -1308,7 +1333,8 @@ struct type<::vnx::keyvalue::SyncInfo> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::SyncInfo& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::SyncInfo& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -1331,9 +1357,6 @@ struct type<::vnx::keyvalue::SyncModuleBase> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::SyncModuleBase& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
-		code.push_back(CODE_OBJECT);
-	}
 };
 
 /// \private
@@ -1354,7 +1377,8 @@ struct type<::vnx::keyvalue::SyncUpdate> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::SyncUpdate& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::SyncUpdate& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -1377,7 +1401,8 @@ struct type<::vnx::keyvalue::TypeEntry> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::TypeEntry& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::TypeEntry& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
@@ -1400,7 +1425,8 @@ struct type<::vnx::keyvalue::shard_t> {
 	void accept(Visitor& visitor, const ::vnx::keyvalue::shard_t& value) {
 		vnx::accept(visitor, value);
 	}
-	void create_dynamic_code(std::vector<uint16_t>& code) {
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::shard_t& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };
