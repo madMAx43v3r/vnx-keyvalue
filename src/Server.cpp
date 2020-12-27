@@ -698,7 +698,7 @@ void Server::store_value_internal(	const Variant& key,
 	}
 }
 
-void Server::store_value(const Variant& key, const std::shared_ptr<const Value>& value)
+void Server::store_value(const Variant& key, std::shared_ptr<const Value> value)
 {
 	if(key.is_null()) {
 		return;
@@ -756,7 +756,7 @@ void Server::store_values(const std::vector<std::pair<Variant, std::shared_ptr<c
 	}
 }
 
-void Server::store_value_delay(const Variant& key, const std::shared_ptr<const Value>& value, const int32_t& delay_ms)
+void Server::store_value_delay(const Variant& key, std::shared_ptr<const Value> value, const int32_t& delay_ms)
 {
 	if(key.is_null()) {
 		return;

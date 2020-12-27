@@ -54,11 +54,11 @@ protected:
 	
 	void cancel_sync_job(const int64_t& job_id) override;
 	
-	void store_value(const Variant& key, const std::shared_ptr<const Value>& value) override;
+	void store_value(const Variant& key, std::shared_ptr<const Value> value) override;
 	
 	void store_values(const std::vector<std::pair<Variant, std::shared_ptr<const Value>>>& values) override;
 	
-	void store_value_delay(const Variant& key, const std::shared_ptr<const Value>& value, const int32_t& delay_ms) override;
+	void store_value_delay(const Variant& key, std::shared_ptr<const Value> value, const int32_t& delay_ms) override;
 	
 	void store_values_delay(const std::vector<std::pair<Variant, std::shared_ptr<const Value>>>& values, const int32_t& delay_ms) override;
 	
