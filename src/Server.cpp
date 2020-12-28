@@ -148,7 +148,7 @@ void Server::main()
 									uint16_t code = 0;
 									vnx::read(value_in, code);
 									if(code == CODE_TYPE_CODE || code == CODE_ALT_TYPE_CODE) {
-										vnx::read_type_code(value_in);
+										vnx::read_type_code(value_in, &code);
 									} else {
 										break;
 									}

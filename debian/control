@@ -1,7 +1,7 @@
 Package: vnx-keyvalue
 Section: base
 Priority: optional
-Depends: vnx-base (>= 1.8.2)
+Depends: vnx-base (>= 1.9.0)
 Maintainer: Max Wittal <max.wittal@mwittal.de>
 Description: VNX based key value storage server
 Architecture: all
