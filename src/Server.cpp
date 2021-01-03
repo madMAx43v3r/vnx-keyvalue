@@ -145,10 +145,12 @@ void Server::main()
 							block->value_file.seek_to(type_entry->block_offset);
 							while(vnx_do_run()) {
 								try {
+									const auto offset = value_in.get_input_pos();
 									uint16_t code = 0;
 									vnx::read(value_in, code);
 									if(code == CODE_TYPE_CODE || code == CODE_ALT_TYPE_CODE) {
-										vnx::read_type_code(value_in, &code);
+										const auto* type_code = vnx::read_type_code(value_in, &code);
+										block->value_file.out.type_code_map[type_code->code_hash] = offset;
 									} else {
 										break;
 									}
