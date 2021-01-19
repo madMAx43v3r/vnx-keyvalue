@@ -9,7 +9,7 @@ interface Storage {
 	Entry* get_value(Variant key) const async;
 	
 	/* Locks value until it is updated via store_value() or delete_value(), or until unlock() is called.
-	 * While it is locked any read requests are blocked until lock is released.
+	 * Other locked read requests are blocked until lock is released.
 	 */
 	Entry* get_value_locked(Variant key, int timeout_ms) const async;
 	
