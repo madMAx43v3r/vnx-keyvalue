@@ -1,5 +1,5 @@
 # vnx-keyvalue
 
 ## Dependencies
-vnxbase (>= 1.6.3)
+vnxbase (>= 1.9.1)
 
