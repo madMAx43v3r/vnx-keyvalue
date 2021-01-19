@@ -6,19 +6,21 @@
 #include <vnx/NoSuchMethod.hxx>
 #include <vnx/Module.h>
 #include <vnx/ModuleInterface_vnx_get_config.hxx>
+#include <vnx/ModuleInterface_vnx_get_config_return.hxx>
 #include <vnx/ModuleInterface_vnx_get_config_object.hxx>
 #include <vnx/ModuleInterface_vnx_get_config_object_return.hxx>
-#include <vnx/ModuleInterface_vnx_get_config_return.hxx>
 #include <vnx/ModuleInterface_vnx_get_module_info.hxx>
 #include <vnx/ModuleInterface_vnx_get_module_info_return.hxx>
 #include <vnx/ModuleInterface_vnx_get_type_code.hxx>
 #include <vnx/ModuleInterface_vnx_get_type_code_return.hxx>
 #include <vnx/ModuleInterface_vnx_restart.hxx>
 #include <vnx/ModuleInterface_vnx_restart_return.hxx>
+#include <vnx/ModuleInterface_vnx_self_test.hxx>
+#include <vnx/ModuleInterface_vnx_self_test_return.hxx>
 #include <vnx/ModuleInterface_vnx_set_config.hxx>
+#include <vnx/ModuleInterface_vnx_set_config_return.hxx>
 #include <vnx/ModuleInterface_vnx_set_config_object.hxx>
 #include <vnx/ModuleInterface_vnx_set_config_object_return.hxx>
-#include <vnx/ModuleInterface_vnx_set_config_return.hxx>
 #include <vnx/ModuleInterface_vnx_stop.hxx>
 #include <vnx/ModuleInterface_vnx_stop_return.hxx>
 #include <vnx/TopicPtr.hpp>
@@ -34,23 +36,23 @@
 #include <vnx/keyvalue/Storage_get_keys.hxx>
 #include <vnx/keyvalue/Storage_get_keys_return.hxx>
 #include <vnx/keyvalue/Storage_get_value.hxx>
+#include <vnx/keyvalue/Storage_get_value_return.hxx>
 #include <vnx/keyvalue/Storage_get_value_locked.hxx>
 #include <vnx/keyvalue/Storage_get_value_locked_return.hxx>
-#include <vnx/keyvalue/Storage_get_value_return.hxx>
 #include <vnx/keyvalue/Storage_get_values.hxx>
 #include <vnx/keyvalue/Storage_get_values_return.hxx>
 #include <vnx/keyvalue/Storage_store_value.hxx>
+#include <vnx/keyvalue/Storage_store_value_return.hxx>
 #include <vnx/keyvalue/Storage_store_value_delay.hxx>
 #include <vnx/keyvalue/Storage_store_value_delay_return.hxx>
-#include <vnx/keyvalue/Storage_store_value_return.hxx>
 #include <vnx/keyvalue/Storage_store_values.hxx>
+#include <vnx/keyvalue/Storage_store_values_return.hxx>
 #include <vnx/keyvalue/Storage_store_values_delay.hxx>
 #include <vnx/keyvalue/Storage_store_values_delay_return.hxx>
-#include <vnx/keyvalue/Storage_store_values_return.hxx>
 #include <vnx/keyvalue/Storage_sync_all.hxx>
+#include <vnx/keyvalue/Storage_sync_all_return.hxx>
 #include <vnx/keyvalue/Storage_sync_all_keys.hxx>
 #include <vnx/keyvalue/Storage_sync_all_keys_return.hxx>
-#include <vnx/keyvalue/Storage_sync_all_return.hxx>
 #include <vnx/keyvalue/Storage_sync_from.hxx>
 #include <vnx/keyvalue/Storage_sync_from_return.hxx>
 #include <vnx/keyvalue/Storage_sync_range.hxx>
@@ -97,8 +99,9 @@ void ClusterBase::write(std::ostream& _out) const {
 }
 
 void ClusterBase::read(std::istream& _in) {
-	std::map<std::string, std::string> _object;
-	vnx::read_object(_in, _object);
+	if(auto _json = vnx::read_json(_in)) {
+		from_object(_json->to_object());
+	}
 }
 
 vnx::Object ClusterBase::to_object() const {
@@ -144,7 +147,7 @@ std::shared_ptr<vnx::TypeCode> ClusterBase::static_create_type_code() {
 	type_code->type_hash = vnx::Hash64(0xd15d8542fc63cb26ull);
 	type_code->code_hash = vnx::Hash64(0x9679d083a6f600b0ull);
 	type_code->is_native = true;
-	type_code->methods.resize(24);
+	type_code->methods.resize(25);
 	type_code->methods[0] = ::vnx::ModuleInterface_vnx_get_config_object::static_get_type_code();
 	type_code->methods[1] = ::vnx::ModuleInterface_vnx_get_config::static_get_type_code();
 	type_code->methods[2] = ::vnx::ModuleInterface_vnx_set_config_object::static_get_type_code();
@@ -153,22 +156,23 @@ std::shared_ptr<vnx::TypeCode> ClusterBase::static_create_type_code() {
 	type_code->methods[5] = ::vnx::ModuleInterface_vnx_get_module_info::static_get_type_code();
 	type_code->methods[6] = ::vnx::ModuleInterface_vnx_restart::static_get_type_code();
 	type_code->methods[7] = ::vnx::ModuleInterface_vnx_stop::static_get_type_code();
-	type_code->methods[8] = ::vnx::keyvalue::Storage_get_value::static_get_type_code();
-	type_code->methods[9] = ::vnx::keyvalue::Storage_get_value_locked::static_get_type_code();
-	type_code->methods[10] = ::vnx::keyvalue::Storage_get_values::static_get_type_code();
-	type_code->methods[11] = ::vnx::keyvalue::Storage_get_key::static_get_type_code();
-	type_code->methods[12] = ::vnx::keyvalue::Storage_get_keys::static_get_type_code();
-	type_code->methods[13] = ::vnx::keyvalue::Storage_unlock::static_get_type_code();
-	type_code->methods[14] = ::vnx::keyvalue::Storage_sync_from::static_get_type_code();
-	type_code->methods[15] = ::vnx::keyvalue::Storage_sync_range::static_get_type_code();
-	type_code->methods[16] = ::vnx::keyvalue::Storage_sync_all::static_get_type_code();
-	type_code->methods[17] = ::vnx::keyvalue::Storage_sync_all_keys::static_get_type_code();
-	type_code->methods[18] = ::vnx::keyvalue::Storage_cancel_sync_job::static_get_type_code();
-	type_code->methods[19] = ::vnx::keyvalue::Storage_store_value::static_get_type_code();
-	type_code->methods[20] = ::vnx::keyvalue::Storage_store_values::static_get_type_code();
-	type_code->methods[21] = ::vnx::keyvalue::Storage_store_value_delay::static_get_type_code();
-	type_code->methods[22] = ::vnx::keyvalue::Storage_store_values_delay::static_get_type_code();
-	type_code->methods[23] = ::vnx::keyvalue::Storage_delete_value::static_get_type_code();
+	type_code->methods[8] = ::vnx::ModuleInterface_vnx_self_test::static_get_type_code();
+	type_code->methods[9] = ::vnx::keyvalue::Storage_get_value::static_get_type_code();
+	type_code->methods[10] = ::vnx::keyvalue::Storage_get_value_locked::static_get_type_code();
+	type_code->methods[11] = ::vnx::keyvalue::Storage_get_values::static_get_type_code();
+	type_code->methods[12] = ::vnx::keyvalue::Storage_get_key::static_get_type_code();
+	type_code->methods[13] = ::vnx::keyvalue::Storage_get_keys::static_get_type_code();
+	type_code->methods[14] = ::vnx::keyvalue::Storage_unlock::static_get_type_code();
+	type_code->methods[15] = ::vnx::keyvalue::Storage_sync_from::static_get_type_code();
+	type_code->methods[16] = ::vnx::keyvalue::Storage_sync_range::static_get_type_code();
+	type_code->methods[17] = ::vnx::keyvalue::Storage_sync_all::static_get_type_code();
+	type_code->methods[18] = ::vnx::keyvalue::Storage_sync_all_keys::static_get_type_code();
+	type_code->methods[19] = ::vnx::keyvalue::Storage_cancel_sync_job::static_get_type_code();
+	type_code->methods[20] = ::vnx::keyvalue::Storage_store_value::static_get_type_code();
+	type_code->methods[21] = ::vnx::keyvalue::Storage_store_values::static_get_type_code();
+	type_code->methods[22] = ::vnx::keyvalue::Storage_store_value_delay::static_get_type_code();
+	type_code->methods[23] = ::vnx::keyvalue::Storage_store_values_delay::static_get_type_code();
+	type_code->methods[24] = ::vnx::keyvalue::Storage_delete_value::static_get_type_code();
 	type_code->build();
 	return type_code;
 }
@@ -241,6 +245,14 @@ std::shared_ptr<vnx::Value> ClusterBase::vnx_call_switch(std::shared_ptr<const v
 		}
 		auto _return_value = ::vnx::ModuleInterface_vnx_stop_return::create();
 		vnx_stop();
+		return _return_value;
+	} else if(_type_hash == vnx::Hash64(0x6ce3775b41a42697ull)) {
+		auto _args = std::dynamic_pointer_cast<const ::vnx::ModuleInterface_vnx_self_test>(_method);
+		if(!_args) {
+			throw std::logic_error("vnx_call_switch(): !_args");
+		}
+		auto _return_value = ::vnx::ModuleInterface_vnx_self_test_return::create();
+		_return_value->_ret_0 = vnx_self_test();
 		return _return_value;
 	} else if(_type_hash == vnx::Hash64(0x8f47587c24580111ull)) {
 		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_value>(_method);
@@ -458,7 +470,7 @@ void write(TypeOutput& out, const ::vnx::keyvalue::ClusterBase& value, const Typ
 		out.write_type_code(type_code);
 		vnx::write_class_header<::vnx::keyvalue::ClusterBase>(out);
 	}
-	if(code && code[0] == CODE_STRUCT) {
+	else if(code && code[0] == CODE_STRUCT) {
 		type_code = type_code->depends[code[1]];
 	}
 }

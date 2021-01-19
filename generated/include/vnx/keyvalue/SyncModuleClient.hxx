@@ -45,6 +45,8 @@ public:
 	
 	void vnx_stop_async();
 	
+	vnx::bool_t vnx_self_test();
+	
 };
 
 

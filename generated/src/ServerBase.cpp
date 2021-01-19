@@ -6,19 +6,21 @@
 #include <vnx/NoSuchMethod.hxx>
 #include <vnx/Module.h>
 #include <vnx/ModuleInterface_vnx_get_config.hxx>
+#include <vnx/ModuleInterface_vnx_get_config_return.hxx>
 #include <vnx/ModuleInterface_vnx_get_config_object.hxx>
 #include <vnx/ModuleInterface_vnx_get_config_object_return.hxx>
-#include <vnx/ModuleInterface_vnx_get_config_return.hxx>
 #include <vnx/ModuleInterface_vnx_get_module_info.hxx>
 #include <vnx/ModuleInterface_vnx_get_module_info_return.hxx>
 #include <vnx/ModuleInterface_vnx_get_type_code.hxx>
 #include <vnx/ModuleInterface_vnx_get_type_code_return.hxx>
 #include <vnx/ModuleInterface_vnx_restart.hxx>
 #include <vnx/ModuleInterface_vnx_restart_return.hxx>
+#include <vnx/ModuleInterface_vnx_self_test.hxx>
+#include <vnx/ModuleInterface_vnx_self_test_return.hxx>
 #include <vnx/ModuleInterface_vnx_set_config.hxx>
+#include <vnx/ModuleInterface_vnx_set_config_return.hxx>
 #include <vnx/ModuleInterface_vnx_set_config_object.hxx>
 #include <vnx/ModuleInterface_vnx_set_config_object_return.hxx>
-#include <vnx/ModuleInterface_vnx_set_config_return.hxx>
 #include <vnx/ModuleInterface_vnx_stop.hxx>
 #include <vnx/ModuleInterface_vnx_stop_return.hxx>
 #include <vnx/TopicPtr.hpp>
@@ -34,23 +36,23 @@
 #include <vnx/keyvalue/Storage_get_keys.hxx>
 #include <vnx/keyvalue/Storage_get_keys_return.hxx>
 #include <vnx/keyvalue/Storage_get_value.hxx>
+#include <vnx/keyvalue/Storage_get_value_return.hxx>
 #include <vnx/keyvalue/Storage_get_value_locked.hxx>
 #include <vnx/keyvalue/Storage_get_value_locked_return.hxx>
-#include <vnx/keyvalue/Storage_get_value_return.hxx>
 #include <vnx/keyvalue/Storage_get_values.hxx>
 #include <vnx/keyvalue/Storage_get_values_return.hxx>
 #include <vnx/keyvalue/Storage_store_value.hxx>
+#include <vnx/keyvalue/Storage_store_value_return.hxx>
 #include <vnx/keyvalue/Storage_store_value_delay.hxx>
 #include <vnx/keyvalue/Storage_store_value_delay_return.hxx>
-#include <vnx/keyvalue/Storage_store_value_return.hxx>
 #include <vnx/keyvalue/Storage_store_values.hxx>
+#include <vnx/keyvalue/Storage_store_values_return.hxx>
 #include <vnx/keyvalue/Storage_store_values_delay.hxx>
 #include <vnx/keyvalue/Storage_store_values_delay_return.hxx>
-#include <vnx/keyvalue/Storage_store_values_return.hxx>
 #include <vnx/keyvalue/Storage_sync_all.hxx>
+#include <vnx/keyvalue/Storage_sync_all_return.hxx>
 #include <vnx/keyvalue/Storage_sync_all_keys.hxx>
 #include <vnx/keyvalue/Storage_sync_all_keys_return.hxx>
-#include <vnx/keyvalue/Storage_sync_all_return.hxx>
 #include <vnx/keyvalue/Storage_sync_from.hxx>
 #include <vnx/keyvalue/Storage_sync_from_return.hxx>
 #include <vnx/keyvalue/Storage_sync_range.hxx>
@@ -71,27 +73,27 @@ const vnx::Hash64 ServerBase::VNX_CODE_HASH(0xd9aec5896eb84ddull);
 ServerBase::ServerBase(const std::string& _vnx_name)
 	:	Module::Module(_vnx_name)
 {
-	vnx::read_config(vnx_name + ".collection", collection);
-	vnx::read_config(vnx_name + ".compress_level", compress_level);
-	vnx::read_config(vnx_name + ".do_compress", do_compress);
-	vnx::read_config(vnx_name + ".domain", domain);
-	vnx::read_config(vnx_name + ".idle_rewrite_interval", idle_rewrite_interval);
-	vnx::read_config(vnx_name + ".idle_rewrite_threshold", idle_rewrite_threshold);
-	vnx::read_config(vnx_name + ".ignore_errors", ignore_errors);
-	vnx::read_config(vnx_name + ".max_block_size", max_block_size);
-	vnx::read_config(vnx_name + ".max_num_pending", max_num_pending);
-	vnx::read_config(vnx_name + ".max_queue_ms", max_queue_ms);
-	vnx::read_config(vnx_name + ".num_threads", num_threads);
-	vnx::read_config(vnx_name + ".rewrite_chunk_count", rewrite_chunk_count);
-	vnx::read_config(vnx_name + ".rewrite_chunk_size", rewrite_chunk_size);
-	vnx::read_config(vnx_name + ".rewrite_interval", rewrite_interval);
-	vnx::read_config(vnx_name + ".rewrite_threshold", rewrite_threshold);
-	vnx::read_config(vnx_name + ".stats_interval_ms", stats_interval_ms);
-	vnx::read_config(vnx_name + ".storage_path", storage_path);
-	vnx::read_config(vnx_name + ".sync_chunk_count", sync_chunk_count);
-	vnx::read_config(vnx_name + ".timeout_interval_ms", timeout_interval_ms);
 	vnx::read_config(vnx_name + ".update_topic", update_topic);
 	vnx::read_config(vnx_name + ".update_topic_keys", update_topic_keys);
+	vnx::read_config(vnx_name + ".domain", domain);
+	vnx::read_config(vnx_name + ".collection", collection);
+	vnx::read_config(vnx_name + ".storage_path", storage_path);
+	vnx::read_config(vnx_name + ".max_block_size", max_block_size);
+	vnx::read_config(vnx_name + ".rewrite_chunk_size", rewrite_chunk_size);
+	vnx::read_config(vnx_name + ".rewrite_chunk_count", rewrite_chunk_count);
+	vnx::read_config(vnx_name + ".rewrite_threshold", rewrite_threshold);
+	vnx::read_config(vnx_name + ".idle_rewrite_threshold", idle_rewrite_threshold);
+	vnx::read_config(vnx_name + ".rewrite_interval", rewrite_interval);
+	vnx::read_config(vnx_name + ".idle_rewrite_interval", idle_rewrite_interval);
+	vnx::read_config(vnx_name + ".sync_chunk_count", sync_chunk_count);
+	vnx::read_config(vnx_name + ".max_queue_ms", max_queue_ms);
+	vnx::read_config(vnx_name + ".max_num_pending", max_num_pending);
+	vnx::read_config(vnx_name + ".num_threads", num_threads);
+	vnx::read_config(vnx_name + ".compress_level", compress_level);
+	vnx::read_config(vnx_name + ".timeout_interval_ms", timeout_interval_ms);
+	vnx::read_config(vnx_name + ".stats_interval_ms", stats_interval_ms);
+	vnx::read_config(vnx_name + ".do_compress", do_compress);
+	vnx::read_config(vnx_name + ".ignore_errors", ignore_errors);
 }
 
 vnx::Hash64 ServerBase::get_type_hash() const {
@@ -160,52 +162,8 @@ void ServerBase::write(std::ostream& _out) const {
 }
 
 void ServerBase::read(std::istream& _in) {
-	std::map<std::string, std::string> _object;
-	vnx::read_object(_in, _object);
-	for(const auto& _entry : _object) {
-		if(_entry.first == "collection") {
-			vnx::from_string(_entry.second, collection);
-		} else if(_entry.first == "compress_level") {
-			vnx::from_string(_entry.second, compress_level);
-		} else if(_entry.first == "do_compress") {
-			vnx::from_string(_entry.second, do_compress);
-		} else if(_entry.first == "domain") {
-			vnx::from_string(_entry.second, domain);
-		} else if(_entry.first == "idle_rewrite_interval") {
-			vnx::from_string(_entry.second, idle_rewrite_interval);
-		} else if(_entry.first == "idle_rewrite_threshold") {
-			vnx::from_string(_entry.second, idle_rewrite_threshold);
-		} else if(_entry.first == "ignore_errors") {
-			vnx::from_string(_entry.second, ignore_errors);
-		} else if(_entry.first == "max_block_size") {
-			vnx::from_string(_entry.second, max_block_size);
-		} else if(_entry.first == "max_num_pending") {
-			vnx::from_string(_entry.second, max_num_pending);
-		} else if(_entry.first == "max_queue_ms") {
-			vnx::from_string(_entry.second, max_queue_ms);
-		} else if(_entry.first == "num_threads") {
-			vnx::from_string(_entry.second, num_threads);
-		} else if(_entry.first == "rewrite_chunk_count") {
-			vnx::from_string(_entry.second, rewrite_chunk_count);
-		} else if(_entry.first == "rewrite_chunk_size") {
-			vnx::from_string(_entry.second, rewrite_chunk_size);
-		} else if(_entry.first == "rewrite_interval") {
-			vnx::from_string(_entry.second, rewrite_interval);
-		} else if(_entry.first == "rewrite_threshold") {
-			vnx::from_string(_entry.second, rewrite_threshold);
-		} else if(_entry.first == "stats_interval_ms") {
-			vnx::from_string(_entry.second, stats_interval_ms);
-		} else if(_entry.first == "storage_path") {
-			vnx::from_string(_entry.second, storage_path);
-		} else if(_entry.first == "sync_chunk_count") {
-			vnx::from_string(_entry.second, sync_chunk_count);
-		} else if(_entry.first == "timeout_interval_ms") {
-			vnx::from_string(_entry.second, timeout_interval_ms);
-		} else if(_entry.first == "update_topic") {
-			vnx::from_string(_entry.second, update_topic);
-		} else if(_entry.first == "update_topic_keys") {
-			vnx::from_string(_entry.second, update_topic_keys);
-		}
+	if(auto _json = vnx::read_json(_in)) {
+		from_object(_json->to_object());
 	}
 }
 
@@ -425,7 +383,7 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 	type_code->type_hash = vnx::Hash64(0xbb28aa6f1d808048ull);
 	type_code->code_hash = vnx::Hash64(0xd9aec5896eb84ddull);
 	type_code->is_native = true;
-	type_code->methods.resize(24);
+	type_code->methods.resize(25);
 	type_code->methods[0] = ::vnx::ModuleInterface_vnx_get_config_object::static_get_type_code();
 	type_code->methods[1] = ::vnx::ModuleInterface_vnx_get_config::static_get_type_code();
 	type_code->methods[2] = ::vnx::ModuleInterface_vnx_set_config_object::static_get_type_code();
@@ -434,22 +392,23 @@ std::shared_ptr<vnx::TypeCode> ServerBase::static_create_type_code() {
 	type_code->methods[5] = ::vnx::ModuleInterface_vnx_get_module_info::static_get_type_code();
 	type_code->methods[6] = ::vnx::ModuleInterface_vnx_restart::static_get_type_code();
 	type_code->methods[7] = ::vnx::ModuleInterface_vnx_stop::static_get_type_code();
-	type_code->methods[8] = ::vnx::keyvalue::Storage_get_value::static_get_type_code();
-	type_code->methods[9] = ::vnx::keyvalue::Storage_get_value_locked::static_get_type_code();
-	type_code->methods[10] = ::vnx::keyvalue::Storage_get_values::static_get_type_code();
-	type_code->methods[11] = ::vnx::keyvalue::Storage_get_key::static_get_type_code();
-	type_code->methods[12] = ::vnx::keyvalue::Storage_get_keys::static_get_type_code();
-	type_code->methods[13] = ::vnx::keyvalue::Storage_unlock::static_get_type_code();
-	type_code->methods[14] = ::vnx::keyvalue::Storage_sync_from::static_get_type_code();
-	type_code->methods[15] = ::vnx::keyvalue::Storage_sync_range::static_get_type_code();
-	type_code->methods[16] = ::vnx::keyvalue::Storage_sync_all::static_get_type_code();
-	type_code->methods[17] = ::vnx::keyvalue::Storage_sync_all_keys::static_get_type_code();
-	type_code->methods[18] = ::vnx::keyvalue::Storage_cancel_sync_job::static_get_type_code();
-	type_code->methods[19] = ::vnx::keyvalue::Storage_store_value::static_get_type_code();
-	type_code->methods[20] = ::vnx::keyvalue::Storage_store_values::static_get_type_code();
-	type_code->methods[21] = ::vnx::keyvalue::Storage_store_value_delay::static_get_type_code();
-	type_code->methods[22] = ::vnx::keyvalue::Storage_store_values_delay::static_get_type_code();
-	type_code->methods[23] = ::vnx::keyvalue::Storage_delete_value::static_get_type_code();
+	type_code->methods[8] = ::vnx::ModuleInterface_vnx_self_test::static_get_type_code();
+	type_code->methods[9] = ::vnx::keyvalue::Storage_get_value::static_get_type_code();
+	type_code->methods[10] = ::vnx::keyvalue::Storage_get_value_locked::static_get_type_code();
+	type_code->methods[11] = ::vnx::keyvalue::Storage_get_values::static_get_type_code();
+	type_code->methods[12] = ::vnx::keyvalue::Storage_get_key::static_get_type_code();
+	type_code->methods[13] = ::vnx::keyvalue::Storage_get_keys::static_get_type_code();
+	type_code->methods[14] = ::vnx::keyvalue::Storage_unlock::static_get_type_code();
+	type_code->methods[15] = ::vnx::keyvalue::Storage_sync_from::static_get_type_code();
+	type_code->methods[16] = ::vnx::keyvalue::Storage_sync_range::static_get_type_code();
+	type_code->methods[17] = ::vnx::keyvalue::Storage_sync_all::static_get_type_code();
+	type_code->methods[18] = ::vnx::keyvalue::Storage_sync_all_keys::static_get_type_code();
+	type_code->methods[19] = ::vnx::keyvalue::Storage_cancel_sync_job::static_get_type_code();
+	type_code->methods[20] = ::vnx::keyvalue::Storage_store_value::static_get_type_code();
+	type_code->methods[21] = ::vnx::keyvalue::Storage_store_values::static_get_type_code();
+	type_code->methods[22] = ::vnx::keyvalue::Storage_store_value_delay::static_get_type_code();
+	type_code->methods[23] = ::vnx::keyvalue::Storage_store_values_delay::static_get_type_code();
+	type_code->methods[24] = ::vnx::keyvalue::Storage_delete_value::static_get_type_code();
 	type_code->fields.resize(21);
 	{
 		vnx::TypeField& field = type_code->fields[0];
@@ -651,6 +610,14 @@ std::shared_ptr<vnx::Value> ServerBase::vnx_call_switch(std::shared_ptr<const vn
 		}
 		auto _return_value = ::vnx::ModuleInterface_vnx_stop_return::create();
 		vnx_stop();
+		return _return_value;
+	} else if(_type_hash == vnx::Hash64(0x6ce3775b41a42697ull)) {
+		auto _args = std::dynamic_pointer_cast<const ::vnx::ModuleInterface_vnx_self_test>(_method);
+		if(!_args) {
+			throw std::logic_error("vnx_call_switch(): !_args");
+		}
+		auto _return_value = ::vnx::ModuleInterface_vnx_self_test_return::create();
+		_return_value->_ret_0 = vnx_self_test();
 		return _return_value;
 	} else if(_type_hash == vnx::Hash64(0x8f47587c24580111ull)) {
 		auto _args = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_value>(_method);
@@ -970,7 +937,7 @@ void write(TypeOutput& out, const ::vnx::keyvalue::ServerBase& value, const Type
 		out.write_type_code(type_code);
 		vnx::write_class_header<::vnx::keyvalue::ServerBase>(out);
 	}
-	if(code && code[0] == CODE_STRUCT) {
+	else if(code && code[0] == CODE_STRUCT) {
 		type_code = type_code->depends[code[1]];
 	}
 	char* const _buf = out.write(62);

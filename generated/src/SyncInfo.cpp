@@ -65,18 +65,8 @@ void SyncInfo::write(std::ostream& _out) const {
 }
 
 void SyncInfo::read(std::istream& _in) {
-	std::map<std::string, std::string> _object;
-	vnx::read_object(_in, _object);
-	for(const auto& _entry : _object) {
-		if(_entry.first == "code") {
-			vnx::from_string(_entry.second, code);
-		} else if(_entry.first == "collection") {
-			vnx::from_string(_entry.second, collection);
-		} else if(_entry.first == "job_id") {
-			vnx::from_string(_entry.second, job_id);
-		} else if(_entry.first == "version") {
-			vnx::from_string(_entry.second, version);
-		}
+	if(auto _json = vnx::read_json(_in)) {
+		from_object(_json->to_object());
 	}
 }
 
@@ -264,7 +254,7 @@ void write(TypeOutput& out, const ::vnx::keyvalue::SyncInfo& value, const TypeCo
 		out.write_type_code(type_code);
 		vnx::write_class_header<::vnx::keyvalue::SyncInfo>(out);
 	}
-	if(code && code[0] == CODE_STRUCT) {
+	else if(code && code[0] == CODE_STRUCT) {
 		type_code = type_code->depends[code[1]];
 	}
 	char* const _buf = out.write(20);

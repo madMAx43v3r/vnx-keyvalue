@@ -53,6 +53,10 @@ public:
 			const std::function<void()>& _callback = std::function<void()>(),
 			const std::function<void(const vnx::exception&)>& _error_callback = std::function<void(const vnx::exception&)>());
 	
+	uint64_t vnx_self_test(
+			const std::function<void(const vnx::bool_t&)>& _callback = std::function<void(const vnx::bool_t&)>(),
+			const std::function<void(const vnx::exception&)>& _error_callback = std::function<void(const vnx::exception&)>());
+	
 	uint64_t get_value(const ::vnx::Variant& key, 
 			const std::function<void(std::shared_ptr<const ::vnx::keyvalue::Entry>)>& _callback = std::function<void(std::shared_ptr<const ::vnx::keyvalue::Entry>)>(),
 			const std::function<void(const vnx::exception&)>& _error_callback = std::function<void(const vnx::exception&)>());
@@ -117,38 +121,37 @@ public:
 			const std::function<void()>& _callback = std::function<void()>(),
 			const std::function<void(const vnx::exception&)>& _error_callback = std::function<void(const vnx::exception&)>());
 	
-	std::vector<uint64_t> vnx_get_pending_ids() const override;
-	
 protected:
-	void vnx_purge_request(uint64_t _request_id, const vnx::exception& _ex) override;
+	int32_t vnx_purge_request(uint64_t _request_id, const vnx::exception& _ex) override;
 	
-	void vnx_callback_switch(uint64_t _request_id, std::shared_ptr<const vnx::Value> _value) override;
+	int32_t vnx_callback_switch(uint64_t _request_id, std::shared_ptr<const vnx::Value> _value) override;
 	
 private:
-	std::map<uint64_t, std::pair<std::function<void(const ::vnx::Object&)>, std::function<void(const vnx::exception&)>>> vnx_queue_vnx_get_config_object;
-	std::map<uint64_t, std::pair<std::function<void(const ::vnx::Variant&)>, std::function<void(const vnx::exception&)>>> vnx_queue_vnx_get_config;
-	std::map<uint64_t, std::pair<std::function<void()>, std::function<void(const vnx::exception&)>>> vnx_queue_vnx_set_config_object;
-	std::map<uint64_t, std::pair<std::function<void()>, std::function<void(const vnx::exception&)>>> vnx_queue_vnx_set_config;
-	std::map<uint64_t, std::pair<std::function<void(const ::vnx::TypeCode&)>, std::function<void(const vnx::exception&)>>> vnx_queue_vnx_get_type_code;
-	std::map<uint64_t, std::pair<std::function<void(std::shared_ptr<const ::vnx::ModuleInfo>)>, std::function<void(const vnx::exception&)>>> vnx_queue_vnx_get_module_info;
-	std::map<uint64_t, std::pair<std::function<void()>, std::function<void(const vnx::exception&)>>> vnx_queue_vnx_restart;
-	std::map<uint64_t, std::pair<std::function<void()>, std::function<void(const vnx::exception&)>>> vnx_queue_vnx_stop;
-	std::map<uint64_t, std::pair<std::function<void(std::shared_ptr<const ::vnx::keyvalue::Entry>)>, std::function<void(const vnx::exception&)>>> vnx_queue_get_value;
-	std::map<uint64_t, std::pair<std::function<void(std::shared_ptr<const ::vnx::keyvalue::Entry>)>, std::function<void(const vnx::exception&)>>> vnx_queue_get_value_locked;
-	std::map<uint64_t, std::pair<std::function<void(const std::vector<std::shared_ptr<const ::vnx::keyvalue::Entry>>&)>, std::function<void(const vnx::exception&)>>> vnx_queue_get_values;
-	std::map<uint64_t, std::pair<std::function<void(const ::vnx::Variant&)>, std::function<void(const vnx::exception&)>>> vnx_queue_get_key;
-	std::map<uint64_t, std::pair<std::function<void(const std::vector<std::pair<uint64_t, ::vnx::Variant>>&)>, std::function<void(const vnx::exception&)>>> vnx_queue_get_keys;
-	std::map<uint64_t, std::pair<std::function<void()>, std::function<void(const vnx::exception&)>>> vnx_queue_unlock;
-	std::map<uint64_t, std::pair<std::function<void(const int64_t&)>, std::function<void(const vnx::exception&)>>> vnx_queue_sync_from;
-	std::map<uint64_t, std::pair<std::function<void(const int64_t&)>, std::function<void(const vnx::exception&)>>> vnx_queue_sync_range;
-	std::map<uint64_t, std::pair<std::function<void(const int64_t&)>, std::function<void(const vnx::exception&)>>> vnx_queue_sync_all;
-	std::map<uint64_t, std::pair<std::function<void(const int64_t&)>, std::function<void(const vnx::exception&)>>> vnx_queue_sync_all_keys;
-	std::map<uint64_t, std::pair<std::function<void()>, std::function<void(const vnx::exception&)>>> vnx_queue_cancel_sync_job;
-	std::map<uint64_t, std::pair<std::function<void()>, std::function<void(const vnx::exception&)>>> vnx_queue_store_value;
-	std::map<uint64_t, std::pair<std::function<void()>, std::function<void(const vnx::exception&)>>> vnx_queue_store_values;
-	std::map<uint64_t, std::pair<std::function<void()>, std::function<void(const vnx::exception&)>>> vnx_queue_store_value_delay;
-	std::map<uint64_t, std::pair<std::function<void()>, std::function<void(const vnx::exception&)>>> vnx_queue_store_values_delay;
-	std::map<uint64_t, std::pair<std::function<void()>, std::function<void(const vnx::exception&)>>> vnx_queue_delete_value;
+	std::unordered_map<uint64_t, std::pair<std::function<void(const ::vnx::Object&)>, std::function<void(const vnx::exception&)>>> vnx_queue_vnx_get_config_object;
+	std::unordered_map<uint64_t, std::pair<std::function<void(const ::vnx::Variant&)>, std::function<void(const vnx::exception&)>>> vnx_queue_vnx_get_config;
+	std::unordered_map<uint64_t, std::pair<std::function<void()>, std::function<void(const vnx::exception&)>>> vnx_queue_vnx_set_config_object;
+	std::unordered_map<uint64_t, std::pair<std::function<void()>, std::function<void(const vnx::exception&)>>> vnx_queue_vnx_set_config;
+	std::unordered_map<uint64_t, std::pair<std::function<void(const ::vnx::TypeCode&)>, std::function<void(const vnx::exception&)>>> vnx_queue_vnx_get_type_code;
+	std::unordered_map<uint64_t, std::pair<std::function<void(std::shared_ptr<const ::vnx::ModuleInfo>)>, std::function<void(const vnx::exception&)>>> vnx_queue_vnx_get_module_info;
+	std::unordered_map<uint64_t, std::pair<std::function<void()>, std::function<void(const vnx::exception&)>>> vnx_queue_vnx_restart;
+	std::unordered_map<uint64_t, std::pair<std::function<void()>, std::function<void(const vnx::exception&)>>> vnx_queue_vnx_stop;
+	std::unordered_map<uint64_t, std::pair<std::function<void(const vnx::bool_t&)>, std::function<void(const vnx::exception&)>>> vnx_queue_vnx_self_test;
+	std::unordered_map<uint64_t, std::pair<std::function<void(std::shared_ptr<const ::vnx::keyvalue::Entry>)>, std::function<void(const vnx::exception&)>>> vnx_queue_get_value;
+	std::unordered_map<uint64_t, std::pair<std::function<void(std::shared_ptr<const ::vnx::keyvalue::Entry>)>, std::function<void(const vnx::exception&)>>> vnx_queue_get_value_locked;
+	std::unordered_map<uint64_t, std::pair<std::function<void(const std::vector<std::shared_ptr<const ::vnx::keyvalue::Entry>>&)>, std::function<void(const vnx::exception&)>>> vnx_queue_get_values;
+	std::unordered_map<uint64_t, std::pair<std::function<void(const ::vnx::Variant&)>, std::function<void(const vnx::exception&)>>> vnx_queue_get_key;
+	std::unordered_map<uint64_t, std::pair<std::function<void(const std::vector<std::pair<uint64_t, ::vnx::Variant>>&)>, std::function<void(const vnx::exception&)>>> vnx_queue_get_keys;
+	std::unordered_map<uint64_t, std::pair<std::function<void()>, std::function<void(const vnx::exception&)>>> vnx_queue_unlock;
+	std::unordered_map<uint64_t, std::pair<std::function<void(const int64_t&)>, std::function<void(const vnx::exception&)>>> vnx_queue_sync_from;
+	std::unordered_map<uint64_t, std::pair<std::function<void(const int64_t&)>, std::function<void(const vnx::exception&)>>> vnx_queue_sync_range;
+	std::unordered_map<uint64_t, std::pair<std::function<void(const int64_t&)>, std::function<void(const vnx::exception&)>>> vnx_queue_sync_all;
+	std::unordered_map<uint64_t, std::pair<std::function<void(const int64_t&)>, std::function<void(const vnx::exception&)>>> vnx_queue_sync_all_keys;
+	std::unordered_map<uint64_t, std::pair<std::function<void()>, std::function<void(const vnx::exception&)>>> vnx_queue_cancel_sync_job;
+	std::unordered_map<uint64_t, std::pair<std::function<void()>, std::function<void(const vnx::exception&)>>> vnx_queue_store_value;
+	std::unordered_map<uint64_t, std::pair<std::function<void()>, std::function<void(const vnx::exception&)>>> vnx_queue_store_values;
+	std::unordered_map<uint64_t, std::pair<std::function<void()>, std::function<void(const vnx::exception&)>>> vnx_queue_store_value_delay;
+	std::unordered_map<uint64_t, std::pair<std::function<void()>, std::function<void(const vnx::exception&)>>> vnx_queue_store_values_delay;
+	std::unordered_map<uint64_t, std::pair<std::function<void()>, std::function<void(const vnx::exception&)>>> vnx_queue_delete_value;
 	
 };
 

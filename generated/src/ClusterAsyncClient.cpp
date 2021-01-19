@@ -5,19 +5,21 @@
 #include <vnx/keyvalue/ClusterAsyncClient.hxx>
 #include <vnx/Module.h>
 #include <vnx/ModuleInterface_vnx_get_config.hxx>
+#include <vnx/ModuleInterface_vnx_get_config_return.hxx>
 #include <vnx/ModuleInterface_vnx_get_config_object.hxx>
 #include <vnx/ModuleInterface_vnx_get_config_object_return.hxx>
-#include <vnx/ModuleInterface_vnx_get_config_return.hxx>
 #include <vnx/ModuleInterface_vnx_get_module_info.hxx>
 #include <vnx/ModuleInterface_vnx_get_module_info_return.hxx>
 #include <vnx/ModuleInterface_vnx_get_type_code.hxx>
 #include <vnx/ModuleInterface_vnx_get_type_code_return.hxx>
 #include <vnx/ModuleInterface_vnx_restart.hxx>
 #include <vnx/ModuleInterface_vnx_restart_return.hxx>
+#include <vnx/ModuleInterface_vnx_self_test.hxx>
+#include <vnx/ModuleInterface_vnx_self_test_return.hxx>
 #include <vnx/ModuleInterface_vnx_set_config.hxx>
+#include <vnx/ModuleInterface_vnx_set_config_return.hxx>
 #include <vnx/ModuleInterface_vnx_set_config_object.hxx>
 #include <vnx/ModuleInterface_vnx_set_config_object_return.hxx>
-#include <vnx/ModuleInterface_vnx_set_config_return.hxx>
 #include <vnx/ModuleInterface_vnx_stop.hxx>
 #include <vnx/ModuleInterface_vnx_stop_return.hxx>
 #include <vnx/TopicPtr.hpp>
@@ -33,23 +35,23 @@
 #include <vnx/keyvalue/Storage_get_keys.hxx>
 #include <vnx/keyvalue/Storage_get_keys_return.hxx>
 #include <vnx/keyvalue/Storage_get_value.hxx>
+#include <vnx/keyvalue/Storage_get_value_return.hxx>
 #include <vnx/keyvalue/Storage_get_value_locked.hxx>
 #include <vnx/keyvalue/Storage_get_value_locked_return.hxx>
-#include <vnx/keyvalue/Storage_get_value_return.hxx>
 #include <vnx/keyvalue/Storage_get_values.hxx>
 #include <vnx/keyvalue/Storage_get_values_return.hxx>
 #include <vnx/keyvalue/Storage_store_value.hxx>
+#include <vnx/keyvalue/Storage_store_value_return.hxx>
 #include <vnx/keyvalue/Storage_store_value_delay.hxx>
 #include <vnx/keyvalue/Storage_store_value_delay_return.hxx>
-#include <vnx/keyvalue/Storage_store_value_return.hxx>
 #include <vnx/keyvalue/Storage_store_values.hxx>
+#include <vnx/keyvalue/Storage_store_values_return.hxx>
 #include <vnx/keyvalue/Storage_store_values_delay.hxx>
 #include <vnx/keyvalue/Storage_store_values_delay_return.hxx>
-#include <vnx/keyvalue/Storage_store_values_return.hxx>
 #include <vnx/keyvalue/Storage_sync_all.hxx>
+#include <vnx/keyvalue/Storage_sync_all_return.hxx>
 #include <vnx/keyvalue/Storage_sync_all_keys.hxx>
 #include <vnx/keyvalue/Storage_sync_all_keys_return.hxx>
-#include <vnx/keyvalue/Storage_sync_all_return.hxx>
 #include <vnx/keyvalue/Storage_sync_from.hxx>
 #include <vnx/keyvalue/Storage_sync_from_return.hxx>
 #include <vnx/keyvalue/Storage_sync_range.hxx>
@@ -57,6 +59,7 @@
 #include <vnx/keyvalue/Storage_unlock.hxx>
 #include <vnx/keyvalue/Storage_unlock_return.hxx>
 
+#include <vnx/Generic.hxx>
 #include <vnx/vnx.h>
 
 
@@ -78,8 +81,8 @@ uint64_t ClusterAsyncClient::vnx_get_config_object(const std::function<void(cons
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 0;
 		vnx_queue_vnx_get_config_object[_request_id] = std::make_pair(_callback, _error_callback);
-		vnx_num_pending++;
 	}
 	vnx_request(_method, _request_id);
 	return _request_id;
@@ -91,8 +94,8 @@ uint64_t ClusterAsyncClient::vnx_get_config(const std::string& name, const std::
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 1;
 		vnx_queue_vnx_get_config[_request_id] = std::make_pair(_callback, _error_callback);
-		vnx_num_pending++;
 	}
 	vnx_request(_method, _request_id);
 	return _request_id;
@@ -104,8 +107,8 @@ uint64_t ClusterAsyncClient::vnx_set_config_object(const ::vnx::Object& config, 
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 2;
 		vnx_queue_vnx_set_config_object[_request_id] = std::make_pair(_callback, _error_callback);
-		vnx_num_pending++;
 	}
 	vnx_request(_method, _request_id);
 	return _request_id;
@@ -118,8 +121,8 @@ uint64_t ClusterAsyncClient::vnx_set_config(const std::string& name, const ::vnx
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 3;
 		vnx_queue_vnx_set_config[_request_id] = std::make_pair(_callback, _error_callback);
-		vnx_num_pending++;
 	}
 	vnx_request(_method, _request_id);
 	return _request_id;
@@ -130,8 +133,8 @@ uint64_t ClusterAsyncClient::vnx_get_type_code(const std::function<void(const ::
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 4;
 		vnx_queue_vnx_get_type_code[_request_id] = std::make_pair(_callback, _error_callback);
-		vnx_num_pending++;
 	}
 	vnx_request(_method, _request_id);
 	return _request_id;
@@ -142,8 +145,8 @@ uint64_t ClusterAsyncClient::vnx_get_module_info(const std::function<void(std::s
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 5;
 		vnx_queue_vnx_get_module_info[_request_id] = std::make_pair(_callback, _error_callback);
-		vnx_num_pending++;
 	}
 	vnx_request(_method, _request_id);
 	return _request_id;
@@ -154,8 +157,8 @@ uint64_t ClusterAsyncClient::vnx_restart(const std::function<void()>& _callback,
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 6;
 		vnx_queue_vnx_restart[_request_id] = std::make_pair(_callback, _error_callback);
-		vnx_num_pending++;
 	}
 	vnx_request(_method, _request_id);
 	return _request_id;
@@ -166,8 +169,20 @@ uint64_t ClusterAsyncClient::vnx_stop(const std::function<void()>& _callback, co
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 7;
 		vnx_queue_vnx_stop[_request_id] = std::make_pair(_callback, _error_callback);
-		vnx_num_pending++;
+	}
+	vnx_request(_method, _request_id);
+	return _request_id;
+}
+
+uint64_t ClusterAsyncClient::vnx_self_test(const std::function<void(const vnx::bool_t&)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
+	auto _method = ::vnx::ModuleInterface_vnx_self_test::create();
+	const auto _request_id = ++vnx_next_id;
+	{
+		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 8;
+		vnx_queue_vnx_self_test[_request_id] = std::make_pair(_callback, _error_callback);
 	}
 	vnx_request(_method, _request_id);
 	return _request_id;
@@ -179,8 +194,8 @@ uint64_t ClusterAsyncClient::get_value(const ::vnx::Variant& key, const std::fun
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 9;
 		vnx_queue_get_value[_request_id] = std::make_pair(_callback, _error_callback);
-		vnx_num_pending++;
 	}
 	vnx_request(_method, _request_id);
 	return _request_id;
@@ -193,8 +208,8 @@ uint64_t ClusterAsyncClient::get_value_locked(const ::vnx::Variant& key, const i
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 10;
 		vnx_queue_get_value_locked[_request_id] = std::make_pair(_callback, _error_callback);
-		vnx_num_pending++;
 	}
 	vnx_request(_method, _request_id);
 	return _request_id;
@@ -206,8 +221,8 @@ uint64_t ClusterAsyncClient::get_values(const std::vector<::vnx::Variant>& keys,
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 11;
 		vnx_queue_get_values[_request_id] = std::make_pair(_callback, _error_callback);
-		vnx_num_pending++;
 	}
 	vnx_request(_method, _request_id);
 	return _request_id;
@@ -219,8 +234,8 @@ uint64_t ClusterAsyncClient::get_key(const uint64_t& version, const std::functio
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 12;
 		vnx_queue_get_key[_request_id] = std::make_pair(_callback, _error_callback);
-		vnx_num_pending++;
 	}
 	vnx_request(_method, _request_id);
 	return _request_id;
@@ -232,8 +247,8 @@ uint64_t ClusterAsyncClient::get_keys(const std::vector<uint64_t>& versions, con
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 13;
 		vnx_queue_get_keys[_request_id] = std::make_pair(_callback, _error_callback);
-		vnx_num_pending++;
 	}
 	vnx_request(_method, _request_id);
 	return _request_id;
@@ -245,8 +260,8 @@ uint64_t ClusterAsyncClient::unlock(const ::vnx::Variant& key, const std::functi
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 14;
 		vnx_queue_unlock[_request_id] = std::make_pair(_callback, _error_callback);
-		vnx_num_pending++;
 	}
 	vnx_request(_method, _request_id);
 	return _request_id;
@@ -259,8 +274,8 @@ uint64_t ClusterAsyncClient::sync_from(const ::vnx::TopicPtr& topic, const uint6
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 15;
 		vnx_queue_sync_from[_request_id] = std::make_pair(_callback, _error_callback);
-		vnx_num_pending++;
 	}
 	vnx_request(_method, _request_id);
 	return _request_id;
@@ -274,8 +289,8 @@ uint64_t ClusterAsyncClient::sync_range(const ::vnx::TopicPtr& topic, const uint
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 16;
 		vnx_queue_sync_range[_request_id] = std::make_pair(_callback, _error_callback);
-		vnx_num_pending++;
 	}
 	vnx_request(_method, _request_id);
 	return _request_id;
@@ -287,8 +302,8 @@ uint64_t ClusterAsyncClient::sync_all(const ::vnx::TopicPtr& topic, const std::f
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 17;
 		vnx_queue_sync_all[_request_id] = std::make_pair(_callback, _error_callback);
-		vnx_num_pending++;
 	}
 	vnx_request(_method, _request_id);
 	return _request_id;
@@ -300,8 +315,8 @@ uint64_t ClusterAsyncClient::sync_all_keys(const ::vnx::TopicPtr& topic, const s
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 18;
 		vnx_queue_sync_all_keys[_request_id] = std::make_pair(_callback, _error_callback);
-		vnx_num_pending++;
 	}
 	vnx_request(_method, _request_id);
 	return _request_id;
@@ -313,8 +328,8 @@ uint64_t ClusterAsyncClient::cancel_sync_job(const int64_t& job_id, const std::f
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 19;
 		vnx_queue_cancel_sync_job[_request_id] = std::make_pair(_callback, _error_callback);
-		vnx_num_pending++;
 	}
 	vnx_request(_method, _request_id);
 	return _request_id;
@@ -327,8 +342,8 @@ uint64_t ClusterAsyncClient::store_value(const ::vnx::Variant& key, std::shared_
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 20;
 		vnx_queue_store_value[_request_id] = std::make_pair(_callback, _error_callback);
-		vnx_num_pending++;
 	}
 	vnx_request(_method, _request_id);
 	return _request_id;
@@ -340,8 +355,8 @@ uint64_t ClusterAsyncClient::store_values(const std::vector<std::pair<::vnx::Var
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 21;
 		vnx_queue_store_values[_request_id] = std::make_pair(_callback, _error_callback);
-		vnx_num_pending++;
 	}
 	vnx_request(_method, _request_id);
 	return _request_id;
@@ -355,8 +370,8 @@ uint64_t ClusterAsyncClient::store_value_delay(const ::vnx::Variant& key, std::s
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 22;
 		vnx_queue_store_value_delay[_request_id] = std::make_pair(_callback, _error_callback);
-		vnx_num_pending++;
 	}
 	vnx_request(_method, _request_id);
 	return _request_id;
@@ -369,8 +384,8 @@ uint64_t ClusterAsyncClient::store_values_delay(const std::vector<std::pair<::vn
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 23;
 		vnx_queue_store_values_delay[_request_id] = std::make_pair(_callback, _error_callback);
-		vnx_num_pending++;
 	}
 	vnx_request(_method, _request_id);
 	return _request_id;
@@ -382,801 +397,750 @@ uint64_t ClusterAsyncClient::delete_value(const ::vnx::Variant& key, const std::
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 24;
 		vnx_queue_delete_value[_request_id] = std::make_pair(_callback, _error_callback);
-		vnx_num_pending++;
 	}
 	vnx_request(_method, _request_id);
 	return _request_id;
 }
 
-std::vector<uint64_t> ClusterAsyncClient::vnx_get_pending_ids() const {
-	std::lock_guard<std::mutex> _lock(vnx_mutex);
-	std::vector<uint64_t> _list;
-	for(const auto& entry : vnx_queue_vnx_get_config_object) {
-		_list.push_back(entry.first);
+int32_t ClusterAsyncClient::vnx_purge_request(uint64_t _request_id, const vnx::exception& _ex) {
+	std::unique_lock<std::mutex> _lock(vnx_mutex);
+	const auto _iter = vnx_pending.find(_request_id);
+	if(_iter == vnx_pending.end()) {
+		return -1;
 	}
-	for(const auto& entry : vnx_queue_vnx_get_config) {
-		_list.push_back(entry.first);
+	const auto _index = _iter->second;
+	vnx_pending.erase(_iter);
+	switch(_index) {
+		case 0: {
+			const auto _iter = vnx_queue_vnx_get_config_object.find(_request_id);
+			if(_iter != vnx_queue_vnx_get_config_object.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_vnx_get_config_object.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
+		case 1: {
+			const auto _iter = vnx_queue_vnx_get_config.find(_request_id);
+			if(_iter != vnx_queue_vnx_get_config.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_vnx_get_config.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
+		case 2: {
+			const auto _iter = vnx_queue_vnx_set_config_object.find(_request_id);
+			if(_iter != vnx_queue_vnx_set_config_object.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_vnx_set_config_object.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
+		case 3: {
+			const auto _iter = vnx_queue_vnx_set_config.find(_request_id);
+			if(_iter != vnx_queue_vnx_set_config.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_vnx_set_config.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
+		case 4: {
+			const auto _iter = vnx_queue_vnx_get_type_code.find(_request_id);
+			if(_iter != vnx_queue_vnx_get_type_code.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_vnx_get_type_code.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
+		case 5: {
+			const auto _iter = vnx_queue_vnx_get_module_info.find(_request_id);
+			if(_iter != vnx_queue_vnx_get_module_info.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_vnx_get_module_info.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
+		case 6: {
+			const auto _iter = vnx_queue_vnx_restart.find(_request_id);
+			if(_iter != vnx_queue_vnx_restart.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_vnx_restart.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
+		case 7: {
+			const auto _iter = vnx_queue_vnx_stop.find(_request_id);
+			if(_iter != vnx_queue_vnx_stop.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_vnx_stop.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
+		case 8: {
+			const auto _iter = vnx_queue_vnx_self_test.find(_request_id);
+			if(_iter != vnx_queue_vnx_self_test.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_vnx_self_test.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
+		case 9: {
+			const auto _iter = vnx_queue_get_value.find(_request_id);
+			if(_iter != vnx_queue_get_value.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_get_value.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
+		case 10: {
+			const auto _iter = vnx_queue_get_value_locked.find(_request_id);
+			if(_iter != vnx_queue_get_value_locked.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_get_value_locked.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
+		case 11: {
+			const auto _iter = vnx_queue_get_values.find(_request_id);
+			if(_iter != vnx_queue_get_values.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_get_values.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
+		case 12: {
+			const auto _iter = vnx_queue_get_key.find(_request_id);
+			if(_iter != vnx_queue_get_key.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_get_key.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
+		case 13: {
+			const auto _iter = vnx_queue_get_keys.find(_request_id);
+			if(_iter != vnx_queue_get_keys.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_get_keys.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
+		case 14: {
+			const auto _iter = vnx_queue_unlock.find(_request_id);
+			if(_iter != vnx_queue_unlock.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_unlock.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
+		case 15: {
+			const auto _iter = vnx_queue_sync_from.find(_request_id);
+			if(_iter != vnx_queue_sync_from.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_sync_from.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
+		case 16: {
+			const auto _iter = vnx_queue_sync_range.find(_request_id);
+			if(_iter != vnx_queue_sync_range.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_sync_range.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
+		case 17: {
+			const auto _iter = vnx_queue_sync_all.find(_request_id);
+			if(_iter != vnx_queue_sync_all.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_sync_all.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
+		case 18: {
+			const auto _iter = vnx_queue_sync_all_keys.find(_request_id);
+			if(_iter != vnx_queue_sync_all_keys.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_sync_all_keys.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
+		case 19: {
+			const auto _iter = vnx_queue_cancel_sync_job.find(_request_id);
+			if(_iter != vnx_queue_cancel_sync_job.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_cancel_sync_job.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
+		case 20: {
+			const auto _iter = vnx_queue_store_value.find(_request_id);
+			if(_iter != vnx_queue_store_value.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_store_value.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
+		case 21: {
+			const auto _iter = vnx_queue_store_values.find(_request_id);
+			if(_iter != vnx_queue_store_values.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_store_values.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
+		case 22: {
+			const auto _iter = vnx_queue_store_value_delay.find(_request_id);
+			if(_iter != vnx_queue_store_value_delay.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_store_value_delay.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
+		case 23: {
+			const auto _iter = vnx_queue_store_values_delay.find(_request_id);
+			if(_iter != vnx_queue_store_values_delay.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_store_values_delay.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
+		case 24: {
+			const auto _iter = vnx_queue_delete_value.find(_request_id);
+			if(_iter != vnx_queue_delete_value.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_delete_value.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
 	}
-	for(const auto& entry : vnx_queue_vnx_set_config_object) {
-		_list.push_back(entry.first);
-	}
-	for(const auto& entry : vnx_queue_vnx_set_config) {
-		_list.push_back(entry.first);
-	}
-	for(const auto& entry : vnx_queue_vnx_get_type_code) {
-		_list.push_back(entry.first);
-	}
-	for(const auto& entry : vnx_queue_vnx_get_module_info) {
-		_list.push_back(entry.first);
-	}
-	for(const auto& entry : vnx_queue_vnx_restart) {
-		_list.push_back(entry.first);
-	}
-	for(const auto& entry : vnx_queue_vnx_stop) {
-		_list.push_back(entry.first);
-	}
-	for(const auto& entry : vnx_queue_get_value) {
-		_list.push_back(entry.first);
-	}
-	for(const auto& entry : vnx_queue_get_value_locked) {
-		_list.push_back(entry.first);
-	}
-	for(const auto& entry : vnx_queue_get_values) {
-		_list.push_back(entry.first);
-	}
-	for(const auto& entry : vnx_queue_get_key) {
-		_list.push_back(entry.first);
-	}
-	for(const auto& entry : vnx_queue_get_keys) {
-		_list.push_back(entry.first);
-	}
-	for(const auto& entry : vnx_queue_unlock) {
-		_list.push_back(entry.first);
-	}
-	for(const auto& entry : vnx_queue_sync_from) {
-		_list.push_back(entry.first);
-	}
-	for(const auto& entry : vnx_queue_sync_range) {
-		_list.push_back(entry.first);
-	}
-	for(const auto& entry : vnx_queue_sync_all) {
-		_list.push_back(entry.first);
-	}
-	for(const auto& entry : vnx_queue_sync_all_keys) {
-		_list.push_back(entry.first);
-	}
-	for(const auto& entry : vnx_queue_cancel_sync_job) {
-		_list.push_back(entry.first);
-	}
-	for(const auto& entry : vnx_queue_store_value) {
-		_list.push_back(entry.first);
-	}
-	for(const auto& entry : vnx_queue_store_values) {
-		_list.push_back(entry.first);
-	}
-	for(const auto& entry : vnx_queue_store_value_delay) {
-		_list.push_back(entry.first);
-	}
-	for(const auto& entry : vnx_queue_store_values_delay) {
-		_list.push_back(entry.first);
-	}
-	for(const auto& entry : vnx_queue_delete_value) {
-		_list.push_back(entry.first);
-	}
-	return _list;
+	return _index;
 }
 
-void ClusterAsyncClient::vnx_purge_request(uint64_t _request_id, const vnx::exception& _ex) {
+int32_t ClusterAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_ptr<const vnx::Value> _value) {
 	std::unique_lock<std::mutex> _lock(vnx_mutex);
-	{
-		const auto _iter = vnx_queue_vnx_get_config_object.find(_request_id);
-		if(_iter != vnx_queue_vnx_get_config_object.end()) {
-			const auto _callback = std::move(_iter->second.second);
-			vnx_queue_vnx_get_config_object.erase(_iter);
-			vnx_num_pending--;
-			_lock.unlock();
-			if(_callback) {
-				_callback(_ex);
-			}
-			return;
-		}
+	const auto _iter = vnx_pending.find(_request_id);
+	if(_iter == vnx_pending.end()) {
+		throw std::runtime_error("ClusterAsyncClient: received unknown return");
 	}
-	{
-		const auto _iter = vnx_queue_vnx_get_config.find(_request_id);
-		if(_iter != vnx_queue_vnx_get_config.end()) {
-			const auto _callback = std::move(_iter->second.second);
-			vnx_queue_vnx_get_config.erase(_iter);
-			vnx_num_pending--;
-			_lock.unlock();
-			if(_callback) {
-				_callback(_ex);
+	const auto _index = _iter->second;
+	vnx_pending.erase(_iter);
+	switch(_index) {
+		case 0: {
+			const auto _iter = vnx_queue_vnx_get_config_object.find(_request_id);
+			if(_iter == vnx_queue_vnx_get_config_object.end()) {
+				throw std::runtime_error("ClusterAsyncClient: callback not found");
 			}
-			return;
-		}
-	}
-	{
-		const auto _iter = vnx_queue_vnx_set_config_object.find(_request_id);
-		if(_iter != vnx_queue_vnx_set_config_object.end()) {
-			const auto _callback = std::move(_iter->second.second);
-			vnx_queue_vnx_set_config_object.erase(_iter);
-			vnx_num_pending--;
-			_lock.unlock();
-			if(_callback) {
-				_callback(_ex);
-			}
-			return;
-		}
-	}
-	{
-		const auto _iter = vnx_queue_vnx_set_config.find(_request_id);
-		if(_iter != vnx_queue_vnx_set_config.end()) {
-			const auto _callback = std::move(_iter->second.second);
-			vnx_queue_vnx_set_config.erase(_iter);
-			vnx_num_pending--;
-			_lock.unlock();
-			if(_callback) {
-				_callback(_ex);
-			}
-			return;
-		}
-	}
-	{
-		const auto _iter = vnx_queue_vnx_get_type_code.find(_request_id);
-		if(_iter != vnx_queue_vnx_get_type_code.end()) {
-			const auto _callback = std::move(_iter->second.second);
-			vnx_queue_vnx_get_type_code.erase(_iter);
-			vnx_num_pending--;
-			_lock.unlock();
-			if(_callback) {
-				_callback(_ex);
-			}
-			return;
-		}
-	}
-	{
-		const auto _iter = vnx_queue_vnx_get_module_info.find(_request_id);
-		if(_iter != vnx_queue_vnx_get_module_info.end()) {
-			const auto _callback = std::move(_iter->second.second);
-			vnx_queue_vnx_get_module_info.erase(_iter);
-			vnx_num_pending--;
-			_lock.unlock();
-			if(_callback) {
-				_callback(_ex);
-			}
-			return;
-		}
-	}
-	{
-		const auto _iter = vnx_queue_vnx_restart.find(_request_id);
-		if(_iter != vnx_queue_vnx_restart.end()) {
-			const auto _callback = std::move(_iter->second.second);
-			vnx_queue_vnx_restart.erase(_iter);
-			vnx_num_pending--;
-			_lock.unlock();
-			if(_callback) {
-				_callback(_ex);
-			}
-			return;
-		}
-	}
-	{
-		const auto _iter = vnx_queue_vnx_stop.find(_request_id);
-		if(_iter != vnx_queue_vnx_stop.end()) {
-			const auto _callback = std::move(_iter->second.second);
-			vnx_queue_vnx_stop.erase(_iter);
-			vnx_num_pending--;
-			_lock.unlock();
-			if(_callback) {
-				_callback(_ex);
-			}
-			return;
-		}
-	}
-	{
-		const auto _iter = vnx_queue_get_value.find(_request_id);
-		if(_iter != vnx_queue_get_value.end()) {
-			const auto _callback = std::move(_iter->second.second);
-			vnx_queue_get_value.erase(_iter);
-			vnx_num_pending--;
-			_lock.unlock();
-			if(_callback) {
-				_callback(_ex);
-			}
-			return;
-		}
-	}
-	{
-		const auto _iter = vnx_queue_get_value_locked.find(_request_id);
-		if(_iter != vnx_queue_get_value_locked.end()) {
-			const auto _callback = std::move(_iter->second.second);
-			vnx_queue_get_value_locked.erase(_iter);
-			vnx_num_pending--;
-			_lock.unlock();
-			if(_callback) {
-				_callback(_ex);
-			}
-			return;
-		}
-	}
-	{
-		const auto _iter = vnx_queue_get_values.find(_request_id);
-		if(_iter != vnx_queue_get_values.end()) {
-			const auto _callback = std::move(_iter->second.second);
-			vnx_queue_get_values.erase(_iter);
-			vnx_num_pending--;
-			_lock.unlock();
-			if(_callback) {
-				_callback(_ex);
-			}
-			return;
-		}
-	}
-	{
-		const auto _iter = vnx_queue_get_key.find(_request_id);
-		if(_iter != vnx_queue_get_key.end()) {
-			const auto _callback = std::move(_iter->second.second);
-			vnx_queue_get_key.erase(_iter);
-			vnx_num_pending--;
-			_lock.unlock();
-			if(_callback) {
-				_callback(_ex);
-			}
-			return;
-		}
-	}
-	{
-		const auto _iter = vnx_queue_get_keys.find(_request_id);
-		if(_iter != vnx_queue_get_keys.end()) {
-			const auto _callback = std::move(_iter->second.second);
-			vnx_queue_get_keys.erase(_iter);
-			vnx_num_pending--;
-			_lock.unlock();
-			if(_callback) {
-				_callback(_ex);
-			}
-			return;
-		}
-	}
-	{
-		const auto _iter = vnx_queue_unlock.find(_request_id);
-		if(_iter != vnx_queue_unlock.end()) {
-			const auto _callback = std::move(_iter->second.second);
-			vnx_queue_unlock.erase(_iter);
-			vnx_num_pending--;
-			_lock.unlock();
-			if(_callback) {
-				_callback(_ex);
-			}
-			return;
-		}
-	}
-	{
-		const auto _iter = vnx_queue_sync_from.find(_request_id);
-		if(_iter != vnx_queue_sync_from.end()) {
-			const auto _callback = std::move(_iter->second.second);
-			vnx_queue_sync_from.erase(_iter);
-			vnx_num_pending--;
-			_lock.unlock();
-			if(_callback) {
-				_callback(_ex);
-			}
-			return;
-		}
-	}
-	{
-		const auto _iter = vnx_queue_sync_range.find(_request_id);
-		if(_iter != vnx_queue_sync_range.end()) {
-			const auto _callback = std::move(_iter->second.second);
-			vnx_queue_sync_range.erase(_iter);
-			vnx_num_pending--;
-			_lock.unlock();
-			if(_callback) {
-				_callback(_ex);
-			}
-			return;
-		}
-	}
-	{
-		const auto _iter = vnx_queue_sync_all.find(_request_id);
-		if(_iter != vnx_queue_sync_all.end()) {
-			const auto _callback = std::move(_iter->second.second);
-			vnx_queue_sync_all.erase(_iter);
-			vnx_num_pending--;
-			_lock.unlock();
-			if(_callback) {
-				_callback(_ex);
-			}
-			return;
-		}
-	}
-	{
-		const auto _iter = vnx_queue_sync_all_keys.find(_request_id);
-		if(_iter != vnx_queue_sync_all_keys.end()) {
-			const auto _callback = std::move(_iter->second.second);
-			vnx_queue_sync_all_keys.erase(_iter);
-			vnx_num_pending--;
-			_lock.unlock();
-			if(_callback) {
-				_callback(_ex);
-			}
-			return;
-		}
-	}
-	{
-		const auto _iter = vnx_queue_cancel_sync_job.find(_request_id);
-		if(_iter != vnx_queue_cancel_sync_job.end()) {
-			const auto _callback = std::move(_iter->second.second);
-			vnx_queue_cancel_sync_job.erase(_iter);
-			vnx_num_pending--;
-			_lock.unlock();
-			if(_callback) {
-				_callback(_ex);
-			}
-			return;
-		}
-	}
-	{
-		const auto _iter = vnx_queue_store_value.find(_request_id);
-		if(_iter != vnx_queue_store_value.end()) {
-			const auto _callback = std::move(_iter->second.second);
-			vnx_queue_store_value.erase(_iter);
-			vnx_num_pending--;
-			_lock.unlock();
-			if(_callback) {
-				_callback(_ex);
-			}
-			return;
-		}
-	}
-	{
-		const auto _iter = vnx_queue_store_values.find(_request_id);
-		if(_iter != vnx_queue_store_values.end()) {
-			const auto _callback = std::move(_iter->second.second);
-			vnx_queue_store_values.erase(_iter);
-			vnx_num_pending--;
-			_lock.unlock();
-			if(_callback) {
-				_callback(_ex);
-			}
-			return;
-		}
-	}
-	{
-		const auto _iter = vnx_queue_store_value_delay.find(_request_id);
-		if(_iter != vnx_queue_store_value_delay.end()) {
-			const auto _callback = std::move(_iter->second.second);
-			vnx_queue_store_value_delay.erase(_iter);
-			vnx_num_pending--;
-			_lock.unlock();
-			if(_callback) {
-				_callback(_ex);
-			}
-			return;
-		}
-	}
-	{
-		const auto _iter = vnx_queue_store_values_delay.find(_request_id);
-		if(_iter != vnx_queue_store_values_delay.end()) {
-			const auto _callback = std::move(_iter->second.second);
-			vnx_queue_store_values_delay.erase(_iter);
-			vnx_num_pending--;
-			_lock.unlock();
-			if(_callback) {
-				_callback(_ex);
-			}
-			return;
-		}
-	}
-	{
-		const auto _iter = vnx_queue_delete_value.find(_request_id);
-		if(_iter != vnx_queue_delete_value.end()) {
-			const auto _callback = std::move(_iter->second.second);
-			vnx_queue_delete_value.erase(_iter);
-			vnx_num_pending--;
-			_lock.unlock();
-			if(_callback) {
-				_callback(_ex);
-			}
-			return;
-		}
-	}
-}
-
-void ClusterAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared_ptr<const vnx::Value> _value) {
-	std::unique_lock<std::mutex> _lock(vnx_mutex);
-	const auto _type_hash = _value->get_type_hash();
-	if(_type_hash == vnx::Hash64(0xa913f47dc68e4876ull)) {
-		auto _result = std::dynamic_pointer_cast<const ::vnx::ModuleInterface_vnx_get_config_object_return>(_value);
-		if(!_result) {
-			throw std::logic_error("ClusterAsyncClient: !_result");
-		}
-		const auto _iter = vnx_queue_vnx_get_config_object.find(_request_id);
-		if(_iter != vnx_queue_vnx_get_config_object.end()) {
 			const auto _callback = std::move(_iter->second.first);
 			vnx_queue_vnx_get_config_object.erase(_iter);
-			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {
-				_callback(_result->_ret_0);
+				if(auto _result = std::dynamic_pointer_cast<const ::vnx::ModuleInterface_vnx_get_config_object_return>(_value)) {
+					_callback(_result->_ret_0);
+				} else if(_value && !_value->is_void()) {
+					_callback(_value->get_field_by_index(0).to<::vnx::Object>());
+				} else {
+					throw std::logic_error("ClusterAsyncClient: invalid return value");
+				}
 			}
-		} else {
-			throw std::runtime_error("ClusterAsyncClient: received unknown return request_id");
+			break;
 		}
-	}
-	else if(_type_hash == vnx::Hash64(0xe5b6c635f30b18a1ull)) {
-		auto _result = std::dynamic_pointer_cast<const ::vnx::ModuleInterface_vnx_get_config_return>(_value);
-		if(!_result) {
-			throw std::logic_error("ClusterAsyncClient: !_result");
-		}
-		const auto _iter = vnx_queue_vnx_get_config.find(_request_id);
-		if(_iter != vnx_queue_vnx_get_config.end()) {
+		case 1: {
+			const auto _iter = vnx_queue_vnx_get_config.find(_request_id);
+			if(_iter == vnx_queue_vnx_get_config.end()) {
+				throw std::runtime_error("ClusterAsyncClient: callback not found");
+			}
 			const auto _callback = std::move(_iter->second.first);
 			vnx_queue_vnx_get_config.erase(_iter);
-			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {
-				_callback(_result->_ret_0);
+				if(auto _result = std::dynamic_pointer_cast<const ::vnx::ModuleInterface_vnx_get_config_return>(_value)) {
+					_callback(_result->_ret_0);
+				} else if(_value && !_value->is_void()) {
+					_callback(_value->get_field_by_index(0).to<::vnx::Variant>());
+				} else {
+					throw std::logic_error("ClusterAsyncClient: invalid return value");
+				}
 			}
-		} else {
-			throw std::runtime_error("ClusterAsyncClient: received unknown return request_id");
+			break;
 		}
-	}
-	else if(_type_hash == vnx::Hash64(0xdd5ede96590e3d28ull)) {
-		const auto _iter = vnx_queue_vnx_set_config_object.find(_request_id);
-		if(_iter != vnx_queue_vnx_set_config_object.end()) {
+		case 2: {
+			const auto _iter = vnx_queue_vnx_set_config_object.find(_request_id);
+			if(_iter == vnx_queue_vnx_set_config_object.end()) {
+				throw std::runtime_error("ClusterAsyncClient: callback not found");
+			}
 			const auto _callback = std::move(_iter->second.first);
 			vnx_queue_vnx_set_config_object.erase(_iter);
-			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {
 				_callback();
 			}
-		} else {
-			throw std::runtime_error("ClusterAsyncClient: received unknown return request_id");
+			break;
 		}
-	}
-	else if(_type_hash == vnx::Hash64(0x3873b149bdf7814eull)) {
-		const auto _iter = vnx_queue_vnx_set_config.find(_request_id);
-		if(_iter != vnx_queue_vnx_set_config.end()) {
+		case 3: {
+			const auto _iter = vnx_queue_vnx_set_config.find(_request_id);
+			if(_iter == vnx_queue_vnx_set_config.end()) {
+				throw std::runtime_error("ClusterAsyncClient: callback not found");
+			}
 			const auto _callback = std::move(_iter->second.first);
 			vnx_queue_vnx_set_config.erase(_iter);
-			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {
 				_callback();
 			}
-		} else {
-			throw std::runtime_error("ClusterAsyncClient: received unknown return request_id");
+			break;
 		}
-	}
-	else if(_type_hash == vnx::Hash64(0x9f4322ca83b0d1ull)) {
-		auto _result = std::dynamic_pointer_cast<const ::vnx::ModuleInterface_vnx_get_type_code_return>(_value);
-		if(!_result) {
-			throw std::logic_error("ClusterAsyncClient: !_result");
-		}
-		const auto _iter = vnx_queue_vnx_get_type_code.find(_request_id);
-		if(_iter != vnx_queue_vnx_get_type_code.end()) {
+		case 4: {
+			const auto _iter = vnx_queue_vnx_get_type_code.find(_request_id);
+			if(_iter == vnx_queue_vnx_get_type_code.end()) {
+				throw std::runtime_error("ClusterAsyncClient: callback not found");
+			}
 			const auto _callback = std::move(_iter->second.first);
 			vnx_queue_vnx_get_type_code.erase(_iter);
-			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {
-				_callback(_result->_ret_0);
+				if(auto _result = std::dynamic_pointer_cast<const ::vnx::ModuleInterface_vnx_get_type_code_return>(_value)) {
+					_callback(_result->_ret_0);
+				} else if(_value && !_value->is_void()) {
+					_callback(_value->get_field_by_index(0).to<::vnx::TypeCode>());
+				} else {
+					throw std::logic_error("ClusterAsyncClient: invalid return value");
+				}
 			}
-		} else {
-			throw std::runtime_error("ClusterAsyncClient: received unknown return request_id");
+			break;
 		}
-	}
-	else if(_type_hash == vnx::Hash64(0xfa24b8a5a75620cfull)) {
-		auto _result = std::dynamic_pointer_cast<const ::vnx::ModuleInterface_vnx_get_module_info_return>(_value);
-		if(!_result) {
-			throw std::logic_error("ClusterAsyncClient: !_result");
-		}
-		const auto _iter = vnx_queue_vnx_get_module_info.find(_request_id);
-		if(_iter != vnx_queue_vnx_get_module_info.end()) {
+		case 5: {
+			const auto _iter = vnx_queue_vnx_get_module_info.find(_request_id);
+			if(_iter == vnx_queue_vnx_get_module_info.end()) {
+				throw std::runtime_error("ClusterAsyncClient: callback not found");
+			}
 			const auto _callback = std::move(_iter->second.first);
 			vnx_queue_vnx_get_module_info.erase(_iter);
-			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {
-				_callback(_result->_ret_0);
+				if(auto _result = std::dynamic_pointer_cast<const ::vnx::ModuleInterface_vnx_get_module_info_return>(_value)) {
+					_callback(_result->_ret_0);
+				} else if(_value && !_value->is_void()) {
+					_callback(_value->get_field_by_index(0).to<std::shared_ptr<const ::vnx::ModuleInfo>>());
+				} else {
+					throw std::logic_error("ClusterAsyncClient: invalid return value");
+				}
 			}
-		} else {
-			throw std::runtime_error("ClusterAsyncClient: received unknown return request_id");
+			break;
 		}
-	}
-	else if(_type_hash == vnx::Hash64(0x2133a6eee0102018ull)) {
-		const auto _iter = vnx_queue_vnx_restart.find(_request_id);
-		if(_iter != vnx_queue_vnx_restart.end()) {
+		case 6: {
+			const auto _iter = vnx_queue_vnx_restart.find(_request_id);
+			if(_iter == vnx_queue_vnx_restart.end()) {
+				throw std::runtime_error("ClusterAsyncClient: callback not found");
+			}
 			const auto _callback = std::move(_iter->second.first);
 			vnx_queue_vnx_restart.erase(_iter);
-			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {
 				_callback();
 			}
-		} else {
-			throw std::runtime_error("ClusterAsyncClient: received unknown return request_id");
+			break;
 		}
-	}
-	else if(_type_hash == vnx::Hash64(0xfc3b62878a8d924ull)) {
-		const auto _iter = vnx_queue_vnx_stop.find(_request_id);
-		if(_iter != vnx_queue_vnx_stop.end()) {
+		case 7: {
+			const auto _iter = vnx_queue_vnx_stop.find(_request_id);
+			if(_iter == vnx_queue_vnx_stop.end()) {
+				throw std::runtime_error("ClusterAsyncClient: callback not found");
+			}
 			const auto _callback = std::move(_iter->second.first);
 			vnx_queue_vnx_stop.erase(_iter);
-			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {
 				_callback();
 			}
-		} else {
-			throw std::runtime_error("ClusterAsyncClient: received unknown return request_id");
+			break;
 		}
-	}
-	else if(_type_hash == vnx::Hash64(0x4a92482e1381ab01ull)) {
-		auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_value_return>(_value);
-		if(!_result) {
-			throw std::logic_error("ClusterAsyncClient: !_result");
+		case 8: {
+			const auto _iter = vnx_queue_vnx_self_test.find(_request_id);
+			if(_iter == vnx_queue_vnx_self_test.end()) {
+				throw std::runtime_error("ClusterAsyncClient: callback not found");
+			}
+			const auto _callback = std::move(_iter->second.first);
+			vnx_queue_vnx_self_test.erase(_iter);
+			_lock.unlock();
+			if(_callback) {
+				if(auto _result = std::dynamic_pointer_cast<const ::vnx::ModuleInterface_vnx_self_test_return>(_value)) {
+					_callback(_result->_ret_0);
+				} else if(_value && !_value->is_void()) {
+					_callback(_value->get_field_by_index(0).to<vnx::bool_t>());
+				} else {
+					throw std::logic_error("ClusterAsyncClient: invalid return value");
+				}
+			}
+			break;
 		}
-		const auto _iter = vnx_queue_get_value.find(_request_id);
-		if(_iter != vnx_queue_get_value.end()) {
+		case 9: {
+			const auto _iter = vnx_queue_get_value.find(_request_id);
+			if(_iter == vnx_queue_get_value.end()) {
+				throw std::runtime_error("ClusterAsyncClient: callback not found");
+			}
 			const auto _callback = std::move(_iter->second.first);
 			vnx_queue_get_value.erase(_iter);
-			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {
-				_callback(_result->_ret_0);
+				if(auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_value_return>(_value)) {
+					_callback(_result->_ret_0);
+				} else if(_value && !_value->is_void()) {
+					_callback(_value->get_field_by_index(0).to<std::shared_ptr<const ::vnx::keyvalue::Entry>>());
+				} else {
+					throw std::logic_error("ClusterAsyncClient: invalid return value");
+				}
 			}
-		} else {
-			throw std::runtime_error("ClusterAsyncClient: received unknown return request_id");
+			break;
 		}
-	}
-	else if(_type_hash == vnx::Hash64(0x9cc2e6345ebe66aeull)) {
-		auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_value_locked_return>(_value);
-		if(!_result) {
-			throw std::logic_error("ClusterAsyncClient: !_result");
-		}
-		const auto _iter = vnx_queue_get_value_locked.find(_request_id);
-		if(_iter != vnx_queue_get_value_locked.end()) {
+		case 10: {
+			const auto _iter = vnx_queue_get_value_locked.find(_request_id);
+			if(_iter == vnx_queue_get_value_locked.end()) {
+				throw std::runtime_error("ClusterAsyncClient: callback not found");
+			}
 			const auto _callback = std::move(_iter->second.first);
 			vnx_queue_get_value_locked.erase(_iter);
-			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {
-				_callback(_result->_ret_0);
+				if(auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_value_locked_return>(_value)) {
+					_callback(_result->_ret_0);
+				} else if(_value && !_value->is_void()) {
+					_callback(_value->get_field_by_index(0).to<std::shared_ptr<const ::vnx::keyvalue::Entry>>());
+				} else {
+					throw std::logic_error("ClusterAsyncClient: invalid return value");
+				}
 			}
-		} else {
-			throw std::runtime_error("ClusterAsyncClient: received unknown return request_id");
+			break;
 		}
-	}
-	else if(_type_hash == vnx::Hash64(0xe59fbd8a92b4aaf7ull)) {
-		auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_values_return>(_value);
-		if(!_result) {
-			throw std::logic_error("ClusterAsyncClient: !_result");
-		}
-		const auto _iter = vnx_queue_get_values.find(_request_id);
-		if(_iter != vnx_queue_get_values.end()) {
+		case 11: {
+			const auto _iter = vnx_queue_get_values.find(_request_id);
+			if(_iter == vnx_queue_get_values.end()) {
+				throw std::runtime_error("ClusterAsyncClient: callback not found");
+			}
 			const auto _callback = std::move(_iter->second.first);
 			vnx_queue_get_values.erase(_iter);
-			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {
-				_callback(_result->_ret_0);
+				if(auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_values_return>(_value)) {
+					_callback(_result->_ret_0);
+				} else if(_value && !_value->is_void()) {
+					_callback(_value->get_field_by_index(0).to<std::vector<std::shared_ptr<const ::vnx::keyvalue::Entry>>>());
+				} else {
+					throw std::logic_error("ClusterAsyncClient: invalid return value");
+				}
 			}
-		} else {
-			throw std::runtime_error("ClusterAsyncClient: received unknown return request_id");
+			break;
 		}
-	}
-	else if(_type_hash == vnx::Hash64(0x5e35e7e9fb0c828ull)) {
-		auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_key_return>(_value);
-		if(!_result) {
-			throw std::logic_error("ClusterAsyncClient: !_result");
-		}
-		const auto _iter = vnx_queue_get_key.find(_request_id);
-		if(_iter != vnx_queue_get_key.end()) {
+		case 12: {
+			const auto _iter = vnx_queue_get_key.find(_request_id);
+			if(_iter == vnx_queue_get_key.end()) {
+				throw std::runtime_error("ClusterAsyncClient: callback not found");
+			}
 			const auto _callback = std::move(_iter->second.first);
 			vnx_queue_get_key.erase(_iter);
-			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {
-				_callback(_result->_ret_0);
+				if(auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_key_return>(_value)) {
+					_callback(_result->_ret_0);
+				} else if(_value && !_value->is_void()) {
+					_callback(_value->get_field_by_index(0).to<::vnx::Variant>());
+				} else {
+					throw std::logic_error("ClusterAsyncClient: invalid return value");
+				}
 			}
-		} else {
-			throw std::runtime_error("ClusterAsyncClient: received unknown return request_id");
+			break;
 		}
-	}
-	else if(_type_hash == vnx::Hash64(0x5a68455b9ce7b40full)) {
-		auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_keys_return>(_value);
-		if(!_result) {
-			throw std::logic_error("ClusterAsyncClient: !_result");
-		}
-		const auto _iter = vnx_queue_get_keys.find(_request_id);
-		if(_iter != vnx_queue_get_keys.end()) {
+		case 13: {
+			const auto _iter = vnx_queue_get_keys.find(_request_id);
+			if(_iter == vnx_queue_get_keys.end()) {
+				throw std::runtime_error("ClusterAsyncClient: callback not found");
+			}
 			const auto _callback = std::move(_iter->second.first);
 			vnx_queue_get_keys.erase(_iter);
-			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {
-				_callback(_result->_ret_0);
+				if(auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_keys_return>(_value)) {
+					_callback(_result->_ret_0);
+				} else if(_value && !_value->is_void()) {
+					_callback(_value->get_field_by_index(0).to<std::vector<std::pair<uint64_t, ::vnx::Variant>>>());
+				} else {
+					throw std::logic_error("ClusterAsyncClient: invalid return value");
+				}
 			}
-		} else {
-			throw std::runtime_error("ClusterAsyncClient: received unknown return request_id");
+			break;
 		}
-	}
-	else if(_type_hash == vnx::Hash64(0x64b5d034680b0fb1ull)) {
-		const auto _iter = vnx_queue_unlock.find(_request_id);
-		if(_iter != vnx_queue_unlock.end()) {
+		case 14: {
+			const auto _iter = vnx_queue_unlock.find(_request_id);
+			if(_iter == vnx_queue_unlock.end()) {
+				throw std::runtime_error("ClusterAsyncClient: callback not found");
+			}
 			const auto _callback = std::move(_iter->second.first);
 			vnx_queue_unlock.erase(_iter);
-			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {
 				_callback();
 			}
-		} else {
-			throw std::runtime_error("ClusterAsyncClient: received unknown return request_id");
+			break;
 		}
-	}
-	else if(_type_hash == vnx::Hash64(0xc2e2a98c4fda747ull)) {
-		auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_sync_from_return>(_value);
-		if(!_result) {
-			throw std::logic_error("ClusterAsyncClient: !_result");
-		}
-		const auto _iter = vnx_queue_sync_from.find(_request_id);
-		if(_iter != vnx_queue_sync_from.end()) {
+		case 15: {
+			const auto _iter = vnx_queue_sync_from.find(_request_id);
+			if(_iter == vnx_queue_sync_from.end()) {
+				throw std::runtime_error("ClusterAsyncClient: callback not found");
+			}
 			const auto _callback = std::move(_iter->second.first);
 			vnx_queue_sync_from.erase(_iter);
-			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {
-				_callback(_result->_ret_0);
+				if(auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_sync_from_return>(_value)) {
+					_callback(_result->_ret_0);
+				} else if(_value && !_value->is_void()) {
+					_callback(_value->get_field_by_index(0).to<int64_t>());
+				} else {
+					throw std::logic_error("ClusterAsyncClient: invalid return value");
+				}
 			}
-		} else {
-			throw std::runtime_error("ClusterAsyncClient: received unknown return request_id");
+			break;
 		}
-	}
-	else if(_type_hash == vnx::Hash64(0xa373940430d0fa20ull)) {
-		auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_sync_range_return>(_value);
-		if(!_result) {
-			throw std::logic_error("ClusterAsyncClient: !_result");
-		}
-		const auto _iter = vnx_queue_sync_range.find(_request_id);
-		if(_iter != vnx_queue_sync_range.end()) {
+		case 16: {
+			const auto _iter = vnx_queue_sync_range.find(_request_id);
+			if(_iter == vnx_queue_sync_range.end()) {
+				throw std::runtime_error("ClusterAsyncClient: callback not found");
+			}
 			const auto _callback = std::move(_iter->second.first);
 			vnx_queue_sync_range.erase(_iter);
-			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {
-				_callback(_result->_ret_0);
+				if(auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_sync_range_return>(_value)) {
+					_callback(_result->_ret_0);
+				} else if(_value && !_value->is_void()) {
+					_callback(_value->get_field_by_index(0).to<int64_t>());
+				} else {
+					throw std::logic_error("ClusterAsyncClient: invalid return value");
+				}
 			}
-		} else {
-			throw std::runtime_error("ClusterAsyncClient: received unknown return request_id");
+			break;
 		}
-	}
-	else if(_type_hash == vnx::Hash64(0x68518904fdf771c7ull)) {
-		auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_sync_all_return>(_value);
-		if(!_result) {
-			throw std::logic_error("ClusterAsyncClient: !_result");
-		}
-		const auto _iter = vnx_queue_sync_all.find(_request_id);
-		if(_iter != vnx_queue_sync_all.end()) {
+		case 17: {
+			const auto _iter = vnx_queue_sync_all.find(_request_id);
+			if(_iter == vnx_queue_sync_all.end()) {
+				throw std::runtime_error("ClusterAsyncClient: callback not found");
+			}
 			const auto _callback = std::move(_iter->second.first);
 			vnx_queue_sync_all.erase(_iter);
-			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {
-				_callback(_result->_ret_0);
+				if(auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_sync_all_return>(_value)) {
+					_callback(_result->_ret_0);
+				} else if(_value && !_value->is_void()) {
+					_callback(_value->get_field_by_index(0).to<int64_t>());
+				} else {
+					throw std::logic_error("ClusterAsyncClient: invalid return value");
+				}
 			}
-		} else {
-			throw std::runtime_error("ClusterAsyncClient: received unknown return request_id");
+			break;
 		}
-	}
-	else if(_type_hash == vnx::Hash64(0x69af743aa67ea377ull)) {
-		auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_sync_all_keys_return>(_value);
-		if(!_result) {
-			throw std::logic_error("ClusterAsyncClient: !_result");
-		}
-		const auto _iter = vnx_queue_sync_all_keys.find(_request_id);
-		if(_iter != vnx_queue_sync_all_keys.end()) {
+		case 18: {
+			const auto _iter = vnx_queue_sync_all_keys.find(_request_id);
+			if(_iter == vnx_queue_sync_all_keys.end()) {
+				throw std::runtime_error("ClusterAsyncClient: callback not found");
+			}
 			const auto _callback = std::move(_iter->second.first);
 			vnx_queue_sync_all_keys.erase(_iter);
-			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {
-				_callback(_result->_ret_0);
+				if(auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_sync_all_keys_return>(_value)) {
+					_callback(_result->_ret_0);
+				} else if(_value && !_value->is_void()) {
+					_callback(_value->get_field_by_index(0).to<int64_t>());
+				} else {
+					throw std::logic_error("ClusterAsyncClient: invalid return value");
+				}
 			}
-		} else {
-			throw std::runtime_error("ClusterAsyncClient: received unknown return request_id");
+			break;
 		}
-	}
-	else if(_type_hash == vnx::Hash64(0x8e03e14a8636511dull)) {
-		const auto _iter = vnx_queue_cancel_sync_job.find(_request_id);
-		if(_iter != vnx_queue_cancel_sync_job.end()) {
+		case 19: {
+			const auto _iter = vnx_queue_cancel_sync_job.find(_request_id);
+			if(_iter == vnx_queue_cancel_sync_job.end()) {
+				throw std::runtime_error("ClusterAsyncClient: callback not found");
+			}
 			const auto _callback = std::move(_iter->second.first);
 			vnx_queue_cancel_sync_job.erase(_iter);
-			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {
 				_callback();
 			}
-		} else {
-			throw std::runtime_error("ClusterAsyncClient: received unknown return request_id");
+			break;
 		}
-	}
-	else if(_type_hash == vnx::Hash64(0x5f02038d66b3d8b5ull)) {
-		const auto _iter = vnx_queue_store_value.find(_request_id);
-		if(_iter != vnx_queue_store_value.end()) {
+		case 20: {
+			const auto _iter = vnx_queue_store_value.find(_request_id);
+			if(_iter == vnx_queue_store_value.end()) {
+				throw std::runtime_error("ClusterAsyncClient: callback not found");
+			}
 			const auto _callback = std::move(_iter->second.first);
 			vnx_queue_store_value.erase(_iter);
-			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {
 				_callback();
 			}
-		} else {
-			throw std::runtime_error("ClusterAsyncClient: received unknown return request_id");
+			break;
 		}
-	}
-	else if(_type_hash == vnx::Hash64(0xd19a5a98ea9c632eull)) {
-		const auto _iter = vnx_queue_store_values.find(_request_id);
-		if(_iter != vnx_queue_store_values.end()) {
+		case 21: {
+			const auto _iter = vnx_queue_store_values.find(_request_id);
+			if(_iter == vnx_queue_store_values.end()) {
+				throw std::runtime_error("ClusterAsyncClient: callback not found");
+			}
 			const auto _callback = std::move(_iter->second.first);
 			vnx_queue_store_values.erase(_iter);
-			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {
 				_callback();
 			}
-		} else {
-			throw std::runtime_error("ClusterAsyncClient: received unknown return request_id");
+			break;
 		}
-	}
-	else if(_type_hash == vnx::Hash64(0x5120f9f0f9c280bbull)) {
-		const auto _iter = vnx_queue_store_value_delay.find(_request_id);
-		if(_iter != vnx_queue_store_value_delay.end()) {
+		case 22: {
+			const auto _iter = vnx_queue_store_value_delay.find(_request_id);
+			if(_iter == vnx_queue_store_value_delay.end()) {
+				throw std::runtime_error("ClusterAsyncClient: callback not found");
+			}
 			const auto _callback = std::move(_iter->second.first);
 			vnx_queue_store_value_delay.erase(_iter);
-			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {
 				_callback();
 			}
-		} else {
-			throw std::runtime_error("ClusterAsyncClient: received unknown return request_id");
+			break;
 		}
-	}
-	else if(_type_hash == vnx::Hash64(0xc60b951a5784d824ull)) {
-		const auto _iter = vnx_queue_store_values_delay.find(_request_id);
-		if(_iter != vnx_queue_store_values_delay.end()) {
+		case 23: {
+			const auto _iter = vnx_queue_store_values_delay.find(_request_id);
+			if(_iter == vnx_queue_store_values_delay.end()) {
+				throw std::runtime_error("ClusterAsyncClient: callback not found");
+			}
 			const auto _callback = std::move(_iter->second.first);
 			vnx_queue_store_values_delay.erase(_iter);
-			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {
 				_callback();
 			}
-		} else {
-			throw std::runtime_error("ClusterAsyncClient: received unknown return request_id");
+			break;
 		}
-	}
-	else if(_type_hash == vnx::Hash64(0xd20199c7d67361d7ull)) {
-		const auto _iter = vnx_queue_delete_value.find(_request_id);
-		if(_iter != vnx_queue_delete_value.end()) {
+		case 24: {
+			const auto _iter = vnx_queue_delete_value.find(_request_id);
+			if(_iter == vnx_queue_delete_value.end()) {
+				throw std::runtime_error("ClusterAsyncClient: callback not found");
+			}
 			const auto _callback = std::move(_iter->second.first);
 			vnx_queue_delete_value.erase(_iter);
-			vnx_num_pending--;
 			_lock.unlock();
 			if(_callback) {
 				_callback();
 			}
-		} else {
-			throw std::runtime_error("ClusterAsyncClient: received unknown return request_id");
+			break;
 		}
+		default:
+			if(_index >= 0) {
+				throw std::logic_error("ClusterAsyncClient: invalid callback index");
+			}
 	}
-	else {
-		throw std::runtime_error("ClusterAsyncClient: received unknown return type");
-	}
+	return _index;
 }
 
 

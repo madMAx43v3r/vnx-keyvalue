@@ -16,23 +16,23 @@
 #include <vnx/keyvalue/Storage_get_keys.hxx>
 #include <vnx/keyvalue/Storage_get_keys_return.hxx>
 #include <vnx/keyvalue/Storage_get_value.hxx>
+#include <vnx/keyvalue/Storage_get_value_return.hxx>
 #include <vnx/keyvalue/Storage_get_value_locked.hxx>
 #include <vnx/keyvalue/Storage_get_value_locked_return.hxx>
-#include <vnx/keyvalue/Storage_get_value_return.hxx>
 #include <vnx/keyvalue/Storage_get_values.hxx>
 #include <vnx/keyvalue/Storage_get_values_return.hxx>
 #include <vnx/keyvalue/Storage_store_value.hxx>
+#include <vnx/keyvalue/Storage_store_value_return.hxx>
 #include <vnx/keyvalue/Storage_store_value_delay.hxx>
 #include <vnx/keyvalue/Storage_store_value_delay_return.hxx>
-#include <vnx/keyvalue/Storage_store_value_return.hxx>
 #include <vnx/keyvalue/Storage_store_values.hxx>
+#include <vnx/keyvalue/Storage_store_values_return.hxx>
 #include <vnx/keyvalue/Storage_store_values_delay.hxx>
 #include <vnx/keyvalue/Storage_store_values_delay_return.hxx>
-#include <vnx/keyvalue/Storage_store_values_return.hxx>
 #include <vnx/keyvalue/Storage_sync_all.hxx>
+#include <vnx/keyvalue/Storage_sync_all_return.hxx>
 #include <vnx/keyvalue/Storage_sync_all_keys.hxx>
 #include <vnx/keyvalue/Storage_sync_all_keys_return.hxx>
-#include <vnx/keyvalue/Storage_sync_all_return.hxx>
 #include <vnx/keyvalue/Storage_sync_from.hxx>
 #include <vnx/keyvalue/Storage_sync_from_return.hxx>
 #include <vnx/keyvalue/Storage_sync_range.hxx>
@@ -40,6 +40,7 @@
 #include <vnx/keyvalue/Storage_unlock.hxx>
 #include <vnx/keyvalue/Storage_unlock_return.hxx>
 
+#include <vnx/Generic.hxx>
 #include <vnx/vnx.h>
 
 
@@ -60,11 +61,13 @@ std::shared_ptr<const ::vnx::keyvalue::Entry> StorageClient::get_value(const ::v
 	auto _method = ::vnx::keyvalue::Storage_get_value::create();
 	_method->key = key;
 	auto _return_value = vnx_request(_method, false);
-	auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_value_return>(_return_value);
-	if(!_result) {
-		throw std::logic_error("StorageClient: !_result");
+	if(auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_value_return>(_return_value)) {
+		return _result->_ret_0;
+	} else if(_return_value && !_return_value->is_void()) {
+		return _return_value->get_field_by_index(0).to<std::shared_ptr<const ::vnx::keyvalue::Entry>>();
+	} else {
+		throw std::logic_error("StorageClient: invalid return value");
 	}
-	return _result->_ret_0;
 }
 
 std::shared_ptr<const ::vnx::keyvalue::Entry> StorageClient::get_value_locked(const ::vnx::Variant& key, const int32_t& timeout_ms) {
@@ -72,44 +75,52 @@ std::shared_ptr<const ::vnx::keyvalue::Entry> StorageClient::get_value_locked(co
 	_method->key = key;
 	_method->timeout_ms = timeout_ms;
 	auto _return_value = vnx_request(_method, false);
-	auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_value_locked_return>(_return_value);
-	if(!_result) {
-		throw std::logic_error("StorageClient: !_result");
+	if(auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_value_locked_return>(_return_value)) {
+		return _result->_ret_0;
+	} else if(_return_value && !_return_value->is_void()) {
+		return _return_value->get_field_by_index(0).to<std::shared_ptr<const ::vnx::keyvalue::Entry>>();
+	} else {
+		throw std::logic_error("StorageClient: invalid return value");
 	}
-	return _result->_ret_0;
 }
 
 std::vector<std::shared_ptr<const ::vnx::keyvalue::Entry>> StorageClient::get_values(const std::vector<::vnx::Variant>& keys) {
 	auto _method = ::vnx::keyvalue::Storage_get_values::create();
 	_method->keys = keys;
 	auto _return_value = vnx_request(_method, false);
-	auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_values_return>(_return_value);
-	if(!_result) {
-		throw std::logic_error("StorageClient: !_result");
+	if(auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_values_return>(_return_value)) {
+		return _result->_ret_0;
+	} else if(_return_value && !_return_value->is_void()) {
+		return _return_value->get_field_by_index(0).to<std::vector<std::shared_ptr<const ::vnx::keyvalue::Entry>>>();
+	} else {
+		throw std::logic_error("StorageClient: invalid return value");
 	}
-	return _result->_ret_0;
 }
 
 ::vnx::Variant StorageClient::get_key(const uint64_t& version) {
 	auto _method = ::vnx::keyvalue::Storage_get_key::create();
 	_method->version = version;
 	auto _return_value = vnx_request(_method, false);
-	auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_key_return>(_return_value);
-	if(!_result) {
-		throw std::logic_error("StorageClient: !_result");
+	if(auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_key_return>(_return_value)) {
+		return _result->_ret_0;
+	} else if(_return_value && !_return_value->is_void()) {
+		return _return_value->get_field_by_index(0).to<::vnx::Variant>();
+	} else {
+		throw std::logic_error("StorageClient: invalid return value");
 	}
-	return _result->_ret_0;
 }
 
 std::vector<std::pair<uint64_t, ::vnx::Variant>> StorageClient::get_keys(const std::vector<uint64_t>& versions) {
 	auto _method = ::vnx::keyvalue::Storage_get_keys::create();
 	_method->versions = versions;
 	auto _return_value = vnx_request(_method, false);
-	auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_keys_return>(_return_value);
-	if(!_result) {
-		throw std::logic_error("StorageClient: !_result");
+	if(auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_get_keys_return>(_return_value)) {
+		return _result->_ret_0;
+	} else if(_return_value && !_return_value->is_void()) {
+		return _return_value->get_field_by_index(0).to<std::vector<std::pair<uint64_t, ::vnx::Variant>>>();
+	} else {
+		throw std::logic_error("StorageClient: invalid return value");
 	}
-	return _result->_ret_0;
 }
 
 void StorageClient::unlock(const ::vnx::Variant& key) {
@@ -129,11 +140,13 @@ int64_t StorageClient::sync_from(const ::vnx::TopicPtr& topic, const uint64_t& v
 	_method->topic = topic;
 	_method->version = version;
 	auto _return_value = vnx_request(_method, false);
-	auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_sync_from_return>(_return_value);
-	if(!_result) {
-		throw std::logic_error("StorageClient: !_result");
+	if(auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_sync_from_return>(_return_value)) {
+		return _result->_ret_0;
+	} else if(_return_value && !_return_value->is_void()) {
+		return _return_value->get_field_by_index(0).to<int64_t>();
+	} else {
+		throw std::logic_error("StorageClient: invalid return value");
 	}
-	return _result->_ret_0;
 }
 
 int64_t StorageClient::sync_range(const ::vnx::TopicPtr& topic, const uint64_t& begin, const uint64_t& end) {
@@ -142,33 +155,39 @@ int64_t StorageClient::sync_range(const ::vnx::TopicPtr& topic, const uint64_t& 
 	_method->begin = begin;
 	_method->end = end;
 	auto _return_value = vnx_request(_method, false);
-	auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_sync_range_return>(_return_value);
-	if(!_result) {
-		throw std::logic_error("StorageClient: !_result");
+	if(auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_sync_range_return>(_return_value)) {
+		return _result->_ret_0;
+	} else if(_return_value && !_return_value->is_void()) {
+		return _return_value->get_field_by_index(0).to<int64_t>();
+	} else {
+		throw std::logic_error("StorageClient: invalid return value");
 	}
-	return _result->_ret_0;
 }
 
 int64_t StorageClient::sync_all(const ::vnx::TopicPtr& topic) {
 	auto _method = ::vnx::keyvalue::Storage_sync_all::create();
 	_method->topic = topic;
 	auto _return_value = vnx_request(_method, false);
-	auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_sync_all_return>(_return_value);
-	if(!_result) {
-		throw std::logic_error("StorageClient: !_result");
+	if(auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_sync_all_return>(_return_value)) {
+		return _result->_ret_0;
+	} else if(_return_value && !_return_value->is_void()) {
+		return _return_value->get_field_by_index(0).to<int64_t>();
+	} else {
+		throw std::logic_error("StorageClient: invalid return value");
 	}
-	return _result->_ret_0;
 }
 
 int64_t StorageClient::sync_all_keys(const ::vnx::TopicPtr& topic) {
 	auto _method = ::vnx::keyvalue::Storage_sync_all_keys::create();
 	_method->topic = topic;
 	auto _return_value = vnx_request(_method, false);
-	auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_sync_all_keys_return>(_return_value);
-	if(!_result) {
-		throw std::logic_error("StorageClient: !_result");
+	if(auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_sync_all_keys_return>(_return_value)) {
+		return _result->_ret_0;
+	} else if(_return_value && !_return_value->is_void()) {
+		return _return_value->get_field_by_index(0).to<int64_t>();
+	} else {
+		throw std::logic_error("StorageClient: invalid return value");
 	}
-	return _result->_ret_0;
 }
 
 void StorageClient::cancel_sync_job(const int64_t& job_id) {

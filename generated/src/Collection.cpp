@@ -61,16 +61,8 @@ void Collection::write(std::ostream& _out) const {
 }
 
 void Collection::read(std::istream& _in) {
-	std::map<std::string, std::string> _object;
-	vnx::read_object(_in, _object);
-	for(const auto& _entry : _object) {
-		if(_entry.first == "block_list") {
-			vnx::from_string(_entry.second, block_list);
-		} else if(_entry.first == "delete_list") {
-			vnx::from_string(_entry.second, delete_list);
-		} else if(_entry.first == "name") {
-			vnx::from_string(_entry.second, name);
-		}
+	if(auto _json = vnx::read_json(_in)) {
+		from_object(_json->to_object());
 	}
 }
 
@@ -230,7 +222,7 @@ void write(TypeOutput& out, const ::vnx::keyvalue::Collection& value, const Type
 		out.write_type_code(type_code);
 		vnx::write_class_header<::vnx::keyvalue::Collection>(out);
 	}
-	if(code && code[0] == CODE_STRUCT) {
+	else if(code && code[0] == CODE_STRUCT) {
 		type_code = type_code->depends[code[1]];
 	}
 	vnx::write(out, value.name, type_code, type_code->fields[0].code.data());

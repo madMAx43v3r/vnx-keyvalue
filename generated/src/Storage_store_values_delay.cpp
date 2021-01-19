@@ -61,14 +61,8 @@ void Storage_store_values_delay::write(std::ostream& _out) const {
 }
 
 void Storage_store_values_delay::read(std::istream& _in) {
-	std::map<std::string, std::string> _object;
-	vnx::read_object(_in, _object);
-	for(const auto& _entry : _object) {
-		if(_entry.first == "delay_ms") {
-			vnx::from_string(_entry.second, delay_ms);
-		} else if(_entry.first == "values") {
-			vnx::from_string(_entry.second, values);
-		}
+	if(auto _json = vnx::read_json(_in)) {
+		from_object(_json->to_object());
 	}
 }
 
@@ -220,7 +214,7 @@ void write(TypeOutput& out, const ::vnx::keyvalue::Storage_store_values_delay& v
 		out.write_type_code(type_code);
 		vnx::write_class_header<::vnx::keyvalue::Storage_store_values_delay>(out);
 	}
-	if(code && code[0] == CODE_STRUCT) {
+	else if(code && code[0] == CODE_STRUCT) {
 		type_code = type_code->depends[code[1]];
 	}
 	char* const _buf = out.write(4);

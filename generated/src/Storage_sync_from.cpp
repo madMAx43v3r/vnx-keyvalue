@@ -61,14 +61,8 @@ void Storage_sync_from::write(std::ostream& _out) const {
 }
 
 void Storage_sync_from::read(std::istream& _in) {
-	std::map<std::string, std::string> _object;
-	vnx::read_object(_in, _object);
-	for(const auto& _entry : _object) {
-		if(_entry.first == "topic") {
-			vnx::from_string(_entry.second, topic);
-		} else if(_entry.first == "version") {
-			vnx::from_string(_entry.second, version);
-		}
+	if(auto _json = vnx::read_json(_in)) {
+		from_object(_json->to_object());
 	}
 }
 
@@ -221,7 +215,7 @@ void write(TypeOutput& out, const ::vnx::keyvalue::Storage_sync_from& value, con
 		out.write_type_code(type_code);
 		vnx::write_class_header<::vnx::keyvalue::Storage_sync_from>(out);
 	}
-	if(code && code[0] == CODE_STRUCT) {
+	else if(code && code[0] == CODE_STRUCT) {
 		type_code = type_code->depends[code[1]];
 	}
 	char* const _buf = out.write(8);

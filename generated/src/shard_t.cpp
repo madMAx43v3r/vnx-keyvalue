@@ -58,14 +58,8 @@ void shard_t::write(std::ostream& _out) const {
 }
 
 void shard_t::read(std::istream& _in) {
-	std::map<std::string, std::string> _object;
-	vnx::read_object(_in, _object);
-	for(const auto& _entry : _object) {
-		if(_entry.first == "index") {
-			vnx::from_string(_entry.second, index);
-		} else if(_entry.first == "size") {
-			vnx::from_string(_entry.second, size);
-		}
+	if(auto _json = vnx::read_json(_in)) {
+		from_object(_json->to_object());
 	}
 }
 
@@ -218,7 +212,7 @@ void write(TypeOutput& out, const ::vnx::keyvalue::shard_t& value, const TypeCod
 		out.write_type_code(type_code);
 		vnx::write_class_header<::vnx::keyvalue::shard_t>(out);
 	}
-	if(code && code[0] == CODE_STRUCT) {
+	else if(code && code[0] == CODE_STRUCT) {
 		type_code = type_code->depends[code[1]];
 	}
 	char* const _buf = out.write(4);

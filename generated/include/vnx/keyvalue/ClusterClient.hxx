@@ -45,6 +45,8 @@ public:
 	
 	void vnx_stop_async();
 	
+	vnx::bool_t vnx_self_test();
+	
 	std::shared_ptr<const ::vnx::keyvalue::Entry> get_value(const ::vnx::Variant& key);
 	
 	std::shared_ptr<const ::vnx::keyvalue::Entry> get_value_locked(const ::vnx::Variant& key, const int32_t& timeout_ms);

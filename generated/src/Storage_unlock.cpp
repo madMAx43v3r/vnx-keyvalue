@@ -59,12 +59,8 @@ void Storage_unlock::write(std::ostream& _out) const {
 }
 
 void Storage_unlock::read(std::istream& _in) {
-	std::map<std::string, std::string> _object;
-	vnx::read_object(_in, _object);
-	for(const auto& _entry : _object) {
-		if(_entry.first == "key") {
-			vnx::from_string(_entry.second, key);
-		}
+	if(auto _json = vnx::read_json(_in)) {
+		from_object(_json->to_object());
 	}
 }
 
@@ -196,7 +192,7 @@ void write(TypeOutput& out, const ::vnx::keyvalue::Storage_unlock& value, const 
 		out.write_type_code(type_code);
 		vnx::write_class_header<::vnx::keyvalue::Storage_unlock>(out);
 	}
-	if(code && code[0] == CODE_STRUCT) {
+	else if(code && code[0] == CODE_STRUCT) {
 		type_code = type_code->depends[code[1]];
 	}
 	vnx::write(out, value.key, type_code, type_code->fields[0].code.data());

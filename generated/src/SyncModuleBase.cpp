@@ -7,19 +7,21 @@
 #include <vnx/Hash64.hpp>
 #include <vnx/Module.h>
 #include <vnx/ModuleInterface_vnx_get_config.hxx>
+#include <vnx/ModuleInterface_vnx_get_config_return.hxx>
 #include <vnx/ModuleInterface_vnx_get_config_object.hxx>
 #include <vnx/ModuleInterface_vnx_get_config_object_return.hxx>
-#include <vnx/ModuleInterface_vnx_get_config_return.hxx>
 #include <vnx/ModuleInterface_vnx_get_module_info.hxx>
 #include <vnx/ModuleInterface_vnx_get_module_info_return.hxx>
 #include <vnx/ModuleInterface_vnx_get_type_code.hxx>
 #include <vnx/ModuleInterface_vnx_get_type_code_return.hxx>
 #include <vnx/ModuleInterface_vnx_restart.hxx>
 #include <vnx/ModuleInterface_vnx_restart_return.hxx>
+#include <vnx/ModuleInterface_vnx_self_test.hxx>
+#include <vnx/ModuleInterface_vnx_self_test_return.hxx>
 #include <vnx/ModuleInterface_vnx_set_config.hxx>
+#include <vnx/ModuleInterface_vnx_set_config_return.hxx>
 #include <vnx/ModuleInterface_vnx_set_config_object.hxx>
 #include <vnx/ModuleInterface_vnx_set_config_object_return.hxx>
-#include <vnx/ModuleInterface_vnx_set_config_return.hxx>
 #include <vnx/ModuleInterface_vnx_stop.hxx>
 #include <vnx/ModuleInterface_vnx_stop_return.hxx>
 #include <vnx/TopicPtr.hpp>
@@ -39,12 +41,12 @@ const vnx::Hash64 SyncModuleBase::VNX_CODE_HASH(0x16148dd4b4c87a0dull);
 SyncModuleBase::SyncModuleBase(const std::string& _vnx_name)
 	:	Module::Module(_vnx_name)
 {
-	vnx::read_config(vnx_name + ".add_only", add_only);
-	vnx::read_config(vnx_name + ".buffer_size", buffer_size);
-	vnx::read_config(vnx_name + ".dst_addr", dst_addr);
 	vnx::read_config(vnx_name + ".input_sync", input_sync);
 	vnx::read_config(vnx_name + ".src_addr", src_addr);
+	vnx::read_config(vnx_name + ".dst_addr", dst_addr);
+	vnx::read_config(vnx_name + ".buffer_size", buffer_size);
 	vnx::read_config(vnx_name + ".stats_interval_ms", stats_interval_ms);
+	vnx::read_config(vnx_name + ".add_only", add_only);
 }
 
 vnx::Hash64 SyncModuleBase::get_type_hash() const {
@@ -83,22 +85,8 @@ void SyncModuleBase::write(std::ostream& _out) const {
 }
 
 void SyncModuleBase::read(std::istream& _in) {
-	std::map<std::string, std::string> _object;
-	vnx::read_object(_in, _object);
-	for(const auto& _entry : _object) {
-		if(_entry.first == "add_only") {
-			vnx::from_string(_entry.second, add_only);
-		} else if(_entry.first == "buffer_size") {
-			vnx::from_string(_entry.second, buffer_size);
-		} else if(_entry.first == "dst_addr") {
-			vnx::from_string(_entry.second, dst_addr);
-		} else if(_entry.first == "input_sync") {
-			vnx::from_string(_entry.second, input_sync);
-		} else if(_entry.first == "src_addr") {
-			vnx::from_string(_entry.second, src_addr);
-		} else if(_entry.first == "stats_interval_ms") {
-			vnx::from_string(_entry.second, stats_interval_ms);
-		}
+	if(auto _json = vnx::read_json(_in)) {
+		from_object(_json->to_object());
 	}
 }
 
@@ -198,7 +186,7 @@ std::shared_ptr<vnx::TypeCode> SyncModuleBase::static_create_type_code() {
 	type_code->type_hash = vnx::Hash64(0x508da303057fe58cull);
 	type_code->code_hash = vnx::Hash64(0x16148dd4b4c87a0dull);
 	type_code->is_native = true;
-	type_code->methods.resize(8);
+	type_code->methods.resize(9);
 	type_code->methods[0] = ::vnx::ModuleInterface_vnx_get_config_object::static_get_type_code();
 	type_code->methods[1] = ::vnx::ModuleInterface_vnx_get_config::static_get_type_code();
 	type_code->methods[2] = ::vnx::ModuleInterface_vnx_set_config_object::static_get_type_code();
@@ -207,6 +195,7 @@ std::shared_ptr<vnx::TypeCode> SyncModuleBase::static_create_type_code() {
 	type_code->methods[5] = ::vnx::ModuleInterface_vnx_get_module_info::static_get_type_code();
 	type_code->methods[6] = ::vnx::ModuleInterface_vnx_restart::static_get_type_code();
 	type_code->methods[7] = ::vnx::ModuleInterface_vnx_stop::static_get_type_code();
+	type_code->methods[8] = ::vnx::ModuleInterface_vnx_self_test::static_get_type_code();
 	type_code->fields.resize(6);
 	{
 		vnx::TypeField& field = type_code->fields[0];
@@ -331,6 +320,14 @@ std::shared_ptr<vnx::Value> SyncModuleBase::vnx_call_switch(std::shared_ptr<cons
 		auto _return_value = ::vnx::ModuleInterface_vnx_stop_return::create();
 		vnx_stop();
 		return _return_value;
+	} else if(_type_hash == vnx::Hash64(0x6ce3775b41a42697ull)) {
+		auto _args = std::dynamic_pointer_cast<const ::vnx::ModuleInterface_vnx_self_test>(_method);
+		if(!_args) {
+			throw std::logic_error("vnx_call_switch(): !_args");
+		}
+		auto _return_value = ::vnx::ModuleInterface_vnx_self_test_return::create();
+		_return_value->_ret_0 = vnx_self_test();
+		return _return_value;
 	}
 	auto _ex = vnx::NoSuchMethod::create();
 	_ex->dst_mac = vnx_request ? vnx_request->dst_mac : vnx::Hash64();
@@ -416,7 +413,7 @@ void write(TypeOutput& out, const ::vnx::keyvalue::SyncModuleBase& value, const 
 		out.write_type_code(type_code);
 		vnx::write_class_header<::vnx::keyvalue::SyncModuleBase>(out);
 	}
-	if(code && code[0] == CODE_STRUCT) {
+	else if(code && code[0] == CODE_STRUCT) {
 		type_code = type_code->depends[code[1]];
 	}
 	char* const _buf = out.write(9);

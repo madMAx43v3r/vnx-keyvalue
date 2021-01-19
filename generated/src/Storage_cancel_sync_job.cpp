@@ -58,12 +58,8 @@ void Storage_cancel_sync_job::write(std::ostream& _out) const {
 }
 
 void Storage_cancel_sync_job::read(std::istream& _in) {
-	std::map<std::string, std::string> _object;
-	vnx::read_object(_in, _object);
-	for(const auto& _entry : _object) {
-		if(_entry.first == "job_id") {
-			vnx::from_string(_entry.second, job_id);
-		}
+	if(auto _json = vnx::read_json(_in)) {
+		from_object(_json->to_object());
 	}
 }
 
@@ -200,7 +196,7 @@ void write(TypeOutput& out, const ::vnx::keyvalue::Storage_cancel_sync_job& valu
 		out.write_type_code(type_code);
 		vnx::write_class_header<::vnx::keyvalue::Storage_cancel_sync_job>(out);
 	}
-	if(code && code[0] == CODE_STRUCT) {
+	else if(code && code[0] == CODE_STRUCT) {
 		type_code = type_code->depends[code[1]];
 	}
 	char* const _buf = out.write(8);

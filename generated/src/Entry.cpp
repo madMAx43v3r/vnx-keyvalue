@@ -62,16 +62,8 @@ void Entry::write(std::ostream& _out) const {
 }
 
 void Entry::read(std::istream& _in) {
-	std::map<std::string, std::string> _object;
-	vnx::read_object(_in, _object);
-	for(const auto& _entry : _object) {
-		if(_entry.first == "key") {
-			vnx::from_string(_entry.second, key);
-		} else if(_entry.first == "value") {
-			vnx::from_string(_entry.second, value);
-		} else if(_entry.first == "version") {
-			vnx::from_string(_entry.second, version);
-		}
+	if(auto _json = vnx::read_json(_in)) {
+		from_object(_json->to_object());
 	}
 }
 
@@ -236,7 +228,7 @@ void write(TypeOutput& out, const ::vnx::keyvalue::Entry& value, const TypeCode*
 		out.write_type_code(type_code);
 		vnx::write_class_header<::vnx::keyvalue::Entry>(out);
 	}
-	if(code && code[0] == CODE_STRUCT) {
+	else if(code && code[0] == CODE_STRUCT) {
 		type_code = type_code->depends[code[1]];
 	}
 	char* const _buf = out.write(8);
