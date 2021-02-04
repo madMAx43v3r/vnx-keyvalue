@@ -125,24 +125,25 @@ const vnx::TypeCode* ServerInfo::static_get_type_code() {
 }
 
 std::shared_ptr<vnx::TypeCode> ServerInfo::static_create_type_code() {
-	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>();
+	auto type_code = std::make_shared<vnx::TypeCode>();
 	type_code->name = "vnx.keyvalue.ServerInfo";
 	type_code->type_hash = vnx::Hash64(0x84f5671f9ec97c93ull);
 	type_code->code_hash = vnx::Hash64(0x7dc3539ef28aad43ull);
 	type_code->is_native = true;
 	type_code->is_class = true;
+	type_code->native_size = sizeof(::vnx::keyvalue::ServerInfo);
 	type_code->create_value = []() -> std::shared_ptr<vnx::Value> { return std::make_shared<ServerInfo>(); };
 	type_code->depends.resize(1);
 	type_code->depends[0] = ::vnx::keyvalue::shard_t::static_get_type_code();
 	type_code->fields.resize(2);
 	{
-		vnx::TypeField& field = type_code->fields[0];
+		auto& field = type_code->fields[0];
 		field.is_extended = true;
 		field.name = "shard";
 		field.code = {19, 0};
 	}
 	{
-		vnx::TypeField& field = type_code->fields[1];
+		auto& field = type_code->fields[1];
 		field.is_extended = true;
 		field.name = "address";
 		field.code = {4};
@@ -190,7 +191,7 @@ void read(TypeInput& in, ::vnx::keyvalue::ServerInfo& value, const TypeCode* typ
 	}
 	if(type_code->is_matched) {
 	}
-	for(const vnx::TypeField* _field : type_code->ext_fields) {
+	for(const auto* _field : type_code->ext_fields) {
 		switch(_field->native_index) {
 			case 0: vnx::read(in, value.shard, type_code, _field->code.data()); break;
 			case 1: vnx::read(in, value.address, type_code, _field->code.data()); break;

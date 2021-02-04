@@ -5,6 +5,7 @@
 #define INCLUDE_vnx_keyvalue_CacheBase_HXX_
 
 #include <vnx/keyvalue/package.hxx>
+#include <vnx/Hash64.hpp>
 #include <vnx/Module.h>
 #include <vnx/TopicPtr.hpp>
 #include <vnx/Value.h>
@@ -23,6 +24,8 @@ public:
 	
 	static const vnx::Hash64 VNX_TYPE_HASH;
 	static const vnx::Hash64 VNX_CODE_HASH;
+	
+	static constexpr uint64_t VNX_TYPE_ID = 0xce1232a3eb35ccf9ull;
 	
 	CacheBase(const std::string& _vnx_name);
 	
@@ -48,6 +51,8 @@ public:
 	static std::shared_ptr<vnx::TypeCode> static_create_type_code();
 	
 protected:
+	using Super::handle;
+	
 	virtual void get_value_async(const ::vnx::Variant& key, const vnx::request_id_t& _request_id) const = 0;
 	void get_value_async_return(const vnx::request_id_t& _request_id, const std::shared_ptr<const ::vnx::keyvalue::Entry>& _ret_0) const;
 	virtual void get_value_locked_async(const ::vnx::Variant& key, const int32_t& timeout_ms, const vnx::request_id_t& _request_id) const = 0;
@@ -63,6 +68,8 @@ protected:
 	virtual int64_t sync_range(const ::vnx::TopicPtr& topic, const uint64_t& begin, const uint64_t& end) const = 0;
 	virtual int64_t sync_all(const ::vnx::TopicPtr& topic) const = 0;
 	virtual int64_t sync_all_keys(const ::vnx::TopicPtr& topic) const = 0;
+	virtual int64_t sync_all_private(const ::vnx::Hash64& dst_mac) const = 0;
+	virtual int64_t sync_all_keys_private(const ::vnx::Hash64& dst_mac) const = 0;
 	virtual void cancel_sync_job(const int64_t& job_id) = 0;
 	virtual void store_value(const ::vnx::Variant& key, std::shared_ptr<const ::vnx::Value> value) = 0;
 	virtual void store_values(const std::vector<std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>>& values) = 0;
@@ -70,7 +77,7 @@ protected:
 	virtual void store_values_delay(const std::vector<std::pair<::vnx::Variant, std::shared_ptr<const ::vnx::Value>>>& values, const int32_t& delay_ms) = 0;
 	virtual void delete_value(const ::vnx::Variant& key) = 0;
 	
-	void vnx_handle_switch(std::shared_ptr<const vnx::Sample> _sample) override;
+	void vnx_handle_switch(std::shared_ptr<const vnx::Value> _value) override;
 	std::shared_ptr<vnx::Value> vnx_call_switch(std::shared_ptr<const vnx::Value> _method, const vnx::request_id_t& _request_id) override;
 	
 };
@@ -78,5 +85,10 @@ protected:
 
 } // namespace vnx
 } // namespace keyvalue
+
+
+namespace vnx {
+
+} // vnx
 
 #endif // INCLUDE_vnx_keyvalue_CacheBase_HXX_

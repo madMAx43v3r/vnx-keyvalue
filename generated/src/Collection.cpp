@@ -133,28 +133,29 @@ const vnx::TypeCode* Collection::static_get_type_code() {
 }
 
 std::shared_ptr<vnx::TypeCode> Collection::static_create_type_code() {
-	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>();
+	auto type_code = std::make_shared<vnx::TypeCode>();
 	type_code->name = "vnx.keyvalue.Collection";
 	type_code->type_hash = vnx::Hash64(0xf1b6072fecc4ebf8ull);
 	type_code->code_hash = vnx::Hash64(0x131a332e6e934729ull);
 	type_code->is_native = true;
 	type_code->is_class = true;
+	type_code->native_size = sizeof(::vnx::keyvalue::Collection);
 	type_code->create_value = []() -> std::shared_ptr<vnx::Value> { return std::make_shared<Collection>(); };
 	type_code->fields.resize(3);
 	{
-		vnx::TypeField& field = type_code->fields[0];
+		auto& field = type_code->fields[0];
 		field.is_extended = true;
 		field.name = "name";
 		field.code = {32};
 	}
 	{
-		vnx::TypeField& field = type_code->fields[1];
+		auto& field = type_code->fields[1];
 		field.is_extended = true;
 		field.name = "block_list";
 		field.code = {12, 8};
 	}
 	{
-		vnx::TypeField& field = type_code->fields[2];
+		auto& field = type_code->fields[2];
 		field.is_extended = true;
 		field.name = "delete_list";
 		field.code = {12, 8};
@@ -202,7 +203,7 @@ void read(TypeInput& in, ::vnx::keyvalue::Collection& value, const TypeCode* typ
 	}
 	if(type_code->is_matched) {
 	}
-	for(const vnx::TypeField* _field : type_code->ext_fields) {
+	for(const auto* _field : type_code->ext_fields) {
 		switch(_field->native_index) {
 			case 0: vnx::read(in, value.name, type_code, _field->code.data()); break;
 			case 1: vnx::read(in, value.block_list, type_code, _field->code.data()); break;

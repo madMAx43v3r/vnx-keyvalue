@@ -144,32 +144,36 @@ const vnx::TypeCode* IndexEntry::static_get_type_code() {
 }
 
 std::shared_ptr<vnx::TypeCode> IndexEntry::static_create_type_code() {
-	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>();
+	auto type_code = std::make_shared<vnx::TypeCode>();
 	type_code->name = "vnx.keyvalue.IndexEntry";
 	type_code->type_hash = vnx::Hash64(0xbcae33addff34e23ull);
 	type_code->code_hash = vnx::Hash64(0xa731a77b41dd8e8bull);
 	type_code->is_native = true;
 	type_code->is_class = true;
+	type_code->native_size = sizeof(::vnx::keyvalue::IndexEntry);
 	type_code->create_value = []() -> std::shared_ptr<vnx::Value> { return std::make_shared<IndexEntry>(); };
 	type_code->fields.resize(4);
 	{
-		vnx::TypeField& field = type_code->fields[0];
+		auto& field = type_code->fields[0];
 		field.is_extended = true;
 		field.name = "key";
 		field.code = {17};
 	}
 	{
-		vnx::TypeField& field = type_code->fields[1];
+		auto& field = type_code->fields[1];
+		field.data_size = 8;
 		field.name = "version";
 		field.code = {4};
 	}
 	{
-		vnx::TypeField& field = type_code->fields[2];
+		auto& field = type_code->fields[2];
+		field.data_size = 4;
 		field.name = "block_offset";
 		field.code = {3};
 	}
 	{
-		vnx::TypeField& field = type_code->fields[3];
+		auto& field = type_code->fields[3];
+		field.data_size = 4;
 		field.name = "num_bytes";
 		field.code = {3};
 	}
@@ -216,26 +220,17 @@ void read(TypeInput& in, ::vnx::keyvalue::IndexEntry& value, const TypeCode* typ
 	}
 	const char* const _buf = in.read(type_code->total_field_size);
 	if(type_code->is_matched) {
-		{
-			const vnx::TypeField* const _field = type_code->field_map[1];
-			if(_field) {
-				vnx::read_value(_buf + _field->offset, value.version, _field->code.data());
-			}
+		if(const auto* const _field = type_code->field_map[1]) {
+			vnx::read_value(_buf + _field->offset, value.version, _field->code.data());
 		}
-		{
-			const vnx::TypeField* const _field = type_code->field_map[2];
-			if(_field) {
-				vnx::read_value(_buf + _field->offset, value.block_offset, _field->code.data());
-			}
+		if(const auto* const _field = type_code->field_map[2]) {
+			vnx::read_value(_buf + _field->offset, value.block_offset, _field->code.data());
 		}
-		{
-			const vnx::TypeField* const _field = type_code->field_map[3];
-			if(_field) {
-				vnx::read_value(_buf + _field->offset, value.num_bytes, _field->code.data());
-			}
+		if(const auto* const _field = type_code->field_map[3]) {
+			vnx::read_value(_buf + _field->offset, value.num_bytes, _field->code.data());
 		}
 	}
-	for(const vnx::TypeField* _field : type_code->ext_fields) {
+	for(const auto* _field : type_code->ext_fields) {
 		switch(_field->native_index) {
 			case 0: vnx::read(in, value.key, type_code, _field->code.data()); break;
 			default: vnx::skip(in, type_code, _field->code.data());

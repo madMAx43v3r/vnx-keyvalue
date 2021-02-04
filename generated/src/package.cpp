@@ -35,6 +35,10 @@
 #include <vnx/keyvalue/Storage_sync_all_return.hxx>
 #include <vnx/keyvalue/Storage_sync_all_keys.hxx>
 #include <vnx/keyvalue/Storage_sync_all_keys_return.hxx>
+#include <vnx/keyvalue/Storage_sync_all_keys_private.hxx>
+#include <vnx/keyvalue/Storage_sync_all_keys_private_return.hxx>
+#include <vnx/keyvalue/Storage_sync_all_private.hxx>
+#include <vnx/keyvalue/Storage_sync_all_private_return.hxx>
 #include <vnx/keyvalue/Storage_sync_from.hxx>
 #include <vnx/keyvalue/Storage_sync_from_return.hxx>
 #include <vnx/keyvalue/Storage_sync_range.hxx>
@@ -178,6 +182,22 @@ void type<::vnx::keyvalue::Storage_sync_all_keys_return>::create_dynamic_code(st
 	create_dynamic_code(code, ::vnx::keyvalue::Storage_sync_all_keys_return());
 }
 
+void type<::vnx::keyvalue::Storage_sync_all_keys_private>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_sync_all_keys_private());
+}
+
+void type<::vnx::keyvalue::Storage_sync_all_keys_private_return>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_sync_all_keys_private_return());
+}
+
+void type<::vnx::keyvalue::Storage_sync_all_private>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_sync_all_private());
+}
+
+void type<::vnx::keyvalue::Storage_sync_all_private_return>::create_dynamic_code(std::vector<uint16_t>& code) {
+	create_dynamic_code(code, ::vnx::keyvalue::Storage_sync_all_private_return());
+}
+
 void type<::vnx::keyvalue::Storage_sync_from>::create_dynamic_code(std::vector<uint16_t>& code) {
 	create_dynamic_code(code, ::vnx::keyvalue::Storage_sync_from());
 }
@@ -261,6 +281,10 @@ static void register_all_types() {
 	vnx::register_type_code(::vnx::keyvalue::Storage_sync_all_return::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Storage_sync_all_keys::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Storage_sync_all_keys_return::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Storage_sync_all_keys_private::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Storage_sync_all_keys_private_return::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Storage_sync_all_private::static_create_type_code());
+	vnx::register_type_code(::vnx::keyvalue::Storage_sync_all_private_return::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Storage_sync_from::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Storage_sync_from_return::static_create_type_code());
 	vnx::register_type_code(::vnx::keyvalue::Storage_sync_range::static_create_type_code());
@@ -314,6 +338,10 @@ const vnx::TypeCode* const vnx_native_type_code_Storage_sync_all = vnx::get_type
 const vnx::TypeCode* const vnx_native_type_code_Storage_sync_all_return = vnx::get_type_code(vnx::Hash64(0x68518904fdf771c7ull));
 const vnx::TypeCode* const vnx_native_type_code_Storage_sync_all_keys = vnx::get_type_code(vnx::Hash64(0xba52cec87e1556e5ull));
 const vnx::TypeCode* const vnx_native_type_code_Storage_sync_all_keys_return = vnx::get_type_code(vnx::Hash64(0x69af743aa67ea377ull));
+const vnx::TypeCode* const vnx_native_type_code_Storage_sync_all_keys_private = vnx::get_type_code(vnx::Hash64(0xe97e1ae088642d08ull));
+const vnx::TypeCode* const vnx_native_type_code_Storage_sync_all_keys_private_return = vnx::get_type_code(vnx::Hash64(0xa1e52eb7076861a9ull));
+const vnx::TypeCode* const vnx_native_type_code_Storage_sync_all_private = vnx::get_type_code(vnx::Hash64(0xa6bf50c092ed0143ull));
+const vnx::TypeCode* const vnx_native_type_code_Storage_sync_all_private_return = vnx::get_type_code(vnx::Hash64(0x8be85d0f4c49eea1ull));
 const vnx::TypeCode* const vnx_native_type_code_Storage_sync_from = vnx::get_type_code(vnx::Hash64(0xacb686150d0602a6ull));
 const vnx::TypeCode* const vnx_native_type_code_Storage_sync_from_return = vnx::get_type_code(vnx::Hash64(0xc2e2a98c4fda747ull));
 const vnx::TypeCode* const vnx_native_type_code_Storage_sync_range = vnx::get_type_code(vnx::Hash64(0x57e04cb98c5e5698ull));

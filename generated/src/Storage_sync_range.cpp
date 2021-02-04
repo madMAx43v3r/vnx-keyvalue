@@ -135,30 +135,33 @@ const vnx::TypeCode* Storage_sync_range::static_get_type_code() {
 }
 
 std::shared_ptr<vnx::TypeCode> Storage_sync_range::static_create_type_code() {
-	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>();
+	auto type_code = std::make_shared<vnx::TypeCode>();
 	type_code->name = "vnx.keyvalue.Storage.sync_range";
 	type_code->type_hash = vnx::Hash64(0x57e04cb98c5e5698ull);
 	type_code->code_hash = vnx::Hash64(0x4cedc13e84ad882full);
 	type_code->is_native = true;
 	type_code->is_class = true;
 	type_code->is_method = true;
+	type_code->native_size = sizeof(::vnx::keyvalue::Storage_sync_range);
 	type_code->create_value = []() -> std::shared_ptr<vnx::Value> { return std::make_shared<Storage_sync_range>(); };
 	type_code->is_const = true;
 	type_code->return_type = ::vnx::keyvalue::Storage_sync_range_return::static_get_type_code();
 	type_code->fields.resize(3);
 	{
-		vnx::TypeField& field = type_code->fields[0];
+		auto& field = type_code->fields[0];
 		field.is_extended = true;
 		field.name = "topic";
 		field.code = {12, 5};
 	}
 	{
-		vnx::TypeField& field = type_code->fields[1];
+		auto& field = type_code->fields[1];
+		field.data_size = 8;
 		field.name = "begin";
 		field.code = {4};
 	}
 	{
-		vnx::TypeField& field = type_code->fields[2];
+		auto& field = type_code->fields[2];
+		field.data_size = 8;
 		field.name = "end";
 		field.code = {4};
 	}
@@ -205,20 +208,14 @@ void read(TypeInput& in, ::vnx::keyvalue::Storage_sync_range& value, const TypeC
 	}
 	const char* const _buf = in.read(type_code->total_field_size);
 	if(type_code->is_matched) {
-		{
-			const vnx::TypeField* const _field = type_code->field_map[1];
-			if(_field) {
-				vnx::read_value(_buf + _field->offset, value.begin, _field->code.data());
-			}
+		if(const auto* const _field = type_code->field_map[1]) {
+			vnx::read_value(_buf + _field->offset, value.begin, _field->code.data());
 		}
-		{
-			const vnx::TypeField* const _field = type_code->field_map[2];
-			if(_field) {
-				vnx::read_value(_buf + _field->offset, value.end, _field->code.data());
-			}
+		if(const auto* const _field = type_code->field_map[2]) {
+			vnx::read_value(_buf + _field->offset, value.end, _field->code.data());
 		}
 	}
-	for(const vnx::TypeField* _field : type_code->ext_fields) {
+	for(const auto* _field : type_code->ext_fields) {
 		switch(_field->native_index) {
 			case 0: vnx::read(in, value.topic, type_code, _field->code.data()); break;
 			default: vnx::skip(in, type_code, _field->code.data());

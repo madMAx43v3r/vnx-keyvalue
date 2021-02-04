@@ -20,6 +20,8 @@ struct shard_t {
 	static const vnx::Hash64 VNX_TYPE_HASH;
 	static const vnx::Hash64 VNX_CODE_HASH;
 	
+	static constexpr uint64_t VNX_TYPE_ID = 0x2d052c83abce314dull;
+	
 	vnx::Hash64 get_type_hash() const;
 	std::string get_type_name() const;
 	const vnx::TypeCode* get_type_code() const;
@@ -52,5 +54,15 @@ struct shard_t {
 
 } // namespace vnx
 } // namespace keyvalue
+
+
+namespace vnx {
+
+template<>
+struct is_equivalent<::vnx::keyvalue::shard_t> {
+	bool operator()(const uint16_t* code, const TypeCode* type_code);
+};
+
+} // vnx
 
 #endif // INCLUDE_vnx_keyvalue_shard_t_HXX_

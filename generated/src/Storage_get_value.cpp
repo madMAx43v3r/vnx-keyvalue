@@ -115,20 +115,21 @@ const vnx::TypeCode* Storage_get_value::static_get_type_code() {
 }
 
 std::shared_ptr<vnx::TypeCode> Storage_get_value::static_create_type_code() {
-	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>();
+	auto type_code = std::make_shared<vnx::TypeCode>();
 	type_code->name = "vnx.keyvalue.Storage.get_value";
 	type_code->type_hash = vnx::Hash64(0x8f47587c24580111ull);
 	type_code->code_hash = vnx::Hash64(0x5a548f2ba988da48ull);
 	type_code->is_native = true;
 	type_code->is_class = true;
 	type_code->is_method = true;
+	type_code->native_size = sizeof(::vnx::keyvalue::Storage_get_value);
 	type_code->create_value = []() -> std::shared_ptr<vnx::Value> { return std::make_shared<Storage_get_value>(); };
 	type_code->is_const = true;
 	type_code->is_async = true;
 	type_code->return_type = ::vnx::keyvalue::Storage_get_value_return::static_get_type_code();
 	type_code->fields.resize(1);
 	{
-		vnx::TypeField& field = type_code->fields[0];
+		auto& field = type_code->fields[0];
 		field.is_extended = true;
 		field.name = "key";
 		field.code = {17};
@@ -176,7 +177,7 @@ void read(TypeInput& in, ::vnx::keyvalue::Storage_get_value& value, const TypeCo
 	}
 	if(type_code->is_matched) {
 	}
-	for(const vnx::TypeField* _field : type_code->ext_fields) {
+	for(const auto* _field : type_code->ext_fields) {
 		switch(_field->native_index) {
 			case 0: vnx::read(in, value.key, type_code, _field->code.data()); break;
 			default: vnx::skip(in, type_code, _field->code.data());

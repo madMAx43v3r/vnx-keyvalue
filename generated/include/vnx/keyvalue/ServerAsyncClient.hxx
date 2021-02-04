@@ -5,6 +5,7 @@
 #define INCLUDE_vnx_keyvalue_Server_ASYNC_CLIENT_HXX_
 
 #include <vnx/AsyncClient.h>
+#include <vnx/Hash64.hpp>
 #include <vnx/Module.h>
 #include <vnx/TopicPtr.hpp>
 #include <vnx/Value.h>
@@ -97,6 +98,14 @@ public:
 			const std::function<void(const int64_t&)>& _callback = std::function<void(const int64_t&)>(),
 			const std::function<void(const vnx::exception&)>& _error_callback = std::function<void(const vnx::exception&)>());
 	
+	uint64_t sync_all_private(const ::vnx::Hash64& dst_mac, 
+			const std::function<void(const int64_t&)>& _callback = std::function<void(const int64_t&)>(),
+			const std::function<void(const vnx::exception&)>& _error_callback = std::function<void(const vnx::exception&)>());
+	
+	uint64_t sync_all_keys_private(const ::vnx::Hash64& dst_mac, 
+			const std::function<void(const int64_t&)>& _callback = std::function<void(const int64_t&)>(),
+			const std::function<void(const vnx::exception&)>& _error_callback = std::function<void(const vnx::exception&)>());
+	
 	uint64_t cancel_sync_job(const int64_t& job_id, 
 			const std::function<void()>& _callback = std::function<void()>(),
 			const std::function<void(const vnx::exception&)>& _error_callback = std::function<void(const vnx::exception&)>());
@@ -146,6 +155,8 @@ private:
 	std::unordered_map<uint64_t, std::pair<std::function<void(const int64_t&)>, std::function<void(const vnx::exception&)>>> vnx_queue_sync_range;
 	std::unordered_map<uint64_t, std::pair<std::function<void(const int64_t&)>, std::function<void(const vnx::exception&)>>> vnx_queue_sync_all;
 	std::unordered_map<uint64_t, std::pair<std::function<void(const int64_t&)>, std::function<void(const vnx::exception&)>>> vnx_queue_sync_all_keys;
+	std::unordered_map<uint64_t, std::pair<std::function<void(const int64_t&)>, std::function<void(const vnx::exception&)>>> vnx_queue_sync_all_private;
+	std::unordered_map<uint64_t, std::pair<std::function<void(const int64_t&)>, std::function<void(const vnx::exception&)>>> vnx_queue_sync_all_keys_private;
 	std::unordered_map<uint64_t, std::pair<std::function<void()>, std::function<void(const vnx::exception&)>>> vnx_queue_cancel_sync_job;
 	std::unordered_map<uint64_t, std::pair<std::function<void()>, std::function<void(const vnx::exception&)>>> vnx_queue_store_value;
 	std::unordered_map<uint64_t, std::pair<std::function<void()>, std::function<void(const vnx::exception&)>>> vnx_queue_store_values;

@@ -125,24 +125,26 @@ const vnx::TypeCode* Storage_store_values_delay::static_get_type_code() {
 }
 
 std::shared_ptr<vnx::TypeCode> Storage_store_values_delay::static_create_type_code() {
-	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>();
+	auto type_code = std::make_shared<vnx::TypeCode>();
 	type_code->name = "vnx.keyvalue.Storage.store_values_delay";
 	type_code->type_hash = vnx::Hash64(0xd00ca16a73abf985ull);
 	type_code->code_hash = vnx::Hash64(0xbebeb3800d279255ull);
 	type_code->is_native = true;
 	type_code->is_class = true;
 	type_code->is_method = true;
+	type_code->native_size = sizeof(::vnx::keyvalue::Storage_store_values_delay);
 	type_code->create_value = []() -> std::shared_ptr<vnx::Value> { return std::make_shared<Storage_store_values_delay>(); };
 	type_code->return_type = ::vnx::keyvalue::Storage_store_values_delay_return::static_get_type_code();
 	type_code->fields.resize(2);
 	{
-		vnx::TypeField& field = type_code->fields[0];
+		auto& field = type_code->fields[0];
 		field.is_extended = true;
 		field.name = "values";
 		field.code = {12, 23, 2, 4, 5, 17, 16};
 	}
 	{
-		vnx::TypeField& field = type_code->fields[1];
+		auto& field = type_code->fields[1];
+		field.data_size = 4;
 		field.name = "delay_ms";
 		field.code = {7};
 	}
@@ -189,14 +191,11 @@ void read(TypeInput& in, ::vnx::keyvalue::Storage_store_values_delay& value, con
 	}
 	const char* const _buf = in.read(type_code->total_field_size);
 	if(type_code->is_matched) {
-		{
-			const vnx::TypeField* const _field = type_code->field_map[1];
-			if(_field) {
-				vnx::read_value(_buf + _field->offset, value.delay_ms, _field->code.data());
-			}
+		if(const auto* const _field = type_code->field_map[1]) {
+			vnx::read_value(_buf + _field->offset, value.delay_ms, _field->code.data());
 		}
 	}
-	for(const vnx::TypeField* _field : type_code->ext_fields) {
+	for(const auto* _field : type_code->ext_fields) {
 		switch(_field->native_index) {
 			case 0: vnx::read(in, value.values, type_code, _field->code.data()); break;
 			default: vnx::skip(in, type_code, _field->code.data());

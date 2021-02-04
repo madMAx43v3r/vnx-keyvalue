@@ -3,6 +3,7 @@
 
 #include <vnx/keyvalue/package.hxx>
 #include <vnx/keyvalue/ServerAsyncClient.hxx>
+#include <vnx/Hash64.hpp>
 #include <vnx/Module.h>
 #include <vnx/ModuleInterface_vnx_get_config.hxx>
 #include <vnx/ModuleInterface_vnx_get_config_return.hxx>
@@ -52,6 +53,10 @@
 #include <vnx/keyvalue/Storage_sync_all_return.hxx>
 #include <vnx/keyvalue/Storage_sync_all_keys.hxx>
 #include <vnx/keyvalue/Storage_sync_all_keys_return.hxx>
+#include <vnx/keyvalue/Storage_sync_all_keys_private.hxx>
+#include <vnx/keyvalue/Storage_sync_all_keys_private_return.hxx>
+#include <vnx/keyvalue/Storage_sync_all_private.hxx>
+#include <vnx/keyvalue/Storage_sync_all_private_return.hxx>
 #include <vnx/keyvalue/Storage_sync_from.hxx>
 #include <vnx/keyvalue/Storage_sync_from_return.hxx>
 #include <vnx/keyvalue/Storage_sync_range.hxx>
@@ -322,13 +327,39 @@ uint64_t ServerAsyncClient::sync_all_keys(const ::vnx::TopicPtr& topic, const st
 	return _request_id;
 }
 
+uint64_t ServerAsyncClient::sync_all_private(const ::vnx::Hash64& dst_mac, const std::function<void(const int64_t&)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
+	auto _method = ::vnx::keyvalue::Storage_sync_all_private::create();
+	_method->dst_mac = dst_mac;
+	const auto _request_id = ++vnx_next_id;
+	{
+		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 19;
+		vnx_queue_sync_all_private[_request_id] = std::make_pair(_callback, _error_callback);
+	}
+	vnx_request(_method, _request_id);
+	return _request_id;
+}
+
+uint64_t ServerAsyncClient::sync_all_keys_private(const ::vnx::Hash64& dst_mac, const std::function<void(const int64_t&)>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
+	auto _method = ::vnx::keyvalue::Storage_sync_all_keys_private::create();
+	_method->dst_mac = dst_mac;
+	const auto _request_id = ++vnx_next_id;
+	{
+		std::lock_guard<std::mutex> _lock(vnx_mutex);
+		vnx_pending[_request_id] = 20;
+		vnx_queue_sync_all_keys_private[_request_id] = std::make_pair(_callback, _error_callback);
+	}
+	vnx_request(_method, _request_id);
+	return _request_id;
+}
+
 uint64_t ServerAsyncClient::cancel_sync_job(const int64_t& job_id, const std::function<void()>& _callback, const std::function<void(const vnx::exception&)>& _error_callback) {
 	auto _method = ::vnx::keyvalue::Storage_cancel_sync_job::create();
 	_method->job_id = job_id;
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
-		vnx_pending[_request_id] = 19;
+		vnx_pending[_request_id] = 21;
 		vnx_queue_cancel_sync_job[_request_id] = std::make_pair(_callback, _error_callback);
 	}
 	vnx_request(_method, _request_id);
@@ -342,7 +373,7 @@ uint64_t ServerAsyncClient::store_value(const ::vnx::Variant& key, std::shared_p
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
-		vnx_pending[_request_id] = 20;
+		vnx_pending[_request_id] = 22;
 		vnx_queue_store_value[_request_id] = std::make_pair(_callback, _error_callback);
 	}
 	vnx_request(_method, _request_id);
@@ -355,7 +386,7 @@ uint64_t ServerAsyncClient::store_values(const std::vector<std::pair<::vnx::Vari
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
-		vnx_pending[_request_id] = 21;
+		vnx_pending[_request_id] = 23;
 		vnx_queue_store_values[_request_id] = std::make_pair(_callback, _error_callback);
 	}
 	vnx_request(_method, _request_id);
@@ -370,7 +401,7 @@ uint64_t ServerAsyncClient::store_value_delay(const ::vnx::Variant& key, std::sh
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
-		vnx_pending[_request_id] = 22;
+		vnx_pending[_request_id] = 24;
 		vnx_queue_store_value_delay[_request_id] = std::make_pair(_callback, _error_callback);
 	}
 	vnx_request(_method, _request_id);
@@ -384,7 +415,7 @@ uint64_t ServerAsyncClient::store_values_delay(const std::vector<std::pair<::vnx
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
-		vnx_pending[_request_id] = 23;
+		vnx_pending[_request_id] = 25;
 		vnx_queue_store_values_delay[_request_id] = std::make_pair(_callback, _error_callback);
 	}
 	vnx_request(_method, _request_id);
@@ -397,7 +428,7 @@ uint64_t ServerAsyncClient::delete_value(const ::vnx::Variant& key, const std::f
 	const auto _request_id = ++vnx_next_id;
 	{
 		std::lock_guard<std::mutex> _lock(vnx_mutex);
-		vnx_pending[_request_id] = 24;
+		vnx_pending[_request_id] = 26;
 		vnx_queue_delete_value[_request_id] = std::make_pair(_callback, _error_callback);
 	}
 	vnx_request(_method, _request_id);
@@ -642,6 +673,30 @@ int32_t ServerAsyncClient::vnx_purge_request(uint64_t _request_id, const vnx::ex
 			break;
 		}
 		case 19: {
+			const auto _iter = vnx_queue_sync_all_private.find(_request_id);
+			if(_iter != vnx_queue_sync_all_private.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_sync_all_private.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
+		case 20: {
+			const auto _iter = vnx_queue_sync_all_keys_private.find(_request_id);
+			if(_iter != vnx_queue_sync_all_keys_private.end()) {
+				const auto _callback = std::move(_iter->second.second);
+				vnx_queue_sync_all_keys_private.erase(_iter);
+				_lock.unlock();
+				if(_callback) {
+					_callback(_ex);
+				}
+			}
+			break;
+		}
+		case 21: {
 			const auto _iter = vnx_queue_cancel_sync_job.find(_request_id);
 			if(_iter != vnx_queue_cancel_sync_job.end()) {
 				const auto _callback = std::move(_iter->second.second);
@@ -653,7 +708,7 @@ int32_t ServerAsyncClient::vnx_purge_request(uint64_t _request_id, const vnx::ex
 			}
 			break;
 		}
-		case 20: {
+		case 22: {
 			const auto _iter = vnx_queue_store_value.find(_request_id);
 			if(_iter != vnx_queue_store_value.end()) {
 				const auto _callback = std::move(_iter->second.second);
@@ -665,7 +720,7 @@ int32_t ServerAsyncClient::vnx_purge_request(uint64_t _request_id, const vnx::ex
 			}
 			break;
 		}
-		case 21: {
+		case 23: {
 			const auto _iter = vnx_queue_store_values.find(_request_id);
 			if(_iter != vnx_queue_store_values.end()) {
 				const auto _callback = std::move(_iter->second.second);
@@ -677,7 +732,7 @@ int32_t ServerAsyncClient::vnx_purge_request(uint64_t _request_id, const vnx::ex
 			}
 			break;
 		}
-		case 22: {
+		case 24: {
 			const auto _iter = vnx_queue_store_value_delay.find(_request_id);
 			if(_iter != vnx_queue_store_value_delay.end()) {
 				const auto _callback = std::move(_iter->second.second);
@@ -689,7 +744,7 @@ int32_t ServerAsyncClient::vnx_purge_request(uint64_t _request_id, const vnx::ex
 			}
 			break;
 		}
-		case 23: {
+		case 25: {
 			const auto _iter = vnx_queue_store_values_delay.find(_request_id);
 			if(_iter != vnx_queue_store_values_delay.end()) {
 				const auto _callback = std::move(_iter->second.second);
@@ -701,7 +756,7 @@ int32_t ServerAsyncClient::vnx_purge_request(uint64_t _request_id, const vnx::ex
 			}
 			break;
 		}
-		case 24: {
+		case 26: {
 			const auto _iter = vnx_queue_delete_value.find(_request_id);
 			if(_iter != vnx_queue_delete_value.end()) {
 				const auto _callback = std::move(_iter->second.second);
@@ -1058,6 +1113,44 @@ int32_t ServerAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared
 			break;
 		}
 		case 19: {
+			const auto _iter = vnx_queue_sync_all_private.find(_request_id);
+			if(_iter == vnx_queue_sync_all_private.end()) {
+				throw std::runtime_error("ServerAsyncClient: callback not found");
+			}
+			const auto _callback = std::move(_iter->second.first);
+			vnx_queue_sync_all_private.erase(_iter);
+			_lock.unlock();
+			if(_callback) {
+				if(auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_sync_all_private_return>(_value)) {
+					_callback(_result->_ret_0);
+				} else if(_value && !_value->is_void()) {
+					_callback(_value->get_field_by_index(0).to<int64_t>());
+				} else {
+					throw std::logic_error("ServerAsyncClient: invalid return value");
+				}
+			}
+			break;
+		}
+		case 20: {
+			const auto _iter = vnx_queue_sync_all_keys_private.find(_request_id);
+			if(_iter == vnx_queue_sync_all_keys_private.end()) {
+				throw std::runtime_error("ServerAsyncClient: callback not found");
+			}
+			const auto _callback = std::move(_iter->second.first);
+			vnx_queue_sync_all_keys_private.erase(_iter);
+			_lock.unlock();
+			if(_callback) {
+				if(auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_sync_all_keys_private_return>(_value)) {
+					_callback(_result->_ret_0);
+				} else if(_value && !_value->is_void()) {
+					_callback(_value->get_field_by_index(0).to<int64_t>());
+				} else {
+					throw std::logic_error("ServerAsyncClient: invalid return value");
+				}
+			}
+			break;
+		}
+		case 21: {
 			const auto _iter = vnx_queue_cancel_sync_job.find(_request_id);
 			if(_iter == vnx_queue_cancel_sync_job.end()) {
 				throw std::runtime_error("ServerAsyncClient: callback not found");
@@ -1070,7 +1163,7 @@ int32_t ServerAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared
 			}
 			break;
 		}
-		case 20: {
+		case 22: {
 			const auto _iter = vnx_queue_store_value.find(_request_id);
 			if(_iter == vnx_queue_store_value.end()) {
 				throw std::runtime_error("ServerAsyncClient: callback not found");
@@ -1083,7 +1176,7 @@ int32_t ServerAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared
 			}
 			break;
 		}
-		case 21: {
+		case 23: {
 			const auto _iter = vnx_queue_store_values.find(_request_id);
 			if(_iter == vnx_queue_store_values.end()) {
 				throw std::runtime_error("ServerAsyncClient: callback not found");
@@ -1096,7 +1189,7 @@ int32_t ServerAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared
 			}
 			break;
 		}
-		case 22: {
+		case 24: {
 			const auto _iter = vnx_queue_store_value_delay.find(_request_id);
 			if(_iter == vnx_queue_store_value_delay.end()) {
 				throw std::runtime_error("ServerAsyncClient: callback not found");
@@ -1109,7 +1202,7 @@ int32_t ServerAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared
 			}
 			break;
 		}
-		case 23: {
+		case 25: {
 			const auto _iter = vnx_queue_store_values_delay.find(_request_id);
 			if(_iter == vnx_queue_store_values_delay.end()) {
 				throw std::runtime_error("ServerAsyncClient: callback not found");
@@ -1122,7 +1215,7 @@ int32_t ServerAsyncClient::vnx_callback_switch(uint64_t _request_id, std::shared
 			}
 			break;
 		}
-		case 24: {
+		case 26: {
 			const auto _iter = vnx_queue_delete_value.find(_request_id);
 			if(_iter == vnx_queue_delete_value.end()) {
 				throw std::runtime_error("ServerAsyncClient: callback not found");

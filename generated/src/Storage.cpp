@@ -3,6 +3,7 @@
 
 #include <vnx/keyvalue/package.hxx>
 #include <vnx/keyvalue/Storage.hxx>
+#include <vnx/Hash64.hpp>
 #include <vnx/TopicPtr.hpp>
 #include <vnx/Value.h>
 #include <vnx/Variant.hpp>
@@ -33,6 +34,10 @@
 #include <vnx/keyvalue/Storage_sync_all_return.hxx>
 #include <vnx/keyvalue/Storage_sync_all_keys.hxx>
 #include <vnx/keyvalue/Storage_sync_all_keys_return.hxx>
+#include <vnx/keyvalue/Storage_sync_all_keys_private.hxx>
+#include <vnx/keyvalue/Storage_sync_all_keys_private_return.hxx>
+#include <vnx/keyvalue/Storage_sync_all_private.hxx>
+#include <vnx/keyvalue/Storage_sync_all_private_return.hxx>
 #include <vnx/keyvalue/Storage_sync_from.hxx>
 #include <vnx/keyvalue/Storage_sync_from_return.hxx>
 #include <vnx/keyvalue/Storage_sync_range.hxx>

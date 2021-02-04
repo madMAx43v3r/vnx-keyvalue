@@ -98,13 +98,14 @@ const vnx::TypeCode* Storage_store_values_delay_return::static_get_type_code() {
 }
 
 std::shared_ptr<vnx::TypeCode> Storage_store_values_delay_return::static_create_type_code() {
-	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>();
+	auto type_code = std::make_shared<vnx::TypeCode>();
 	type_code->name = "vnx.keyvalue.Storage.store_values_delay.return";
 	type_code->type_hash = vnx::Hash64(0xc60b951a5784d824ull);
 	type_code->code_hash = vnx::Hash64(0x279bbf4822e3183cull);
 	type_code->is_native = true;
 	type_code->is_class = true;
 	type_code->is_return = true;
+	type_code->native_size = sizeof(::vnx::keyvalue::Storage_store_values_delay_return);
 	type_code->create_value = []() -> std::shared_ptr<vnx::Value> { return std::make_shared<Storage_store_values_delay_return>(); };
 	type_code->build();
 	return type_code;
@@ -149,7 +150,7 @@ void read(TypeInput& in, ::vnx::keyvalue::Storage_store_values_delay_return& val
 	}
 	if(type_code->is_matched) {
 	}
-	for(const vnx::TypeField* _field : type_code->ext_fields) {
+	for(const auto* _field : type_code->ext_fields) {
 		switch(_field->native_index) {
 			default: vnx::skip(in, type_code, _field->code.data());
 		}

@@ -48,6 +48,10 @@ class Storage_sync_all;
 class Storage_sync_all_return;
 class Storage_sync_all_keys;
 class Storage_sync_all_keys_return;
+class Storage_sync_all_keys_private;
+class Storage_sync_all_keys_private_return;
+class Storage_sync_all_private;
+class Storage_sync_all_private_return;
 class Storage_sync_from;
 class Storage_sync_from_return;
 class Storage_sync_range;
@@ -94,6 +98,10 @@ extern const vnx::TypeCode* const vnx_native_type_code_Storage_sync_all; ///< \p
 extern const vnx::TypeCode* const vnx_native_type_code_Storage_sync_all_return; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_Storage_sync_all_keys; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_Storage_sync_all_keys_return; ///< \private
+extern const vnx::TypeCode* const vnx_native_type_code_Storage_sync_all_keys_private; ///< \private
+extern const vnx::TypeCode* const vnx_native_type_code_Storage_sync_all_keys_private_return; ///< \private
+extern const vnx::TypeCode* const vnx_native_type_code_Storage_sync_all_private; ///< \private
+extern const vnx::TypeCode* const vnx_native_type_code_Storage_sync_all_private_return; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_Storage_sync_from; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_Storage_sync_from_return; ///< \private
 extern const vnx::TypeCode* const vnx_native_type_code_Storage_sync_range; ///< \private
@@ -147,6 +155,10 @@ void read(TypeInput& in, ::vnx::keyvalue::Storage_sync_all& value, const TypeCod
 void read(TypeInput& in, ::vnx::keyvalue::Storage_sync_all_return& value, const TypeCode* type_code, const uint16_t* code); ///< \private
 void read(TypeInput& in, ::vnx::keyvalue::Storage_sync_all_keys& value, const TypeCode* type_code, const uint16_t* code); ///< \private
 void read(TypeInput& in, ::vnx::keyvalue::Storage_sync_all_keys_return& value, const TypeCode* type_code, const uint16_t* code); ///< \private
+void read(TypeInput& in, ::vnx::keyvalue::Storage_sync_all_keys_private& value, const TypeCode* type_code, const uint16_t* code); ///< \private
+void read(TypeInput& in, ::vnx::keyvalue::Storage_sync_all_keys_private_return& value, const TypeCode* type_code, const uint16_t* code); ///< \private
+void read(TypeInput& in, ::vnx::keyvalue::Storage_sync_all_private& value, const TypeCode* type_code, const uint16_t* code); ///< \private
+void read(TypeInput& in, ::vnx::keyvalue::Storage_sync_all_private_return& value, const TypeCode* type_code, const uint16_t* code); ///< \private
 void read(TypeInput& in, ::vnx::keyvalue::Storage_sync_from& value, const TypeCode* type_code, const uint16_t* code); ///< \private
 void read(TypeInput& in, ::vnx::keyvalue::Storage_sync_from_return& value, const TypeCode* type_code, const uint16_t* code); ///< \private
 void read(TypeInput& in, ::vnx::keyvalue::Storage_sync_range& value, const TypeCode* type_code, const uint16_t* code); ///< \private
@@ -194,6 +206,10 @@ void write(TypeOutput& out, const ::vnx::keyvalue::Storage_sync_all& value, cons
 void write(TypeOutput& out, const ::vnx::keyvalue::Storage_sync_all_return& value, const TypeCode* type_code, const uint16_t* code); ///< \private
 void write(TypeOutput& out, const ::vnx::keyvalue::Storage_sync_all_keys& value, const TypeCode* type_code, const uint16_t* code); ///< \private
 void write(TypeOutput& out, const ::vnx::keyvalue::Storage_sync_all_keys_return& value, const TypeCode* type_code, const uint16_t* code); ///< \private
+void write(TypeOutput& out, const ::vnx::keyvalue::Storage_sync_all_keys_private& value, const TypeCode* type_code, const uint16_t* code); ///< \private
+void write(TypeOutput& out, const ::vnx::keyvalue::Storage_sync_all_keys_private_return& value, const TypeCode* type_code, const uint16_t* code); ///< \private
+void write(TypeOutput& out, const ::vnx::keyvalue::Storage_sync_all_private& value, const TypeCode* type_code, const uint16_t* code); ///< \private
+void write(TypeOutput& out, const ::vnx::keyvalue::Storage_sync_all_private_return& value, const TypeCode* type_code, const uint16_t* code); ///< \private
 void write(TypeOutput& out, const ::vnx::keyvalue::Storage_sync_from& value, const TypeCode* type_code, const uint16_t* code); ///< \private
 void write(TypeOutput& out, const ::vnx::keyvalue::Storage_sync_from_return& value, const TypeCode* type_code, const uint16_t* code); ///< \private
 void write(TypeOutput& out, const ::vnx::keyvalue::Storage_sync_range& value, const TypeCode* type_code, const uint16_t* code); ///< \private
@@ -241,6 +257,10 @@ void read(std::istream& in, ::vnx::keyvalue::Storage_sync_all& value); ///< \pri
 void read(std::istream& in, ::vnx::keyvalue::Storage_sync_all_return& value); ///< \private
 void read(std::istream& in, ::vnx::keyvalue::Storage_sync_all_keys& value); ///< \private
 void read(std::istream& in, ::vnx::keyvalue::Storage_sync_all_keys_return& value); ///< \private
+void read(std::istream& in, ::vnx::keyvalue::Storage_sync_all_keys_private& value); ///< \private
+void read(std::istream& in, ::vnx::keyvalue::Storage_sync_all_keys_private_return& value); ///< \private
+void read(std::istream& in, ::vnx::keyvalue::Storage_sync_all_private& value); ///< \private
+void read(std::istream& in, ::vnx::keyvalue::Storage_sync_all_private_return& value); ///< \private
 void read(std::istream& in, ::vnx::keyvalue::Storage_sync_from& value); ///< \private
 void read(std::istream& in, ::vnx::keyvalue::Storage_sync_from_return& value); ///< \private
 void read(std::istream& in, ::vnx::keyvalue::Storage_sync_range& value); ///< \private
@@ -288,6 +308,10 @@ void write(std::ostream& out, const ::vnx::keyvalue::Storage_sync_all& value); /
 void write(std::ostream& out, const ::vnx::keyvalue::Storage_sync_all_return& value); ///< \private
 void write(std::ostream& out, const ::vnx::keyvalue::Storage_sync_all_keys& value); ///< \private
 void write(std::ostream& out, const ::vnx::keyvalue::Storage_sync_all_keys_return& value); ///< \private
+void write(std::ostream& out, const ::vnx::keyvalue::Storage_sync_all_keys_private& value); ///< \private
+void write(std::ostream& out, const ::vnx::keyvalue::Storage_sync_all_keys_private_return& value); ///< \private
+void write(std::ostream& out, const ::vnx::keyvalue::Storage_sync_all_private& value); ///< \private
+void write(std::ostream& out, const ::vnx::keyvalue::Storage_sync_all_private_return& value); ///< \private
 void write(std::ostream& out, const ::vnx::keyvalue::Storage_sync_from& value); ///< \private
 void write(std::ostream& out, const ::vnx::keyvalue::Storage_sync_from_return& value); ///< \private
 void write(std::ostream& out, const ::vnx::keyvalue::Storage_sync_range& value); ///< \private
@@ -335,6 +359,10 @@ void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_sync_all& value); /
 void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_sync_all_return& value); ///< \private
 void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_sync_all_keys& value); ///< \private
 void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_sync_all_keys_return& value); ///< \private
+void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_sync_all_keys_private& value); ///< \private
+void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_sync_all_keys_private_return& value); ///< \private
+void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_sync_all_private& value); ///< \private
+void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_sync_all_private_return& value); ///< \private
 void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_sync_from& value); ///< \private
 void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_sync_from_return& value); ///< \private
 void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_sync_range& value); ///< \private
@@ -1167,6 +1195,102 @@ struct type<::vnx::keyvalue::Storage_sync_all_keys_return> {
 	}
 	void create_dynamic_code(std::vector<uint16_t>& code);
 	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_sync_all_keys_return& value, bool special = false) {
+		code.push_back(CODE_OBJECT);
+	}
+};
+
+/// \private
+template<>
+struct type<::vnx::keyvalue::Storage_sync_all_keys_private> {
+	void read(TypeInput& in, ::vnx::keyvalue::Storage_sync_all_keys_private& value, const TypeCode* type_code, const uint16_t* code) {
+		vnx::read(in, value, type_code, code);
+	}
+	void write(TypeOutput& out, const ::vnx::keyvalue::Storage_sync_all_keys_private& value, const TypeCode* type_code, const uint16_t* code) {
+		vnx::write(out, value, type_code, code);
+	}
+	void read(std::istream& in, ::vnx::keyvalue::Storage_sync_all_keys_private& value) {
+		vnx::read(in, value);
+	}
+	void write(std::ostream& out, const ::vnx::keyvalue::Storage_sync_all_keys_private& value) {
+		vnx::write(out, value);
+	}
+	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_sync_all_keys_private& value) {
+		vnx::accept(visitor, value);
+	}
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_sync_all_keys_private& value, bool special = false) {
+		code.push_back(CODE_OBJECT);
+	}
+};
+
+/// \private
+template<>
+struct type<::vnx::keyvalue::Storage_sync_all_keys_private_return> {
+	void read(TypeInput& in, ::vnx::keyvalue::Storage_sync_all_keys_private_return& value, const TypeCode* type_code, const uint16_t* code) {
+		vnx::read(in, value, type_code, code);
+	}
+	void write(TypeOutput& out, const ::vnx::keyvalue::Storage_sync_all_keys_private_return& value, const TypeCode* type_code, const uint16_t* code) {
+		vnx::write(out, value, type_code, code);
+	}
+	void read(std::istream& in, ::vnx::keyvalue::Storage_sync_all_keys_private_return& value) {
+		vnx::read(in, value);
+	}
+	void write(std::ostream& out, const ::vnx::keyvalue::Storage_sync_all_keys_private_return& value) {
+		vnx::write(out, value);
+	}
+	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_sync_all_keys_private_return& value) {
+		vnx::accept(visitor, value);
+	}
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_sync_all_keys_private_return& value, bool special = false) {
+		code.push_back(CODE_OBJECT);
+	}
+};
+
+/// \private
+template<>
+struct type<::vnx::keyvalue::Storage_sync_all_private> {
+	void read(TypeInput& in, ::vnx::keyvalue::Storage_sync_all_private& value, const TypeCode* type_code, const uint16_t* code) {
+		vnx::read(in, value, type_code, code);
+	}
+	void write(TypeOutput& out, const ::vnx::keyvalue::Storage_sync_all_private& value, const TypeCode* type_code, const uint16_t* code) {
+		vnx::write(out, value, type_code, code);
+	}
+	void read(std::istream& in, ::vnx::keyvalue::Storage_sync_all_private& value) {
+		vnx::read(in, value);
+	}
+	void write(std::ostream& out, const ::vnx::keyvalue::Storage_sync_all_private& value) {
+		vnx::write(out, value);
+	}
+	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_sync_all_private& value) {
+		vnx::accept(visitor, value);
+	}
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_sync_all_private& value, bool special = false) {
+		code.push_back(CODE_OBJECT);
+	}
+};
+
+/// \private
+template<>
+struct type<::vnx::keyvalue::Storage_sync_all_private_return> {
+	void read(TypeInput& in, ::vnx::keyvalue::Storage_sync_all_private_return& value, const TypeCode* type_code, const uint16_t* code) {
+		vnx::read(in, value, type_code, code);
+	}
+	void write(TypeOutput& out, const ::vnx::keyvalue::Storage_sync_all_private_return& value, const TypeCode* type_code, const uint16_t* code) {
+		vnx::write(out, value, type_code, code);
+	}
+	void read(std::istream& in, ::vnx::keyvalue::Storage_sync_all_private_return& value) {
+		vnx::read(in, value);
+	}
+	void write(std::ostream& out, const ::vnx::keyvalue::Storage_sync_all_private_return& value) {
+		vnx::write(out, value);
+	}
+	void accept(Visitor& visitor, const ::vnx::keyvalue::Storage_sync_all_private_return& value) {
+		vnx::accept(visitor, value);
+	}
+	void create_dynamic_code(std::vector<uint16_t>& code);
+	void create_dynamic_code(std::vector<uint16_t>& code, const ::vnx::keyvalue::Storage_sync_all_private_return& value, bool special = false) {
 		code.push_back(CODE_OBJECT);
 	}
 };

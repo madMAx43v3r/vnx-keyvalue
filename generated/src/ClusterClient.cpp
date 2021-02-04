@@ -3,6 +3,7 @@
 
 #include <vnx/keyvalue/package.hxx>
 #include <vnx/keyvalue/ClusterClient.hxx>
+#include <vnx/Hash64.hpp>
 #include <vnx/Module.h>
 #include <vnx/ModuleInterface_vnx_get_config.hxx>
 #include <vnx/ModuleInterface_vnx_get_config_return.hxx>
@@ -52,6 +53,10 @@
 #include <vnx/keyvalue/Storage_sync_all_return.hxx>
 #include <vnx/keyvalue/Storage_sync_all_keys.hxx>
 #include <vnx/keyvalue/Storage_sync_all_keys_return.hxx>
+#include <vnx/keyvalue/Storage_sync_all_keys_private.hxx>
+#include <vnx/keyvalue/Storage_sync_all_keys_private_return.hxx>
+#include <vnx/keyvalue/Storage_sync_all_private.hxx>
+#include <vnx/keyvalue/Storage_sync_all_private_return.hxx>
 #include <vnx/keyvalue/Storage_sync_from.hxx>
 #include <vnx/keyvalue/Storage_sync_from_return.hxx>
 #include <vnx/keyvalue/Storage_sync_range.hxx>
@@ -308,6 +313,32 @@ int64_t ClusterClient::sync_all_keys(const ::vnx::TopicPtr& topic) {
 	_method->topic = topic;
 	auto _return_value = vnx_request(_method, false);
 	if(auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_sync_all_keys_return>(_return_value)) {
+		return _result->_ret_0;
+	} else if(_return_value && !_return_value->is_void()) {
+		return _return_value->get_field_by_index(0).to<int64_t>();
+	} else {
+		throw std::logic_error("ClusterClient: invalid return value");
+	}
+}
+
+int64_t ClusterClient::sync_all_private(const ::vnx::Hash64& dst_mac) {
+	auto _method = ::vnx::keyvalue::Storage_sync_all_private::create();
+	_method->dst_mac = dst_mac;
+	auto _return_value = vnx_request(_method, false);
+	if(auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_sync_all_private_return>(_return_value)) {
+		return _result->_ret_0;
+	} else if(_return_value && !_return_value->is_void()) {
+		return _return_value->get_field_by_index(0).to<int64_t>();
+	} else {
+		throw std::logic_error("ClusterClient: invalid return value");
+	}
+}
+
+int64_t ClusterClient::sync_all_keys_private(const ::vnx::Hash64& dst_mac) {
+	auto _method = ::vnx::keyvalue::Storage_sync_all_keys_private::create();
+	_method->dst_mac = dst_mac;
+	auto _return_value = vnx_request(_method, false);
+	if(auto _result = std::dynamic_pointer_cast<const ::vnx::keyvalue::Storage_sync_all_keys_private_return>(_return_value)) {
 		return _result->_ret_0;
 	} else if(_return_value && !_return_value->is_void()) {
 		return _return_value->get_field_by_index(0).to<int64_t>();

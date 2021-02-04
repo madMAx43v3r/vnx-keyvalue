@@ -5,6 +5,7 @@
 #define INCLUDE_vnx_keyvalue_Storage_CLIENT_HXX_
 
 #include <vnx/Client.h>
+#include <vnx/Hash64.hpp>
 #include <vnx/TopicPtr.hpp>
 #include <vnx/Value.h>
 #include <vnx/Variant.hpp>
@@ -41,6 +42,10 @@ public:
 	int64_t sync_all(const ::vnx::TopicPtr& topic);
 	
 	int64_t sync_all_keys(const ::vnx::TopicPtr& topic);
+	
+	int64_t sync_all_private(const ::vnx::Hash64& dst_mac);
+	
+	int64_t sync_all_keys_private(const ::vnx::Hash64& dst_mac);
 	
 	void cancel_sync_job(const int64_t& job_id);
 	

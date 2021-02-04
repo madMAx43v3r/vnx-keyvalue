@@ -153,41 +153,44 @@ const vnx::TypeCode* SyncUpdate::static_get_type_code() {
 }
 
 std::shared_ptr<vnx::TypeCode> SyncUpdate::static_create_type_code() {
-	std::shared_ptr<vnx::TypeCode> type_code = std::make_shared<vnx::TypeCode>();
+	auto type_code = std::make_shared<vnx::TypeCode>();
 	type_code->name = "vnx.keyvalue.SyncUpdate";
 	type_code->type_hash = vnx::Hash64(0xcf6f029ce644d6e3ull);
 	type_code->code_hash = vnx::Hash64(0x92afa93c03648d30ull);
 	type_code->is_native = true;
 	type_code->is_class = true;
+	type_code->native_size = sizeof(::vnx::keyvalue::SyncUpdate);
 	type_code->parents.resize(1);
 	type_code->parents[0] = ::vnx::keyvalue::Entry::static_get_type_code();
 	type_code->create_value = []() -> std::shared_ptr<vnx::Value> { return std::make_shared<SyncUpdate>(); };
 	type_code->fields.resize(5);
 	{
-		vnx::TypeField& field = type_code->fields[0];
+		auto& field = type_code->fields[0];
+		field.data_size = 8;
 		field.name = "version";
 		field.code = {4};
 	}
 	{
-		vnx::TypeField& field = type_code->fields[1];
+		auto& field = type_code->fields[1];
 		field.is_extended = true;
 		field.name = "key";
 		field.code = {17};
 	}
 	{
-		vnx::TypeField& field = type_code->fields[2];
+		auto& field = type_code->fields[2];
 		field.is_extended = true;
 		field.name = "value";
 		field.code = {16};
 	}
 	{
-		vnx::TypeField& field = type_code->fields[3];
+		auto& field = type_code->fields[3];
 		field.is_extended = true;
 		field.name = "collection";
 		field.code = {32};
 	}
 	{
-		vnx::TypeField& field = type_code->fields[4];
+		auto& field = type_code->fields[4];
+		field.data_size = 8;
 		field.name = "previous";
 		field.code = {4};
 	}
@@ -234,20 +237,14 @@ void read(TypeInput& in, ::vnx::keyvalue::SyncUpdate& value, const TypeCode* typ
 	}
 	const char* const _buf = in.read(type_code->total_field_size);
 	if(type_code->is_matched) {
-		{
-			const vnx::TypeField* const _field = type_code->field_map[0];
-			if(_field) {
-				vnx::read_value(_buf + _field->offset, value.version, _field->code.data());
-			}
+		if(const auto* const _field = type_code->field_map[0]) {
+			vnx::read_value(_buf + _field->offset, value.version, _field->code.data());
 		}
-		{
-			const vnx::TypeField* const _field = type_code->field_map[4];
-			if(_field) {
-				vnx::read_value(_buf + _field->offset, value.previous, _field->code.data());
-			}
+		if(const auto* const _field = type_code->field_map[4]) {
+			vnx::read_value(_buf + _field->offset, value.previous, _field->code.data());
 		}
 	}
-	for(const vnx::TypeField* _field : type_code->ext_fields) {
+	for(const auto* _field : type_code->ext_fields) {
 		switch(_field->native_index) {
 			case 1: vnx::read(in, value.key, type_code, _field->code.data()); break;
 			case 2: vnx::read(in, value.value, type_code, _field->code.data()); break;
