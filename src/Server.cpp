@@ -14,6 +14,7 @@
 #include <vnx/keyvalue/ServerClient.hxx>
 
 #include <vnx/addons/DeflatedValue.hxx>
+#include <vnx/Stream.h>
 
 #include <sys/file.h>
 #include <fcntl.h>
@@ -541,11 +542,12 @@ void Server::store_compress_job(std::shared_ptr<const Entry> entry)
 	add_task(std::bind(&Server::store_value_version_ex, this, entry->key, entry->value, compressed, entry->version));
 }
 
-int64_t Server::sync_range_ex(TopicPtr topic, uint64_t begin, uint64_t end, bool key_only) const
+int64_t Server::sync_range_ex(TopicPtr topic, Hash64 dst_mac, uint64_t begin, uint64_t end, bool key_only) const
 {
 	auto job = std::make_shared<sync_job_t>();
 	job->id = next_sync_id++;
 	job->topic = topic;
+	job->dst_mac = dst_mac;
 	job->begin = begin;
 	job->end = end;
 	job->key_only = key_only;
@@ -566,17 +568,27 @@ int64_t Server::sync_from(const TopicPtr& topic, const uint64_t& version) const
 
 int64_t Server::sync_range(const TopicPtr& topic, const uint64_t& begin, const uint64_t& end) const
 {
-	return sync_range_ex(topic, begin, end, false);
+	return sync_range_ex(topic, Hash64(), begin, end, false);
 }
 
 int64_t Server::sync_all(const TopicPtr& topic) const
 {
-	return sync_range(topic, 0, 0);
+	return sync_range_ex(topic, Hash64(), 0, 0, false);
 }
 
 int64_t Server::sync_all_keys(const TopicPtr& topic) const
 {
-	return sync_range_ex(topic, 0, 0, true);
+	return sync_range_ex(topic, Hash64(), 0, 0, true);
+}
+
+int64_t Server::sync_all_private(const Hash64& dst_mac) const
+{
+	return sync_range_ex(nullptr, dst_mac, 0, 0, false);
+}
+
+int64_t Server::sync_all_keys_private(const Hash64& dst_mac) const
+{
+	return sync_range_ex(nullptr, dst_mac, 0, 0, true);
 }
 
 void Server::cancel_sync_job(const int64_t& job_id)
@@ -1147,15 +1159,19 @@ void Server::update_loop() const noexcept
 
 void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 {
-	uint64_t version = job->begin;
-	uint64_t previous = job->begin;
+	Stream stream(job->dst_mac);
 	{
 		auto info = SyncInfo::create();
 		info->collection = collection;
 		info->version = job->begin;
 		info->job_id = job->id;
 		info->code = SyncInfo::BEGIN;
-		publish(info, job->topic, BLOCKING);
+		if(job->dst_mac) {
+			stream.send(info);
+		}
+		if(job->topic) {
+			publish(info, job->topic, BLOCKING);
+		}
 	}
 	
 	struct entry_t {
@@ -1168,6 +1184,8 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 	
 	bool is_done = false;
 	std::vector<entry_t> list;
+	uint64_t version = job->begin;
+	uint64_t previous = version;
 	
 	while(vnx_do_run() && job->do_run && !is_done)
 	{
@@ -1258,16 +1276,22 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 		}
 		for(const auto& entry : list)
 		{
-			if(entry.index) {
-				auto pair = SyncUpdate::create();
-				pair->collection = collection;
-				pair->version = entry.version;
-				pair->previous = previous;
-				pair->key = entry.index->key;
-				pair->value = entry.value;
-				publish(pair, job->topic, BLOCKING);
-				previous = entry.version;
+			if(!entry.index) {
+				continue;
 			}
+			auto pair = SyncUpdate::create();
+			pair->collection = collection;
+			pair->version = entry.version;
+			pair->previous = previous;
+			pair->key = entry.index->key;
+			pair->value = entry.value;
+			if(job->dst_mac) {
+				stream.send(pair);
+			}
+			if(job->topic) {
+				publish(pair, job->topic, BLOCKING);
+			}
+			previous = entry.version;
 		}
 	}
 	if(vnx_do_run() && job->do_run)
@@ -1277,7 +1301,12 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 		info->version = version;
 		info->job_id = job->id;
 		info->code = SyncInfo::END;
-		publish(info, job->topic, BLOCKING);
+		if(job->dst_mac) {
+			stream.send(info);
+		}
+		if(job->topic) {
+			publish(info, job->topic, BLOCKING);
+		}
 	}
 	{
 		std::lock_guard lock(sync_mutex);

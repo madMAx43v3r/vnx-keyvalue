@@ -3,6 +3,7 @@ package vnx.keyvalue;
 import vnx.Value;
 import vnx.Variant;
 import vnx.TopicPtr;
+import vnx.Hash64;
 
 interface Storage {
 	
@@ -28,6 +29,10 @@ interface Storage {
 	long sync_all(TopicPtr topic) const;
 	
 	long sync_all_keys(TopicPtr topic) const;
+	
+	long sync_all_private(Hash64 dst_mac) const;
+	
+	long sync_all_keys_private(Hash64 dst_mac) const;
 	
 	void cancel_sync_job(long job_id);
 	

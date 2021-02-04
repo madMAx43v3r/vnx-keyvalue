@@ -52,6 +52,10 @@ protected:
 	
 	int64_t sync_all_keys(const TopicPtr& topic) const override;
 	
+	int64_t sync_all_private(const Hash64& dst_mac) const override;
+	
+	int64_t sync_all_keys_private(const Hash64& dst_mac) const override;
+	
 	void cancel_sync_job(const int64_t& job_id) override;
 	
 	void store_value(const Variant& key, std::shared_ptr<const Value> value) override;
@@ -105,6 +109,7 @@ private:
 	struct sync_job_t {
 		int64_t id = -1;
 		TopicPtr topic;
+		Hash64 dst_mac;
 		uint64_t begin = 0;
 		uint64_t end = 0;
 		bool key_only = false;
@@ -179,7 +184,7 @@ private:
 								std::shared_ptr<const Value> store_value,
 								const uint64_t version);
 	
-	int64_t sync_range_ex(TopicPtr topic, uint64_t begin, uint64_t end, bool key_only) const;
+	int64_t sync_range_ex(TopicPtr topic, Hash64 dst_mac, uint64_t begin, uint64_t end, bool key_only) const;
 	
 	void check_rewrite(bool is_idle);
 	
