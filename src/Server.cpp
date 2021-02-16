@@ -1159,15 +1159,19 @@ void Server::update_loop() const noexcept
 
 void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 {
-	Stream stream(job->dst_mac);
+	std::shared_ptr<Stream> stream;
+	if(job->dst_mac) {
+		stream = std::make_shared<Stream>(job->dst_mac);
+		stream->open();
+	}
 	{
 		auto info = SyncInfo::create();
 		info->collection = collection;
 		info->version = job->begin;
 		info->job_id = job->id;
 		info->code = SyncInfo::BEGIN;
-		if(job->dst_mac) {
-			stream.send(info);
+		if(stream) {
+			stream->send(info);
 		}
 		if(job->topic) {
 			publish(info, job->topic, BLOCKING);
@@ -1285,8 +1289,8 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 			pair->previous = previous;
 			pair->key = entry.index->key;
 			pair->value = entry.value;
-			if(job->dst_mac) {
-				stream.send(pair);
+			if(stream) {
+				stream->send(pair);
 			}
 			if(job->topic) {
 				publish(pair, job->topic, BLOCKING);
@@ -1301,8 +1305,8 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 		info->version = version;
 		info->job_id = job->id;
 		info->code = SyncInfo::END;
-		if(job->dst_mac) {
-			stream.send(info);
+		if(stream) {
+			stream->send(info);
 		}
 		if(job->topic) {
 			publish(info, job->topic, BLOCKING);
