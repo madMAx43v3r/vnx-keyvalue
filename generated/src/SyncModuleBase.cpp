@@ -36,12 +36,14 @@ namespace keyvalue {
 
 
 const vnx::Hash64 SyncModuleBase::VNX_TYPE_HASH(0x508da303057fe58cull);
-const vnx::Hash64 SyncModuleBase::VNX_CODE_HASH(0x16148dd4b4c87a0dull);
+const vnx::Hash64 SyncModuleBase::VNX_CODE_HASH(0xa5ad06681388cf8dull);
 
 SyncModuleBase::SyncModuleBase(const std::string& _vnx_name)
 	:	Module::Module(_vnx_name)
 {
 	vnx::read_config(vnx_name + ".input_sync", input_sync);
+	vnx::read_config(vnx_name + ".src_name", src_name);
+	vnx::read_config(vnx_name + ".dst_name", dst_name);
 	vnx::read_config(vnx_name + ".src_addr", src_addr);
 	vnx::read_config(vnx_name + ".dst_addr", dst_addr);
 	vnx::read_config(vnx_name + ".buffer_size", buffer_size);
@@ -65,17 +67,21 @@ void SyncModuleBase::accept(vnx::Visitor& _visitor) const {
 	const vnx::TypeCode* _type_code = vnx::keyvalue::vnx_native_type_code_SyncModuleBase;
 	_visitor.type_begin(*_type_code);
 	_visitor.type_field(_type_code->fields[0], 0); vnx::accept(_visitor, input_sync);
-	_visitor.type_field(_type_code->fields[1], 1); vnx::accept(_visitor, src_addr);
-	_visitor.type_field(_type_code->fields[2], 2); vnx::accept(_visitor, dst_addr);
-	_visitor.type_field(_type_code->fields[3], 3); vnx::accept(_visitor, buffer_size);
-	_visitor.type_field(_type_code->fields[4], 4); vnx::accept(_visitor, stats_interval_ms);
-	_visitor.type_field(_type_code->fields[5], 5); vnx::accept(_visitor, add_only);
+	_visitor.type_field(_type_code->fields[1], 1); vnx::accept(_visitor, src_name);
+	_visitor.type_field(_type_code->fields[2], 2); vnx::accept(_visitor, dst_name);
+	_visitor.type_field(_type_code->fields[3], 3); vnx::accept(_visitor, src_addr);
+	_visitor.type_field(_type_code->fields[4], 4); vnx::accept(_visitor, dst_addr);
+	_visitor.type_field(_type_code->fields[5], 5); vnx::accept(_visitor, buffer_size);
+	_visitor.type_field(_type_code->fields[6], 6); vnx::accept(_visitor, stats_interval_ms);
+	_visitor.type_field(_type_code->fields[7], 7); vnx::accept(_visitor, add_only);
 	_visitor.type_end(*_type_code);
 }
 
 void SyncModuleBase::write(std::ostream& _out) const {
 	_out << "{";
 	_out << "\"input_sync\": "; vnx::write(_out, input_sync);
+	_out << ", \"src_name\": "; vnx::write(_out, src_name);
+	_out << ", \"dst_name\": "; vnx::write(_out, dst_name);
 	_out << ", \"src_addr\": "; vnx::write(_out, src_addr);
 	_out << ", \"dst_addr\": "; vnx::write(_out, dst_addr);
 	_out << ", \"buffer_size\": "; vnx::write(_out, buffer_size);
@@ -94,6 +100,8 @@ vnx::Object SyncModuleBase::to_object() const {
 	vnx::Object _object;
 	_object["__type"] = "vnx.keyvalue.SyncModule";
 	_object["input_sync"] = input_sync;
+	_object["src_name"] = src_name;
+	_object["dst_name"] = dst_name;
 	_object["src_addr"] = src_addr;
 	_object["dst_addr"] = dst_addr;
 	_object["buffer_size"] = buffer_size;
@@ -110,10 +118,14 @@ void SyncModuleBase::from_object(const vnx::Object& _object) {
 			_entry.second.to(buffer_size);
 		} else if(_entry.first == "dst_addr") {
 			_entry.second.to(dst_addr);
+		} else if(_entry.first == "dst_name") {
+			_entry.second.to(dst_name);
 		} else if(_entry.first == "input_sync") {
 			_entry.second.to(input_sync);
 		} else if(_entry.first == "src_addr") {
 			_entry.second.to(src_addr);
+		} else if(_entry.first == "src_name") {
+			_entry.second.to(src_name);
 		} else if(_entry.first == "stats_interval_ms") {
 			_entry.second.to(stats_interval_ms);
 		}
@@ -123,6 +135,12 @@ void SyncModuleBase::from_object(const vnx::Object& _object) {
 vnx::Variant SyncModuleBase::get_field(const std::string& _name) const {
 	if(_name == "input_sync") {
 		return vnx::Variant(input_sync);
+	}
+	if(_name == "src_name") {
+		return vnx::Variant(src_name);
+	}
+	if(_name == "dst_name") {
+		return vnx::Variant(dst_name);
 	}
 	if(_name == "src_addr") {
 		return vnx::Variant(src_addr);
@@ -145,6 +163,10 @@ vnx::Variant SyncModuleBase::get_field(const std::string& _name) const {
 void SyncModuleBase::set_field(const std::string& _name, const vnx::Variant& _value) {
 	if(_name == "input_sync") {
 		_value.to(input_sync);
+	} else if(_name == "src_name") {
+		_value.to(src_name);
+	} else if(_name == "dst_name") {
+		_value.to(dst_name);
 	} else if(_name == "src_addr") {
 		_value.to(src_addr);
 	} else if(_name == "dst_addr") {
@@ -184,7 +206,7 @@ std::shared_ptr<vnx::TypeCode> SyncModuleBase::static_create_type_code() {
 	auto type_code = std::make_shared<vnx::TypeCode>();
 	type_code->name = "vnx.keyvalue.SyncModule";
 	type_code->type_hash = vnx::Hash64(0x508da303057fe58cull);
-	type_code->code_hash = vnx::Hash64(0x16148dd4b4c87a0dull);
+	type_code->code_hash = vnx::Hash64(0xa5ad06681388cf8dull);
 	type_code->is_native = true;
 	type_code->native_size = sizeof(::vnx::keyvalue::SyncModuleBase);
 	type_code->methods.resize(9);
@@ -197,7 +219,7 @@ std::shared_ptr<vnx::TypeCode> SyncModuleBase::static_create_type_code() {
 	type_code->methods[6] = ::vnx::ModuleInterface_vnx_restart::static_get_type_code();
 	type_code->methods[7] = ::vnx::ModuleInterface_vnx_stop::static_get_type_code();
 	type_code->methods[8] = ::vnx::ModuleInterface_vnx_self_test::static_get_type_code();
-	type_code->fields.resize(6);
+	type_code->fields.resize(8);
 	{
 		auto& field = type_code->fields[0];
 		field.is_extended = true;
@@ -207,31 +229,43 @@ std::shared_ptr<vnx::TypeCode> SyncModuleBase::static_create_type_code() {
 	{
 		auto& field = type_code->fields[1];
 		field.is_extended = true;
+		field.name = "src_name";
+		field.code = {32};
+	}
+	{
+		auto& field = type_code->fields[2];
+		field.is_extended = true;
+		field.name = "dst_name";
+		field.code = {32};
+	}
+	{
+		auto& field = type_code->fields[3];
+		field.is_extended = true;
 		field.name = "src_addr";
 		field.code = {4};
 	}
 	{
-		auto& field = type_code->fields[2];
+		auto& field = type_code->fields[4];
 		field.is_extended = true;
 		field.name = "dst_addr";
 		field.code = {4};
 	}
 	{
-		auto& field = type_code->fields[3];
+		auto& field = type_code->fields[5];
 		field.data_size = 4;
 		field.name = "buffer_size";
 		field.value = vnx::to_string(100);
 		field.code = {7};
 	}
 	{
-		auto& field = type_code->fields[4];
+		auto& field = type_code->fields[6];
 		field.data_size = 4;
 		field.name = "stats_interval_ms";
 		field.value = vnx::to_string(3000);
 		field.code = {7};
 	}
 	{
-		auto& field = type_code->fields[5];
+		auto& field = type_code->fields[7];
 		field.data_size = 1;
 		field.name = "add_only";
 		field.value = vnx::to_string(false);
@@ -360,21 +394,23 @@ void read(TypeInput& in, ::vnx::keyvalue::SyncModuleBase& value, const TypeCode*
 	}
 	const char* const _buf = in.read(type_code->total_field_size);
 	if(type_code->is_matched) {
-		if(const auto* const _field = type_code->field_map[3]) {
+		if(const auto* const _field = type_code->field_map[5]) {
 			vnx::read_value(_buf + _field->offset, value.buffer_size, _field->code.data());
 		}
-		if(const auto* const _field = type_code->field_map[4]) {
+		if(const auto* const _field = type_code->field_map[6]) {
 			vnx::read_value(_buf + _field->offset, value.stats_interval_ms, _field->code.data());
 		}
-		if(const auto* const _field = type_code->field_map[5]) {
+		if(const auto* const _field = type_code->field_map[7]) {
 			vnx::read_value(_buf + _field->offset, value.add_only, _field->code.data());
 		}
 	}
 	for(const auto* _field : type_code->ext_fields) {
 		switch(_field->native_index) {
 			case 0: vnx::read(in, value.input_sync, type_code, _field->code.data()); break;
-			case 1: vnx::read(in, value.src_addr, type_code, _field->code.data()); break;
-			case 2: vnx::read(in, value.dst_addr, type_code, _field->code.data()); break;
+			case 1: vnx::read(in, value.src_name, type_code, _field->code.data()); break;
+			case 2: vnx::read(in, value.dst_name, type_code, _field->code.data()); break;
+			case 3: vnx::read(in, value.src_addr, type_code, _field->code.data()); break;
+			case 4: vnx::read(in, value.dst_addr, type_code, _field->code.data()); break;
 			default: vnx::skip(in, type_code, _field->code.data());
 		}
 	}
@@ -398,8 +434,10 @@ void write(TypeOutput& out, const ::vnx::keyvalue::SyncModuleBase& value, const 
 	vnx::write_value(_buf + 4, value.stats_interval_ms);
 	vnx::write_value(_buf + 8, value.add_only);
 	vnx::write(out, value.input_sync, type_code, type_code->fields[0].code.data());
-	vnx::write(out, value.src_addr, type_code, type_code->fields[1].code.data());
-	vnx::write(out, value.dst_addr, type_code, type_code->fields[2].code.data());
+	vnx::write(out, value.src_name, type_code, type_code->fields[1].code.data());
+	vnx::write(out, value.dst_name, type_code, type_code->fields[2].code.data());
+	vnx::write(out, value.src_addr, type_code, type_code->fields[3].code.data());
+	vnx::write(out, value.dst_addr, type_code, type_code->fields[4].code.data());
 }
 
 void read(std::istream& in, ::vnx::keyvalue::SyncModuleBase& value) {

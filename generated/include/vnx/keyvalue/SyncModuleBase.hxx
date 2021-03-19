@@ -19,6 +19,8 @@ class SyncModuleBase : public ::vnx::Module {
 public:
 	
 	::vnx::TopicPtr input_sync;
+	std::string src_name;
+	std::string dst_name;
 	::vnx::Hash64 src_addr;
 	::vnx::Hash64 dst_addr;
 	int32_t buffer_size = 100;
