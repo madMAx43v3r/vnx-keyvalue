@@ -23,8 +23,11 @@ void SyncModule::main()
 {
 	subscribe(input_sync, 1000);
 	
-	src = std::make_shared<keyvalue::ServerClient>(src_addr);
-	dst = std::make_shared<keyvalue::ServerClient>(dst_addr);
+	src = std::make_shared<StorageClient>(src_name);
+	dst = std::make_shared<StorageClient>(dst_name);
+	
+	src->vnx_set_tunnel(src_addr);
+	dst->vnx_set_tunnel(dst_addr);
 	
 	if(stats_interval_ms) {
 		set_timer_millis(stats_interval_ms, std::bind(&SyncModule::print_stats, this));

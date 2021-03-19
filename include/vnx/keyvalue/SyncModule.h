@@ -9,7 +9,7 @@
 #define VNX_KEYVALUE_SYNCMODULE_H_
 
 #include <vnx/keyvalue/SyncModuleBase.hxx>
-#include <vnx/keyvalue/ServerClient.hxx>
+#include <vnx/keyvalue/StorageClient.hxx>
 
 
 namespace vnx {
@@ -32,8 +32,8 @@ private:
 	void print_stats();
 	
 private:
-	std::shared_ptr<keyvalue::ServerClient> src;
-	std::shared_ptr<keyvalue::ServerClient> dst;
+	std::shared_ptr<StorageClient> src;
+	std::shared_ptr<StorageClient> dst;
 	
 	std::vector<std::pair<Variant, std::shared_ptr<const Value>>> buffer;
 	
