@@ -35,6 +35,8 @@ private:
 	std::shared_ptr<StorageClient> src;
 	std::shared_ptr<StorageClient> dst;
 	
+	std::shared_ptr<Stream> stream;
+	
 	std::vector<std::pair<Variant, std::shared_ptr<const Value>>> buffer;
 	
 	size_t num_copied = 0;

@@ -42,7 +42,6 @@ int main(int argc, char** argv)
 	
 	{
 		vnx::Handle<vnx::Proxy> proxy = new vnx::Proxy("SrcProxy", vnx::Endpoint::from_url(from));
-		proxy->import_list.push_back(module->input_sync->get_name());
 		proxy->tunnel_list.push_back(module->src_addr);
 		proxy.start_detached();
 	}

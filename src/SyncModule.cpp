@@ -16,12 +16,14 @@ SyncModule::SyncModule(const std::string& _vnx_name)
 {
 	src_addr = vnx::Hash64::rand();
 	dst_addr = vnx::Hash64::rand();
-	input_sync = vnx_name + ".input_" + std::to_string(vnx::rand64());
 }
 
 void SyncModule::main()
 {
 	subscribe(input_sync, 1000);
+	
+	stream = std::make_shared<Stream>(src_name);
+	stream->connect(this, 100, 1000);
 	
 	src = std::make_shared<StorageClient>(src_name);
 	dst = std::make_shared<StorageClient>(dst_name);
@@ -29,11 +31,11 @@ void SyncModule::main()
 	src->vnx_set_tunnel(src_addr);
 	dst->vnx_set_tunnel(dst_addr);
 	
+	src->sync_all_private(stream->get_src_mac());
+	
 	if(stats_interval_ms) {
 		set_timer_millis(stats_interval_ms, std::bind(&SyncModule::print_stats, this));
 	}
-	
-	src->sync_all(input_sync);
 	
 	Super::main();
 }
@@ -75,6 +77,7 @@ void SyncModule::print_stats()
 {
 	log(INFO) << num_copied << " entries, " << num_failed << " failed";
 }
+
 
 } // keyvalue
 } // vnx
