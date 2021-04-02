@@ -31,6 +31,7 @@ namespace keyvalue {
 Server::Server(const std::string& _vnx_name)
 	:	ServerBase(_vnx_name)
 {
+	vnx_task_priority = PRIORITY_HIGH;
 }
 
 void Server::init()
