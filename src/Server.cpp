@@ -245,6 +245,7 @@ void Server::main()
 	write_index();
 	
 	threads = std::make_shared<ThreadPool>(num_threads, max_num_pending);
+	rewrite_threads = std::make_shared<ThreadPool>(num_threads_rewrite, UNLIMITED);
 	sync_threads = std::make_shared<ThreadPool>(-1);
 	
 	update_thread = std::thread(&Server::update_loop, this);
@@ -258,12 +259,11 @@ void Server::main()
 		set_timer_millis(stats_interval_ms, std::bind(&Server::print_stats, this));
 	}
 	
-	rewrite.timer = add_timer(std::bind(&Server::rewrite_func, this));
-	
 	Super::main();
 	
 	threads->close();
 	sync_threads->close();
+	rewrite_threads->close();
 	
 	update_condition.notify_all();
 	if(update_thread.joinable()) {
@@ -950,18 +950,17 @@ std::shared_ptr<Server::block_t> Server::add_new_block()
 
 void Server::check_rewrite(bool is_idle)
 {
-	if(!rewrite.block) {
-		for(const auto& entry : block_map) {
-			if(entry.first != get_current_block()->index) {
-				auto block = entry.second;
-				const double use_factor = double(block->num_bytes_used) / block->num_bytes_total;
-				if(use_factor < rewrite_threshold || (is_idle && use_factor < idle_rewrite_threshold))
-				{
-					log(INFO) << "Rewriting block " << block->index << " with use factor " << float(100 * use_factor) << " % ...";
-					rewrite.block = block;
-					rewrite.timer->set_millis(0);
-					break;
-				}
+	const auto current = get_current_block();
+	
+	for(const auto& entry : block_map) {
+		auto block = entry.second;
+		if(block != current) {
+			const double use_factor = double(block->num_bytes_used) / block->num_bytes_total;
+			if(use_factor < rewrite_threshold || (is_idle && use_factor < idle_rewrite_threshold))
+			{
+				rewrite_threads->add_task(std::bind(&Server::rewrite_task, this, block));
+				log(INFO) << "Rewriting block " << block->index << " with use factor " << float(100 * use_factor) << " % ...";
+				break;
 			}
 		}
 	}
@@ -982,85 +981,14 @@ void Server::check_rewrite(bool is_idle)
 	}
 }
 
-void Server::rewrite_func()
+void Server::finish_rewrite(std::shared_ptr<block_t> block, std::vector<std::shared_ptr<const Entry>> entries)
 {
-	auto block = rewrite.block;
-	if(!block) {
-		return;
-	}
-	
-	if(!rewrite.is_run) {
-		rewrite.is_run = true;
-		rewrite.key_in.reset();
-		rewrite.key_stream.reset(block->key_file.get_handle());
-		try {
-			block->key_file.fadvise(POSIX_FADV_SEQUENTIAL);
-			block->value_file.fadvise(POSIX_FADV_SEQUENTIAL);
-		} catch(...) {
-			// ignore
-		}
-	}
-	
-	struct pair_t {
-		std::shared_ptr<IndexEntry> index;
-		std::shared_ptr<Value> value;
-		bool is_error = true;
-	};
-	
-	bool is_done = false;
-	int64_t num_bytes = 0;
-	std::vector<pair_t> list;
-	
-	for(int i = 0; i < rewrite_chunk_count; ++i) {
-		try {
-			const auto index = std::dynamic_pointer_cast<IndexEntry>(vnx::read(rewrite.key_in));
-			if(index) {
-				if(const auto* key_index = index_map.find(index->version)) {
-					if(key_index->block_index == rewrite.block->index) {
-						pair_t entry;
-						entry.index = index;
-						list.push_back(entry);
-						num_bytes += index->num_bytes + key_index->num_bytes;
-						if(num_bytes > rewrite_chunk_size) {
-							break;
-						}
-					}
-				}
-			}
-		}
-		catch(const std::underflow_error& ex) {
-			is_done = true;
-			break;
-		}
-		catch(const std::exception& ex) {
-			log(ERROR) << "Block " << block->index << " (key) rewrite: " << ex.what();
-			is_done = true;
-			break;
-		}
-	}
-	read_counter += list.size();
-	num_bytes_read += num_bytes;
-	
-	FileSectionInputStream stream;
-	TypeInput in(&stream);
-	const auto value_file = block->value_file.get_handle();
-	
-	for(auto& entry : list) {
-		try {
-			in.reset();
-			stream.reset(value_file, entry.index->block_offset, entry.index->num_bytes);
-			entry.value = vnx::read(in);
-			entry.is_error = false;
-		}
-		catch(const std::exception& ex) {
-			log(ERROR) << "Block " << block->index << " (value) rewrite: " << ex.what();
-			// keep going, since we are not reading the file as a stream
-		}
-	}
+	size_t num_rewrite = 0;
 	try {
-		for(const auto& entry : list) {
-			if(!entry.is_error) {
-				store_value_internal(entry.index->key, entry.value, entry.index->version);
+		for(const auto& entry : entries) {
+			if(index_map.find(entry->version)) {
+				store_value_internal(entry->key, entry->value, entry->version);
+				num_rewrite++;
 			}
 		}
 	}
@@ -1069,22 +997,15 @@ void Server::rewrite_func()
 		return;		// stop rewriting in case storage fails
 	}
 	
-	if(is_done) {
-		log(INFO) << "Rewrite of block " << block->index << " finished.";
-		{
-			std::unique_lock lock(index_mutex);
-			block_map.erase(block->index);
-			delete_list.push_back(block);
-		}
-		coll_index->delete_list.push_back(block->index);
-		write_index();
-		
-		rewrite.block = 0;
-		rewrite.is_run = false;
-		check_rewrite(false);
-	} else {
-		rewrite.timer->set_millis(0);
+	log(INFO) << "Rewrite of block " << block->index << " finished with " << num_rewrite << " / " << entries.size() << " entries";
+	{
+		std::unique_lock lock(index_mutex);
+		block_map.erase(block->index);
+		delete_list.push_back(block);
 	}
+	coll_index->delete_list.push_back(block->index);
+	write_index();
+	check_rewrite(false);
 }
 
 void Server::write_index()
@@ -1118,8 +1039,8 @@ void Server::print_stats()
 			<< (1000 * num_bytes_written) / 1024 / stats_interval_ms << " KB/s write, "
 			<< lock_map.size() << " locks, " << num_lock_timeouts << " timeout, "
 			<< delay_cache.size() << " cached, " << keyhash_map.size() << " entries, "
-			<< sync_jobs.size() << " sync jobs" << (rewrite.block ? ", rewriting " : "")
-			<< (rewrite.block ? std::to_string(rewrite.block->index) : "");
+			<< sync_jobs.size() << " sync jobs, "
+			<< rewrite_threads->get_num_pending() << " brw pending";
 	
 	read_counter = 0;
 	write_counter = 0;
@@ -1147,14 +1068,79 @@ void Server::update_loop() const noexcept
 			}
 		}
 		value->previous = previous;
+		
 		publish(value, update_topic, BLOCKING);
 		{
 			auto copy = vnx::clone(value);
-			copy->value = 0;
+			copy->value = nullptr;
 			publish(copy, update_topic_keys, BLOCKING);
 		}
 		previous = value->version;
 	}
+}
+
+void Server::rewrite_task(std::shared_ptr<block_t> block) noexcept
+{
+	FileSectionInputStream key_stream(block->key_file.get_handle());
+	TypeInput key_in(&key_stream);
+	
+	std::vector<std::shared_ptr<IndexEntry>> all_keys;
+	while(true) {
+		try {
+			auto value = vnx::read(key_in);
+			if(auto index = std::dynamic_pointer_cast<IndexEntry>(value)) {
+				all_keys.push_back(index);
+			} else if(std::dynamic_pointer_cast<CloseEntry>(value)) {
+				break;
+			}
+		} catch(const std::underflow_error& ex) {
+			log(WARN) << "Block " << block->index << " (key) rewrite: unexpected end of file";
+			break;
+		} catch(const std::exception& ex) {
+			log(ERROR) << "Block " << block->index << " (key) rewrite: " << ex.what();
+			break;
+		}
+	}
+	
+	std::vector<std::shared_ptr<IndexEntry>> keys;
+	{
+		std::shared_lock lock(index_mutex);
+		
+		for(const auto& entry : all_keys) {
+			if(auto index = index_map.find(entry->version)) {
+				if(index->block_index == block->index) {
+					keys.push_back(entry);
+				}
+			}
+		}
+	}
+	
+	FileSectionInputStream stream;
+	TypeInput in(&stream);
+	const auto value_file = block->value_file.get_handle();
+	
+	std::vector<std::shared_ptr<const Entry>> entries;
+	for(const auto& entry : keys) {
+		try {
+			in.reset();
+			stream.reset(value_file, entry->block_offset, entry->num_bytes);
+			
+			auto out = Entry::create();
+			out->value = vnx::read(in);
+			out->version = entry->version;
+			out->key = std::move(entry->key);
+			entries.push_back(out);
+			
+			read_counter++;
+			num_bytes_read += entry->num_bytes;
+		}
+		catch(const std::exception& ex) {
+			log(ERROR) << "Block " << block->index << " (value) rewrite: " << ex.what();
+			// keep going, since we are not reading the file as a stream
+		}
+	}
+	
+	add_task(std::bind(&Server::finish_rewrite, this, block, entries));
 }
 
 void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept

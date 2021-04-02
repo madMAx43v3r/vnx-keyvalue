@@ -15,34 +15,26 @@ module Server implements Storage {
 	
 	long max_block_size = 268435456;			// [bytes]
 	
-	int rewrite_chunk_size = 4194304;			// [bytes]
-	
-	int rewrite_chunk_count = 1000;				// number of values
-	
 	float rewrite_threshold = 0.5;
-	
 	float idle_rewrite_threshold = 0.9;
 	
 	int rewrite_interval = 10;					// [sec]
-	
 	int idle_rewrite_interval = 1000;			// [sec]
 	
 	int sync_chunk_count = 100;					// number of values
 	
 	int max_queue_ms = 100;
-	
 	int max_num_pending = 100;					// number of read/write requests
 	
 	int num_threads = 1;						// number of threads for reading / compression
+	int num_threads_rewrite = 1;				// number of threads for block re-writing
 	
 	int compress_level = 6;						// deflate level (0 to 9)
 	
 	int timeout_interval_ms = 100;				// for checking lock timeouts [ms]
-	
 	int stats_interval_ms = 3000;				// 0 = disable stats [ms]
 	
 	bool do_compress = false;					// if to enable deflate compression
-	
 	bool ignore_errors = false;					// if to continue loading even if there is errors
 	
 }

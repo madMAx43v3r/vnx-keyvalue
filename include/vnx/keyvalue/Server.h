@@ -188,13 +188,15 @@ private:
 	
 	void check_rewrite(bool is_idle);
 	
-	void rewrite_func();
+	void finish_rewrite(std::shared_ptr<block_t> block, std::vector<std::shared_ptr<const Entry>> entries);
 	
 	void write_index();
 	
 	void print_stats();
 	
 	void update_loop() const noexcept;
+	
+	void rewrite_task(std::shared_ptr<block_t> block) noexcept;
 	
 	void sync_loop(std::shared_ptr<sync_job_t> job) const noexcept;
 	
@@ -203,6 +205,7 @@ private:
 	std::shared_ptr<Collection> coll_index;
 	std::shared_ptr<ThreadPool> threads;
 	std::shared_ptr<ThreadPool> sync_threads;
+	std::shared_ptr<ThreadPool> rewrite_threads;
 	
 	mutable std::shared_mutex index_mutex;
 	
@@ -233,15 +236,6 @@ private:
 	mutable std::atomic<uint64_t> num_bytes_read {0};
 	mutable std::atomic<uint64_t> num_bytes_written {0};
 	mutable std::atomic<uint64_t> num_lock_timeouts {0};
-	
-	struct rewrite_t {
-		std::shared_ptr<block_t> block;
-		std::shared_ptr<Timer> timer;
-		FileSectionInputStream key_stream;
-		TypeInput key_in;
-		bool is_run = false;
-		rewrite_t() : key_in(&key_stream) {}
-	} rewrite;
 	
 	static const int NUM_INDEX = 3;
 	
