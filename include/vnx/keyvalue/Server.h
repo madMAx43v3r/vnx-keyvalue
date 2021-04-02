@@ -89,6 +89,7 @@ private:
 		File key_file;
 		File value_file;
 		uint32_t index = -1;
+		bool is_rewrite = false;
 		int64_t num_bytes_used = 0;
 		int64_t num_bytes_total = 0;
 		std::atomic<size_t> num_pending {0};
@@ -173,7 +174,8 @@ private:
 	
 	void store_value_internal(	const Variant& key,
 								std::shared_ptr<const Value> value,
-								const uint64_t version);
+								const uint64_t version,
+								index_t* key_index_rewrite = nullptr);
 	
 	void store_value_version(	const Variant& key,
 								std::shared_ptr<const Value> value,

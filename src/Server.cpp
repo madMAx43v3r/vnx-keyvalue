@@ -603,7 +603,8 @@ void Server::cancel_sync_job(const int64_t& job_id)
 
 void Server::store_value_internal(	const Variant& key,
 									std::shared_ptr<const Value> value,
-									const uint64_t version)
+									const uint64_t version,
+									index_t* key_index_rewrite)
 {
 	auto block = get_current_block();
 	if(!block) {
@@ -673,21 +674,29 @@ void Server::store_value_internal(	const Variant& key,
 		throw;
 	}
 	{
-		const auto prev_value_index = get_value_index(key);
-		const auto prev_key_iter = prev_value_index.key_iter;
-		const auto key_hash = prev_value_index.key_hash;
+		value_index_t value_index;
+		if(!key_index_rewrite) {
+			value_index = get_value_index(key);
+		}
 		
 		std::unique_lock lock(index_mutex);
 		
-		if(prev_key_iter == keyhash_map.cend() || version >= prev_key_iter->second)
-		{
-			delete_internal(prev_value_index);
-			keyhash_map.emplace(key_hash, version);
-			
-			index_t& key_index = index_map[version];
-			key_index.block_index = block->index;
-			key_index.block_offset = prev_key_pos;
-			key_index.num_bytes = num_bytes_key;
+		index_t* key_index = nullptr;
+		if(key_index_rewrite) {
+			key_index = key_index_rewrite;
+		} else {
+			const auto key_iter = value_index.key_iter;
+			if(key_iter == keyhash_map.cend() || version >= key_iter->second)
+			{
+				delete_internal(value_index);
+				keyhash_map.emplace(value_index.key_hash, version);
+				key_index = &index_map[version];
+			}
+		}
+		if(key_index) {
+			key_index->block_index = block->index;
+			key_index->block_offset = prev_key_pos;
+			key_index->num_bytes = num_bytes_key;
 		}
 		{
 			const auto iter = delay_cache.find(key);
@@ -953,10 +962,11 @@ void Server::check_rewrite(bool is_idle)
 	
 	for(const auto& entry : block_map) {
 		auto block = entry.second;
-		if(block != current) {
+		if(!block->is_rewrite && block != current) {
 			const double use_factor = double(block->num_bytes_used) / block->num_bytes_total;
 			if(use_factor < rewrite_threshold || (is_idle && use_factor < idle_rewrite_threshold))
 			{
+				block->is_rewrite = true;
 				rewrite_threads->add_task(std::bind(&Server::rewrite_task, this, block));
 				log(INFO) << "Rewriting block " << block->index << " with use factor " << float(100 * use_factor) << " % ...";
 				break;
@@ -985,8 +995,8 @@ void Server::finish_rewrite(std::shared_ptr<block_t> block, std::vector<std::sha
 	size_t num_rewrite = 0;
 	try {
 		for(const auto& entry : entries) {
-			if(index_map.find(entry->version)) {
-				store_value_internal(entry->key, entry->value, entry->version);
+			if(auto key_index = index_map.find(entry->version)) {
+				store_value_internal(entry->key, entry->value, entry->version, key_index);
 				num_rewrite++;
 			}
 		}
