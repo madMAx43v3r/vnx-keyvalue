@@ -890,8 +890,7 @@ void Server::delete_internal(const value_index_t& index)
 	// index_mutex needs to be unique locked by caller
 	const auto key_iter = index.key_iter;
 	if(key_iter != keyhash_map.cend()) {
-		auto block = get_block(index.block_index);
-		if(block) {
+		if(auto block = get_block(index.block_index)) {
 			block->num_bytes_used -= index.num_bytes;
 		}
 		index_map.erase(key_iter->second);
