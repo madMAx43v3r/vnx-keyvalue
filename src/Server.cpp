@@ -1050,7 +1050,7 @@ void Server::print_stats()
 			<< lock_map.size() << " locks, " << num_lock_timeouts << " timeout, "
 			<< delay_cache.size() << " cached, " << keyhash_map.size() << " entries, "
 			<< sync_jobs.size() << " sync jobs, "
-			<< rewrite_threads->get_num_pending() << " brw pending";
+			<< rewrite_threads->get_num_running() << " rewrite";
 	
 	read_counter = 0;
 	write_counter = 0;
