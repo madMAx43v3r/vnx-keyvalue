@@ -997,9 +997,11 @@ void Server::finish_rewrite(std::shared_ptr<block_t> block, std::vector<std::sha
 	size_t num_rewrite = 0;
 	try {
 		for(const auto& entry : entries) {
-			if(auto key_index = index_map.find(entry->version)) {
-				store_value_internal(entry->key, entry->value, entry->version, key_index);
-				num_rewrite++;
+			if(auto index = index_map.find(entry->version)) {
+				if(index->block_index == block->index) {
+					store_value_internal(entry->key, entry->value, entry->version, index);
+					num_rewrite++;
+				}
 			}
 		}
 	}
