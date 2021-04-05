@@ -120,6 +120,14 @@ private:
 		std::condition_variable condition;
 	};
 	
+	struct sync_entry_t {
+		uint64_t version;
+		index_t key_index;
+		std::shared_ptr<block_t> block;
+		std::shared_ptr<IndexEntry> index;
+		std::shared_ptr<const Value> value;
+	};
+	
 	struct lock_entry_t {
 		std::vector<std::function<void()>> waiting;
 		std::multimap<int64_t, std::map<Variant, lock_entry_t>::iterator>::iterator queue_iter;
@@ -201,6 +209,8 @@ private:
 	void rewrite_task(std::shared_ptr<block_t> block) noexcept;
 	
 	void sync_loop(std::shared_ptr<sync_job_t> job) const noexcept;
+	
+	void sync_read_task(std::shared_ptr<sync_job_t> job, sync_entry_t* entry) const noexcept;
 	
 private:
 	uint64_t curr_version = 0;

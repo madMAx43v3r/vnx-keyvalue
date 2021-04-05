@@ -461,6 +461,7 @@ std::shared_ptr<const Entry> Server::read_value(const Variant& key) const
 			// ignore
 		}
 	}
+	
 	try {
 		FileSectionInputStream stream(block->value_file.get_handle(), index.block_offset, index.num_bytes);
 		TypeInput in(&stream);
@@ -471,6 +472,7 @@ std::shared_ptr<const Entry> Server::read_value(const Variant& key) const
 	}
 	block->num_pending--;
 	read_counter++;
+	
 	if(entry->value) {
 		auto decompressed = entry->value->vnx_decompress();
 		if(decompressed) {
@@ -862,7 +864,6 @@ Server::version_index_t Server::get_version_index(const uint64_t& version) const
 			TypeInput in(&stream);
 			try {
 				entry = std::dynamic_pointer_cast<IndexEntry>(vnx::read(in));
-				num_bytes_read += key_index->num_bytes;
 			} catch(...) {
 				// ignore
 			}
@@ -1174,16 +1175,8 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 		}
 	}
 	
-	struct entry_t {
-		uint64_t version;
-		index_t key_index;
-		std::shared_ptr<block_t> block;
-		std::shared_ptr<IndexEntry> index;
-		std::shared_ptr<const Value> value;
-	};
-	
 	bool is_done = false;
-	std::vector<entry_t> list;
+	std::vector<sync_entry_t> list;
 	uint64_t version = job->begin;
 	uint64_t previous = version;
 	
@@ -1205,7 +1198,7 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 					break;
 				}
 				try {
-					entry_t entry;
+					sync_entry_t entry;
 					entry.version = version;
 					entry.key_index = *iter;
 					entry.block = get_block(entry.key_index.block_index);
@@ -1221,52 +1214,8 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 		}
 		job->num_left = list.size();
 		
-		for(auto& entry : list)
-		{
-			threads->add_task([this, job, &entry]() {
-				FileSectionInputStream stream;
-				TypeInput in(&stream);
-				const auto& block = entry.block;
-				const auto& key_index = entry.key_index;
-				{
-					in.reset();
-					stream.reset(block->key_file.get_handle(), key_index.block_offset, key_index.num_bytes);
-					try {
-						entry.index = std::dynamic_pointer_cast<IndexEntry>(vnx::read(in));
-						num_bytes_read += key_index.num_bytes;
-					} catch(...) {
-						// ignore
-					}
-				}
-				const auto& index = entry.index;
-				
-				if(index && !job->key_only)
-				{
-					in.reset();
-					stream.reset(block->value_file.get_handle(), index->block_offset, index->num_bytes);
-					try {
-						std::shared_ptr<const Value> value = vnx::read(in);
-						if(value) {
-							auto decompressed = value->vnx_decompress();
-							if(decompressed) {
-								value = decompressed;
-							}
-						}
-						entry.value = value;
-						num_bytes_read += index->num_bytes;
-						read_counter++;
-					} catch(...) {
-						// ignore
-					}
-				}
-				block->num_pending--;
-				{
-					std::lock_guard lock(job->mutex);
-					if(--job->num_left == 0) {
-						job->condition.notify_all();
-					}
-				}
-			});
+		for(auto& entry : list) {
+			threads->add_task(std::bind(&Server::sync_read_task, this, job, &entry));
 		}
 		{
 			std::unique_lock lock(job->mutex);
@@ -1312,6 +1261,50 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 		std::lock_guard lock(sync_mutex);
 		sync_jobs.erase(job->id);
 		log(INFO) << "Finished sync job " << job->id;
+	}
+}
+
+void Server::sync_read_task(std::shared_ptr<sync_job_t> job, sync_entry_t* entry) const noexcept
+{
+	FileSectionInputStream stream;
+	TypeInput in(&stream);
+	const auto& block = entry->block;
+	const auto& key_index = entry->key_index;
+	{
+		in.reset();
+		stream.reset(block->key_file.get_handle(), key_index.block_offset, key_index.num_bytes);
+		try {
+			entry->index = std::dynamic_pointer_cast<IndexEntry>(vnx::read(in));
+		} catch(...) {
+			// ignore
+		}
+	}
+	const auto& index = entry->index;
+	
+	if(index && !job->key_only)
+	{
+		in.reset();
+		stream.reset(block->value_file.get_handle(), index->block_offset, index->num_bytes);
+		try {
+			std::shared_ptr<const Value> value = vnx::read(in);
+			if(value) {
+				if(auto decompressed = value->vnx_decompress()) {
+					value = decompressed;
+				}
+			}
+			entry->value = value;
+			num_bytes_read += index->num_bytes;
+			read_counter++;
+		} catch(...) {
+			// ignore
+		}
+	}
+	block->num_pending--;
+	{
+		std::lock_guard lock(job->mutex);
+		if(--job->num_left == 0) {
+			job->condition.notify_all();
+		}
 	}
 }
 
