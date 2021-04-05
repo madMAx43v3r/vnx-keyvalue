@@ -1161,7 +1161,11 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 	std::shared_ptr<Stream> stream;
 	if(job->dst_mac) {
 		stream = std::make_shared<Stream>(job->dst_mac);
-		stream->open();
+		try {
+			stream->open();
+		} catch(const std::exception& ex) {
+			log(ERROR) << "Failed to open stream for sync: " << ex.what();
+		}
 	}
 	{
 		auto info = SyncInfo::create();
