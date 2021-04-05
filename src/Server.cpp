@@ -42,11 +42,17 @@ void Server::init()
 
 void Server::main()
 {
-	if(max_block_size > 0xFFFFFFFF) {
-		throw std::logic_error("max_block_size > 0xFFFFFFFF");
+	if(max_block_size > std::numeric_limits<uint32_t>::max()) {
+		throw std::logic_error("max_block_size > UINT_MAX");
+	}
+	if(rewrite_threshold >= 1) {
+		throw std::logic_error("invalid rewrite_threshold");
+	}
+	if(idle_rewrite_threshold >= 1) {
+		throw std::logic_error("invalid idle_rewrite_threshold");
 	}
 	if(collection.empty()) {
-		throw std::logic_error("invalid collection config");
+		throw std::logic_error("invalid collection");
 	}
 	
 	for(int i = 0; i < NUM_INDEX; ++i) {
@@ -64,19 +70,16 @@ void Server::main()
 	
 	for(const auto block_index : coll_index->delete_list)
 	{
-		try {
-			File file(get_file_path("key", block_index));
-			file.remove();
-			log(INFO) << "Deleted old key file from block " << block_index;
-		} catch(...) {
-			// ignore
-		}
-		try {
-			File file(get_file_path("value", block_index));
-			file.remove();
-			log(INFO) << "Deleted old value file from block " << block_index;
-		} catch(...) {
-			// ignore
+		for(const std::string& name : {"key", "value"}) {
+			try {
+				File file(get_file_path(name, block_index));
+				if(file.exists()) {
+					file.remove();
+					log(INFO) << "Deleted old " << name << " file from block " << block_index;
+				}
+			} catch(...) {
+				// ignore
+			}
 		}
 	}
 	coll_index->delete_list.clear();
@@ -107,7 +110,7 @@ void Server::main()
 				// ignore
 			}
 			
-			while(vnx_do_run())
+			while(true)
 			{
 				prev_key_pos = key_in.get_input_pos();
 				try {
@@ -145,7 +148,7 @@ void Server::main()
 						if(type_entry) {
 							value_in.reset();
 							block->value_file.seek_to(type_entry->block_offset);
-							while(vnx_do_run()) {
+							while(true) {
 								try {
 									const auto offset = value_in.get_input_pos();
 									uint16_t code = 0;
@@ -185,8 +188,7 @@ void Server::main()
 				log(INFO) << "Verifying block " << block->index << " ...";
 				value_in.reset();
 				block->value_file.seek_begin();
-				while(vnx_do_run())
-				{
+				while(true) {
 					value_end_pos = value_in.get_input_pos();
 					try {
 						vnx::skip(value_in);
@@ -262,6 +264,12 @@ void Server::main()
 	
 	Super::main();
 	
+	{
+		std::lock_guard<std::mutex> lock(sync_mutex);
+		for(auto& entry : sync_jobs) {
+			entry.second->do_run = false;
+		}
+	}
 	threads->close();
 	sync_threads->close();
 	rewrite_threads->close();
@@ -554,10 +562,7 @@ int64_t Server::sync_range_ex(TopicPtr topic, Hash64 dst_mac, uint64_t begin, ui
 	job->begin = begin;
 	job->end = end;
 	job->key_only = key_only;
-	{
-		std::lock_guard lock(sync_mutex);
-		sync_jobs[job->id] = job;
-	}
+	sync_jobs[job->id] = job;
 	sync_threads->add_task(std::bind(&Server::sync_loop, this, job));
 	
 	log(INFO) << "Started sync job " << job->id << " ...";
@@ -596,12 +601,21 @@ int64_t Server::sync_all_keys_private(const Hash64& dst_mac) const
 
 void Server::cancel_sync_job(const int64_t& job_id)
 {
-	std::lock_guard lock(sync_mutex);
-	
 	const auto iter = sync_jobs.find(job_id);
 	if(iter != sync_jobs.end()) {
+		std::lock_guard lock(sync_mutex);
 		iter->second->do_run = false;
 	}
+}
+
+void Server::sync_finished(std::shared_ptr<sync_job_t> job) const
+{
+	if(job->do_run) {
+		log(INFO) << "Finished sync job " << job->id;
+	} else {
+		log(WARN) << "Canceled sync job " << job->id;
+	}
+	sync_jobs.erase(job->id);
 }
 
 void Server::store_value_internal(	const Variant& key,
@@ -966,12 +980,14 @@ void Server::check_rewrite(bool is_idle)
 		auto block = entry.second;
 		if(!block->is_rewrite && block != current) {
 			const double use_factor = double(block->num_bytes_used) / block->num_bytes_total;
-			if(use_factor < rewrite_threshold || (is_idle && use_factor < idle_rewrite_threshold))
+			if(use_factor < (is_idle ? idle_rewrite_threshold : rewrite_threshold))
 			{
 				block->is_rewrite = true;
 				rewrite_threads->add_task(std::bind(&Server::rewrite_task, this, block));
 				log(INFO) << "Rewriting block " << block->index << " with use factor " << float(100 * use_factor) << " % ...";
-				break;
+				if(is_idle) {
+					break;
+				}
 			}
 		}
 	}
@@ -1018,7 +1034,6 @@ void Server::finish_rewrite(std::shared_ptr<block_t> block, std::vector<std::sha
 	}
 	coll_index->delete_list.push_back(block->index);
 	write_index();
-	check_rewrite(false);
 }
 
 void Server::write_index()
@@ -1186,7 +1201,7 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 	uint64_t version = job->begin;
 	uint64_t previous = version;
 	
-	while(vnx_do_run() && job->do_run && !is_done)
+	while(job->do_run && !is_done)
 	{
 		list.clear();
 		{
@@ -1195,11 +1210,7 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 			for(int i = 0; i < sync_chunk_count; ++i)
 			{
 				const auto* iter = index_map.find_next(version);
-				if(!iter) {
-					is_done = true;
-					break;
-				}
-				if(job->end > 0 && version >= job->end) {
+				if(!iter || (job->end > 0 && version >= job->end)) {
 					is_done = true;
 					break;
 				}
@@ -1207,9 +1218,9 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 					sync_entry_t entry;
 					entry.version = version;
 					entry.key_index = *iter;
-					entry.block = get_block(entry.key_index.block_index);
-					if(entry.block) {
-						entry.block->num_pending++;
+					if(auto block = get_block(iter->block_index)) {
+						block->num_pending++;
+						entry.block = block;
 						list.push_back(entry);
 					}
 				}
@@ -1248,9 +1259,10 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 			}
 			previous = entry.version;
 		}
+		std::lock_guard lock(sync_mutex);	// sync with main thread for do_run
 	}
-	if(vnx_do_run() && job->do_run)
-	{
+	
+	if(job->do_run) {
 		auto info = SyncInfo::create();
 		info->collection = collection;
 		info->version = version;
@@ -1263,11 +1275,8 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 			publish(info, job->topic, BLOCKING);
 		}
 	}
-	{
-		std::lock_guard lock(sync_mutex);
-		sync_jobs.erase(job->id);
-		log(INFO) << "Finished sync job " << job->id;
-	}
+	
+	add_task(std::bind(&Server::sync_finished, this, job));
 }
 
 void Server::sync_read_task(std::shared_ptr<sync_job_t> job, sync_entry_t* entry) const noexcept

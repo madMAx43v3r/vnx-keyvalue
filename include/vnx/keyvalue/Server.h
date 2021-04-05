@@ -196,6 +196,8 @@ private:
 	
 	int64_t sync_range_ex(TopicPtr topic, Hash64 dst_mac, uint64_t begin, uint64_t end, bool key_only) const;
 	
+	void sync_finished(std::shared_ptr<sync_job_t> job) const;
+	
 	void check_rewrite(bool is_idle);
 	
 	void finish_rewrite(std::shared_ptr<block_t> block, std::vector<std::shared_ptr<const Entry>> entries);
