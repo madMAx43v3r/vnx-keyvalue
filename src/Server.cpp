@@ -86,7 +86,6 @@ void Server::main()
 	
 	for(const auto block_index : coll_index->block_list)
 	{
-		log(INFO) << "Reading block " << block_index << " ...";
 		try {
 			auto block = std::make_shared<block_t>();
 			block->index = block_index;
@@ -115,66 +114,60 @@ void Server::main()
 				prev_key_pos = key_in.get_input_pos();
 				try {
 					auto entry = vnx::read(key_in);
+					if(auto index_entry = std::dynamic_pointer_cast<IndexEntry>(entry))
 					{
-						auto index_entry = std::dynamic_pointer_cast<IndexEntry>(entry);
-						if(index_entry) {
-							if(index_entry->block_offset + index_entry->num_bytes <= value_block_size)
+						if(index_entry->block_offset + index_entry->num_bytes <= value_block_size)
+						{
+							const auto value_index = get_value_index(index_entry->key);
+							const auto key_iter = value_index.key_iter;
+							
+							if(key_iter == keyhash_map.cend() || index_entry->version >= key_iter->second)
 							{
-								const auto value_index = get_value_index(index_entry->key);
-								const auto key_iter = value_index.key_iter;
+								delete_internal(value_index);
+								keyhash_map.emplace(value_index.key_hash, index_entry->version);
 								
-								if(key_iter == keyhash_map.cend() || index_entry->version >= key_iter->second)
-								{
-									delete_internal(value_index);
-									keyhash_map.emplace(value_index.key_hash, index_entry->version);
-									
-									auto& index = index_map[index_entry->version];
-									index.block_index = block_index;
-									index.block_offset = prev_key_pos;
-									index.num_bytes = key_in.get_input_pos() - prev_key_pos;
-									
-									curr_version = std::max(curr_version, index_entry->version);
-									block->num_bytes_used += index_entry->num_bytes;
-								}
-								block->num_bytes_total += index_entry->num_bytes;
+								auto& index = index_map[index_entry->version];
+								index.block_index = block_index;
+								index.block_offset = prev_key_pos;
+								index.num_bytes = key_in.get_input_pos() - prev_key_pos;
+								
+								curr_version = std::max(curr_version, index_entry->version);
+								block->num_bytes_used += index_entry->num_bytes;
 							}
-							else {
-								log(WARN) << "Lost value for key '" << index_entry->key.to_string_value() << "'";
+							block->num_bytes_total += index_entry->num_bytes;
+						}
+						else {
+							log(WARN) << "Lost value for key '" << index_entry->key.to_string_value() << "'";
+						}
+					}
+					if(auto type_entry = std::dynamic_pointer_cast<TypeEntry>(entry))
+					{
+						value_in.reset();
+						block->value_file.seek_to(type_entry->block_offset);
+						while(true) {
+							try {
+								const auto offset = value_in.get_input_pos();
+								uint16_t code = 0;
+								vnx::read(value_in, code);
+								if(code == CODE_TYPE_CODE || code == CODE_ALT_TYPE_CODE) {
+									const auto* type_code = vnx::read_type_code(value_in, &code);
+									block->value_file.out.type_code_map[type_code->code_hash] = offset;
+								} else {
+									break;
+								}
+							} catch(const std::underflow_error& ex) {
+								break;
+							} catch(const std::exception& ex) {
+								log(WARN) << "Error while reading type codes from block "
+										<< block_index << ": " << ex.what();
+								break;
 							}
 						}
 					}
+					if(auto close_entry = std::dynamic_pointer_cast<CloseEntry>(entry))
 					{
-						auto type_entry = std::dynamic_pointer_cast<TypeEntry>(entry);
-						if(type_entry) {
-							value_in.reset();
-							block->value_file.seek_to(type_entry->block_offset);
-							while(true) {
-								try {
-									const auto offset = value_in.get_input_pos();
-									uint16_t code = 0;
-									vnx::read(value_in, code);
-									if(code == CODE_TYPE_CODE || code == CODE_ALT_TYPE_CODE) {
-										const auto* type_code = vnx::read_type_code(value_in, &code);
-										block->value_file.out.type_code_map[type_code->code_hash] = offset;
-									} else {
-										break;
-									}
-								} catch(const std::underflow_error& ex) {
-									break;
-								} catch(const std::exception& ex) {
-									log(WARN) << "Error while reading type codes from block "
-											<< block_index << ": " << ex.what();
-									break;
-								}
-							}
-						}
-					}
-					{
-						auto close_entry = std::dynamic_pointer_cast<CloseEntry>(entry);
-						if(close_entry) {
-							value_end_pos = close_entry->block_offset;
-							break;
-						}
+						value_end_pos = close_entry->block_offset;
+						break;
 					}
 				}
 				catch(const std::exception& ex) {
@@ -209,21 +202,17 @@ void Server::main()
 			
 			block->key_file.seek_to(prev_key_pos);
 			block->value_file.seek_to(value_end_pos);
+			
+			log(INFO) << "Block " << block->index << ": " << block->num_bytes_used << " bytes used, "
+					<< block->num_bytes_total << " bytes total, "
+					<< 100 * float(block->num_bytes_used) / block->num_bytes_total << " % use factor";
 		}
 		catch(const std::exception& ex) {
-			if(ignore_errors) {
-				log(ERROR) << "Failed to read block " << block_index << ": " << ex.what();
-			} else {
-				throw;
+			log(ERROR) << "Failed to read block " << block_index << ": " << ex.what();
+			if(!ignore_errors) {
+				throw std::runtime_error("failed to initialize (ignore_errors = false)");
 			}
 		}
-	}
-	
-	for(const auto& entry : block_map) {
-		auto block = entry.second;
-		log(INFO) << "Block " << block->index << ": " << block->num_bytes_used << " bytes used, "
-				<< block->num_bytes_total << " bytes total, "
-				<< 100 * float(block->num_bytes_used) / block->num_bytes_total << " % use factor";
 	}
 	
 	if(block_map.empty()) {
@@ -242,9 +231,8 @@ void Server::main()
 		}
 		lock_file_exclusive(block->key_file);
 		lock_file_exclusive(block->value_file);
-		log(INFO) << "Got " << keyhash_map.size() << " entries.";
+		log(INFO) << "Got " << keyhash_map.size() << " entries total.";
 	}
-	
 	write_index();
 	
 	threads = std::make_shared<ThreadPool>(num_threads, max_num_pending);
