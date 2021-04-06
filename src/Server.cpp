@@ -1131,6 +1131,7 @@ void Server::rewrite_task(std::shared_ptr<block_t> block) noexcept
 	}
 	
 	std::vector<std::shared_ptr<IndexEntry>> keys;
+	keys.reserve(all_keys.size());
 	{
 		std::shared_lock lock(index_mutex);
 		
