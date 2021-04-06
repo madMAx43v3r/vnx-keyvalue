@@ -988,20 +988,23 @@ void Server::check_rewrite(bool is_idle)
 			}
 		}
 	}
-	{
-		std::unique_lock lock(index_mutex);
-		
-		auto iter = delete_list.begin();
-		while(iter != delete_list.end()) {
-			const auto& block = *iter;
-			if(block.use_count() == 1) {
-				block->key_file.remove();
-				block->value_file.remove();
-				log(INFO) << "Deleted block " << block->index;
-				iter = delete_list.erase(iter);
-			} else {
-				iter++;
-			}
+	check_delete();
+}
+
+void Server::check_delete()
+{
+	std::unique_lock lock(index_mutex);
+	
+	auto iter = delete_list.begin();
+	while(iter != delete_list.end()) {
+		const auto& block = *iter;
+		if(block.use_count() == 1) {
+			block->key_file.remove();
+			block->value_file.remove();
+			log(DEBUG) << "Deleted block " << block->index;
+			iter = delete_list.erase(iter);
+		} else {
+			iter++;
 		}
 	}
 }
@@ -1032,6 +1035,8 @@ void Server::finish_rewrite(std::shared_ptr<block_t> block, std::vector<std::sha
 	}
 	coll_index->delete_list.push_back(block->index);
 	write_index();
+	
+	add_task(std::bind(&Server::check_delete, this));
 }
 
 void Server::write_index()

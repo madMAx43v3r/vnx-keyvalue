@@ -199,6 +199,8 @@ private:
 	
 	void check_rewrite(bool is_idle);
 	
+	void check_delete();
+	
 	void finish_rewrite(std::shared_ptr<block_t> block, std::vector<std::shared_ptr<const Entry>> entries);
 	
 	void write_index();
