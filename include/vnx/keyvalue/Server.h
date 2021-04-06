@@ -92,7 +92,6 @@ private:
 		bool is_rewrite = false;
 		int64_t num_bytes_used = 0;
 		int64_t num_bytes_total = 0;
-		std::atomic<size_t> num_pending {0};
 	};
 	
 	struct multi_read_job_t {

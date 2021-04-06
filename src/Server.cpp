@@ -451,9 +451,6 @@ std::shared_ptr<const Entry> Server::read_value(const Variant& key) const
 		index = get_value_index(key);
 		if(index.block_index >= 0) {
 			block = get_block(index.block_index);
-			if(block) {
-				block->num_pending++;
-			}
 			if(index.key_iter != keyhash_map.cend()) {
 				entry->version = index.key_iter->second;
 			}
@@ -478,7 +475,6 @@ std::shared_ptr<const Entry> Server::read_value(const Variant& key) const
 	} catch(...) {
 		// ignore
 	}
-	block->num_pending--;
 	read_counter++;
 	
 	if(entry->value) {
@@ -939,11 +935,11 @@ void Server::close_block(std::shared_ptr<block_t> block)
 
 std::shared_ptr<Server::block_t> Server::add_new_block()
 {
-	auto curr_block = get_current_block();
+	auto current = get_current_block();
 	
 	std::shared_ptr<block_t> block = std::make_shared<block_t>();
 	try {
-		block->index = curr_block ? curr_block->index + 1 : 0;
+		block->index = current ? current->index + 1 : 0;
 		block->key_file.open(get_file_path("key", block->index), "wb");
 		block->value_file.open(get_file_path("value", block->index), "wb");
 		block->key_file.write_header();
@@ -963,11 +959,12 @@ std::shared_ptr<Server::block_t> Server::add_new_block()
 	}
 	catch(const std::exception& ex) {
 		log(ERROR) << "Failed to write new block " << block->index << ": " << ex.what();
-		return curr_block;
+		return current;
 	}
-	if(curr_block) {
-		close_block(curr_block);
+	if(current) {
+		close_block(current);
 	}
+	add_task(std::bind(&Server::check_rewrite, this, false));
 	log(INFO) << "Added new block " << block->index;
 	return block;
 }
@@ -996,10 +993,11 @@ void Server::check_rewrite(bool is_idle)
 		
 		auto iter = delete_list.begin();
 		while(iter != delete_list.end()) {
-			auto block = *iter;
-			if(block->num_pending == 0) {
+			const auto& block = *iter;
+			if(block.use_count() == 1) {
 				block->key_file.remove();
 				block->value_file.remove();
+				log(INFO) << "Deleted block " << block->index;
 				iter = delete_list.erase(iter);
 			} else {
 				iter++;
@@ -1220,7 +1218,6 @@ void Server::sync_loop(std::shared_ptr<sync_job_t> job) const noexcept
 					entry.version = version;
 					entry.key_index = *iter;
 					if(auto block = get_block(iter->block_index)) {
-						block->num_pending++;
 						entry.block = block;
 						list.push_back(entry);
 					}
@@ -1315,7 +1312,6 @@ void Server::sync_read_task(std::shared_ptr<sync_job_t> job, sync_entry_t* entry
 			// ignore
 		}
 	}
-	block->num_pending--;
 	{
 		std::lock_guard lock(job->mutex);
 		if(--job->num_left == 0) {
